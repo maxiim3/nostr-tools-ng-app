@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import type NDK from '@nostr-dev-kit/ndk';
 import type { NDKEvent, NDKFilter, NDKSigner, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
+import type { Event, EventTemplate } from 'nostr-tools';
 
 import { DEFAULT_RELAY_URLS } from '../infrastructure/relay.config';
 
@@ -110,11 +111,75 @@ export class NostrClientService {
     const event = new NDKEvent(ndk);
     event.kind = kind;
     event.tags = tags as never;
-    event.content = JSON.stringify(content);
+    event.content = typeof content === 'string' ? content : JSON.stringify(content);
     event.created_at = Math.floor(Date.now() / 1000);
 
     await event.publish();
     return event.id;
+  }
+
+  async sendDirectMessage(recipientPubkey: string, message: string): Promise<string> {
+    const ndk = await this.ensureNdk();
+
+    if (!ndk.signer || !ndk.activeUser) {
+      throw new Error('Nostr authentication is required before sending a DM.');
+    }
+
+    const normalizedRecipientPubkey = normalizeHexPubkey(recipientPubkey);
+    if (!normalizedRecipientPubkey) {
+      throw new Error('Invalid recipient pubkey.');
+    }
+
+    const messageContent = message.trim();
+    if (!messageContent) {
+      throw new Error('DM content cannot be empty.');
+    }
+
+    const { NDKEvent } = await this.ndkModulePromise;
+    const event = new NDKEvent(ndk);
+    event.kind = 4;
+    event.tags = [['p', normalizedRecipientPubkey]] as never;
+    event.content = messageContent;
+    event.created_at = Math.floor(Date.now() / 1000);
+
+    const recipient = ndk.getUser({ pubkey: normalizedRecipientPubkey });
+    await event.encrypt(recipient, ndk.signer, 'nip04');
+    await event.publish();
+
+    return event.id;
+  }
+
+  async createHttpAuthHeader(
+    url: string,
+    method: string,
+    payload?: Record<string, unknown>
+  ): Promise<string> {
+    const ndk = await this.ensureNdk();
+
+    if (!ndk.signer || !ndk.activeUser) {
+      throw new Error('Nostr authentication is required before signing API requests.');
+    }
+
+    const { NDKEvent } = await this.ndkModulePromise;
+    const { getToken } = await import('nostr-tools/nip98');
+
+    return getToken(
+      url,
+      method,
+      async (template: EventTemplate) => {
+        const event = new NDKEvent(ndk);
+        event.kind = template.kind;
+        event.tags = template.tags as never;
+        event.content = template.content;
+        event.created_at = template.created_at;
+
+        await event.sign(ndk.signer);
+
+        return event.rawEvent() as Event;
+      },
+      true,
+      payload
+    );
   }
 
   private async ensureNdk(): Promise<NDK> {
@@ -156,4 +221,9 @@ export class NostrClientService {
       nip05: profile?.nip05 ?? null
     };
   }
+}
+
+function normalizeHexPubkey(pubkey: string): string | null {
+  const trimmedPubkey = pubkey.trim().toLowerCase();
+  return /^[0-9a-f]{64}$/.test(trimmedPubkey) ? trimmedPubkey : null;
 }
