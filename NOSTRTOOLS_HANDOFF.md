@@ -39,7 +39,7 @@ Le LLM doit uniquement :
 5. configurer Tailwind
 6. configurer daisyUI
 7. configurer les outils MCP
-8. configurer les dépendances Nostr
+8. installer `@nostr-dev-kit/ndk` et `@nostr-dev-kit/ndk-cache-dexie`, sans créer de service applicatif ni de composant qui les utilise
 9. lancer le serveur
 10. vérifier que l’app démarre
 
@@ -155,6 +155,16 @@ Commande recommandée :
 ng new nostr-tools --package-manager bun
 ```
 
+### Tailwind CSS
+
+Installation explicite recommandée :
+
+```bash
+bun i -D tailwindcss@^4 @tailwindcss/postcss@^4
+```
+
+Note : si le projet a déjà été créé avec le setup Angular/Tailwind attendu, cette étape peut déjà être satisfaite.
+
 ### daisyUI
 
 Installation obligatoire :
@@ -255,10 +265,11 @@ Décision :
 
 1. langue par défaut : `fr`
 2. stratégie runtime
-3. pas de routes localisées au départ
-4. sélecteur de langue global
-5. persistance de la langue choisie
-6. détection initiale du navigateur avec fallback
+3. librairie retenue : `@jsverse/transloco`
+4. pas de routes localisées au départ
+5. sélecteur de langue global
+6. persistance de la langue choisie via `localStorage`
+7. détection initiale du navigateur via `navigator.language` avec fallback `fr`
 
 Toutes les chaînes UI doivent être externalisées.
 
@@ -804,6 +815,7 @@ Ce crédit doit apparaître :
 Utiliser en priorité :
 
 1. `@nostr-dev-kit/ndk`
+2. `@nostr-dev-kit/ndk-cache-dexie` pour le cache local IndexedDB
 
 ## Auth
 
@@ -811,6 +823,8 @@ Utiliser en priorité :
 2. pas de saisie de clé privée dans le flow normal
 3. pas de stockage de `nsec`
 4. pas de session serveur centralisée
+5. détection NIP-07 via `window.nostr` au boot
+6. fallback lecture seule si NIP-07 n’est pas disponible
 
 ## Relays
 
@@ -1000,7 +1014,7 @@ Recommandation :
 
 Proposition :
 
-1. `kind`: `34550`
+1. `kind`: `30100`
 2. `d`: `<packSlug>:<requesterPubkey>`
 3. tag `pack`: `<packSlug>`
 4. contenu JSON minimal avec langue et date
@@ -1009,11 +1023,13 @@ Proposition :
 
 Proposition :
 
-1. `kind`: `34551`
+1. `kind`: `30101`
 2. `d`: `<packSlug>:<requesterPubkey>`
 3. tag `pack`: `<packSlug>`
 4. tag `p`: pubkey du demandeur
 5. contenu JSON avec statut et date
+
+Note : les `kind 34550/34551` sont réservés par NIP-72. Le pack cible reste en `kind 39089` (Following.space) ; les events de demande et de décision utilisent ici des kinds addressables libres `30100/30101`.
 
 ## Statut calculé
 
@@ -1030,8 +1046,13 @@ Au départ :
 
 1. pas de sous-admins
 2. pas de rôles complexes
-3. admin = configuration explicite du pack
+3. les admins d’un pack sont définis dans `PackConfig.adminNpubs`
 4. le pack francophone est administré par toi
+
+Au runtime :
+
+1. la pubkey NIP-07 courante est comparée à `PackConfig.adminNpubs`
+2. les routes `/packs/*/admin/**` et `/tools/**` sont protégées par des guards Angular fonctionnels (`CanMatch`)
 
 ## 27. Config pack
 
@@ -1143,3 +1164,52 @@ Le Gate 0 est validé seulement si :
 8. les dépendances principales sont installées
 9. le serveur démarre
 10. aucune feature produit n’a encore été implémentée
+
+## 34. Critères de réussite des Gates 1 à 5
+
+### Gate 1
+
+Le Gate 1 est validé seulement si :
+
+1. les règles d’architecture sont écrites explicitement
+2. les couches `domain`, `application`, `infrastructure`, `presentation` sont définies
+3. les règles de dépendance entre couches sont définies
+4. le rôle de `shared` est clarifié
+5. la liste de ce qui est autorisé et interdit est explicite
+
+### Gate 2
+
+Le Gate 2 est validé seulement si :
+
+1. l’inventaire UI est identifié
+2. les définitions `atom`, `molecule`, `organism`, `template`, `page` sont clarifiées
+3. les règles `variante` vs `composant séparé` sont définies
+4. seuls les éléments UI de base sont produits
+5. aucun layout n’est encore produit
+
+### Gate 3
+
+Le Gate 3 est validé seulement si :
+
+1. la page `/design-system` existe
+2. elle expose tous les éléments UI de base
+3. elle montre variantes et états utiles
+4. la base visuelle est validée humainement avant toute page produit
+
+### Gate 4
+
+Le Gate 4 est validé seulement si :
+
+1. les layouts sont définis
+2. les templates éventuels sont justifiés
+3. les skeletons de pages montrent la structure attendue
+4. les pages métier ne sont pas encore finalisées
+
+### Gate 5
+
+Le Gate 5 est validé seulement si :
+
+1. les pages réelles sont implémentées
+2. la logique Nostr est branchée
+3. le merge, la request page, l’admin et le feed sont branchés
+4. les validations précédentes n’ont pas été contournées
