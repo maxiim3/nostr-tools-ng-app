@@ -4,6 +4,23 @@
     <p class="text-base text-base-content/70">{{ 'adminRequests.subtitle' | transloco }}</p>
   </div>
 
+  @if (isPackMember()) {
+    <div class="alert alert-success mb-6">
+      <span>{{ 'adminRequests.youAreInPack' | transloco }}</span>
+      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">{{ 'adminRequests.openPack' | transloco }}</a>
+    </div>
+  } @else if (userRequestStatus() === 'pending') {
+    <div class="alert alert-info mb-6">
+      <span>{{ 'adminRequests.yourRequestPending' | transloco }}</span>
+    </div>
+  }
+
+  @if (actionError()) {
+    <div role="alert" class="alert alert-error mb-6">
+      <span>{{ actionError()! | transloco }}</span>
+    </div>
+  }
+
   @if (loading()) {
     <div class="flex justify-center py-12">
       <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -42,11 +59,53 @@
               <a [href]="entry.primalUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
                 {{ 'adminRequests.primal' | transloco }}
               </a>
-              <button type="button" class="btn btn-success btn-sm" [disabled]="actingOn() === entry.requesterPubkey" (click)="approve(entry)">
-                {{ 'adminRequests.approve' | transloco }}
+              <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
+                Following
+              </a>
+              <button
+                type="button"
+                class="btn btn-success btn-sm btn-square"
+                [disabled]="actingOn() === entry.requesterPubkey"
+                [title]="'adminRequests.approve' | transloco"
+                (click)="approve(entry)"
+              >
+                <span class="sr-only">{{ 'adminRequests.approve' | transloco }}</span>
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  class="h-4 w-4"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
               </button>
-              <button type="button" class="btn btn-error btn-sm" [disabled]="actingOn() === entry.requesterPubkey" (click)="reject(entry)">
-                {{ 'adminRequests.reject' | transloco }}
+              <button
+                type="button"
+                class="btn btn-error btn-sm btn-square"
+                [disabled]="actingOn() === entry.requesterPubkey"
+                [title]="'adminRequests.reject' | transloco"
+                (click)="reject(entry)"
+              >
+                <span class="sr-only">{{ 'adminRequests.reject' | transloco }}</span>
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  class="h-4 w-4"
+                >
+                  <path d="m18 6-12 12" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
             </div>
           </section>
