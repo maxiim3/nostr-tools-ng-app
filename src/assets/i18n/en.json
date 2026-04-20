@@ -93,10 +93,11 @@
     "modal": {
       "title": "I support with sats",
       "cta": "I zap {{amount}} 🫶",
-      "generating": "Generating...",
+      "generatingInvoice": "Generating invoice...",
+      "scanToPay": "Scan to pay",
+      "invoiceGenerated": "Payment request ready",
       "validation": "Between 21 and 100,000 sats",
-      "loading": "Generating...",
-      "success": "🫶 Zap paid!"
+      "loading": "Generating..."
     },
     "support": "Thanks ❤️"
   },

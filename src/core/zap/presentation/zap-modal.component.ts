@@ -67,29 +67,24 @@ const PRESETS = [
         <div
           class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
         >
-          @if (zap.loading()) {
+          @if (zap.invoiceQr(); as qr) {
+            <div class="space-y-6">
+              <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
+                {{ 'zap.modal.scanToPay' | transloco }}
+              </h2>
+              <div class="flex justify-center">
+                <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
+              </div>
+              <p class="text-center text-sm text-base-content/70">
+                {{ 'zap.modal.invoiceGenerated' | transloco }}
+              </p>
+            </div>
+          } @else if (zap.loading()) {
             <div class="flex flex-col items-center gap-4 py-8">
               <span class="loading loading-spinner loading-lg text-primary"></span>
               <p class="text-sm text-base-content/70">
-                {{ 'zap.modal.loading' | transloco }}
+                {{ 'zap.modal.generatingInvoice' | transloco }}
               </p>
-            </div>
-          } @else if (zap.success()) {
-            <div class="flex flex-col items-center gap-4 py-12">
-              <span class="text-6xl">🫶</span>
-              <p class="text-lg font-semibold">{{ 'zap.modal.success' | transloco }}</p>
-            </div>
-          } @else if (zap.error()) {
-            <div class="flex flex-col items-center gap-4 py-12">
-              <span class="text-6xl">❌</span>
-              <p class="text-lg font-semibold">{{ zap.error() }}</p>
-              <button
-                type="button"
-                class="btn btn-outline"
-                (click)="submit()"
-              >
-                {{ 'common.retry' | transloco }}
-              </button>
             </div>
           } @else {
             <div class="space-y-6">
