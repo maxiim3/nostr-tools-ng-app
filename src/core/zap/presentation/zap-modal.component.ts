@@ -67,36 +67,26 @@ const PRESETS = [
         <div
           class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
         >
-          @if (zap.invoiceQr(); as qr) {
-            <div class="space-y-6">
-              <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
-                {{ 'zap.modal.scanToPay' | transloco }}
-              </h2>
-              <div class="flex justify-center">
-                <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
-              </div>
-              <p class="text-center text-sm text-base-content/70">
-                {{ 'zap.modal.invoiceGenerated' | transloco }}
-              </p>
-            </div>
-          } @else if (zap.loading()) {
+          @if (!zap.invoiceQr() && !zap.invoiceError()) {
             <div class="flex flex-col items-center gap-4 py-8">
               <span class="loading loading-spinner loading-lg text-primary"></span>
               <p class="text-sm text-base-content/70">
                 {{ 'zap.modal.generatingInvoice' | transloco }}
               </p>
             </div>
-          } @else {
+          } @else if (zap.invoiceQr(); as qr) {
             <div class="space-y-6">
               <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
                 {{ 'zap.modal.title' | transloco }}
               </h2>
 
-              @if (zap.amountQrPreview(); as qr) {
-                <div class="flex justify-center">
-                  <img [src]="qr" alt="QR Code" class="rounded-xl size-48" />
-                </div>
-              }
+              <div class="flex justify-center">
+                <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
+              </div>
+
+              <p class="text-center text-sm text-base-content/70">
+                {{ 'zap.modal.scanToPay' | transloco }}
+              </p>
 
               <div class="flex items-center justify-center gap-3">
                 @for (preset of presets; track preset.amount) {
@@ -133,10 +123,22 @@ const PRESETS = [
               <button
                 type="button"
                 class="btn btn-primary btn-block text-lg"
-                [disabled]="amountControl.invalid"
-                (click)="submit()"
+                (click)="zapAndClose()"
               >
                 {{ 'zap.modal.cta' | transloco: { amount: amountControl.value } }}
+              </button>
+            </div>
+          } @else if (zap.invoiceError()) {
+            <div class="flex flex-col items-center gap-4 py-8">
+              <p class="text-base-content/70">
+                {{ 'zap.modal.invoiceError' | transloco }}
+              </p>
+              <button
+                type="button"
+                class="btn btn-outline"
+                (click)="retry()"
+              >
+                {{ 'common.retry' | transloco }}
               </button>
             </div>
           }
@@ -165,12 +167,10 @@ export class ZapModalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.amountControl.valueChanges
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .pipe(debounceTime(500), takeUntil(this.destroy$))
       .subscribe((amount) => {
-        this.zap.generateAmountQrPreview(amount);
+        this.zap.setAmount(amount);
       });
-
-    this.zap.generateAmountQrPreview(42);
   }
 
   ngOnDestroy(): void {
@@ -195,8 +195,12 @@ export class ZapModalComponent implements OnInit, OnDestroy {
     this.zap.openAuthModal();
   }
 
-  protected submit(): void {
-    this.zap.setAmount(this.amountControl.value);
-    this.zap.submit();
+  protected retry(): void {
+    this.zap.generateInvoice();
+  }
+
+  protected zapAndClose(): void {
+    this.zap.sendZapEvent();
+    this.close();
   }
 }

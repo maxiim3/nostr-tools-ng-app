@@ -95,7 +95,7 @@
       "cta": "I zap {{amount}} 🫶",
       "generatingInvoice": "Generating invoice...",
       "scanToPay": "Scan to pay",
-      "invoiceGenerated": "Payment request ready",
+      "invoiceError": "Failed to generate invoice",
       "validation": "Between 21 and 100,000 sats",
       "loading": "Generating..."
     },

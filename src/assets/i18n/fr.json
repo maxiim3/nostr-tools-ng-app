@@ -95,7 +95,7 @@
       "cta": "Je zap {{amount}} 🫶",
       "generatingInvoice": "Génération de la facture...",
       "scanToPay": "Scannez pour payer",
-      "invoiceGenerated": "Facture prête",
+      "invoiceError": "Erreur de génération",
       "validation": "Entre 21 et 100 000 sats",
       "loading": "Génération..."
     },

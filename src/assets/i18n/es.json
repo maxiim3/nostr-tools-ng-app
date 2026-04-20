@@ -95,7 +95,7 @@
       "cta": "Yo zap {{amount}} 🫶",
       "generatingInvoice": "Generando factura...",
       "scanToPay": "Escanea para pagar",
-      "invoiceGenerated": "Factura lista",
+      "invoiceError": "Error al generar",
       "validation": "Entre 21 y 100 000 sats",
       "loading": "Generando..."
     },
