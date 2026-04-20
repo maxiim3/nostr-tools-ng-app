@@ -1,6 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Subject, debounceTime, takeUntil } from 'rxjs';
 
 import { ZapService } from '../zap.service';
 
@@ -67,39 +74,34 @@ const PRESETS = [
                 {{ 'zap.modal.loading' | transloco }}
               </p>
             </div>
-          } @else if (zap.paymentUri(); as uri) {
-            <div class="space-y-6">
-              <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
-                {{ 'zap.modal.invoiceTitle' | transloco }}
-              </h2>
-
-              @if (zap.qrDataUrl(); as qr) {
-                <div class="flex justify-center">
-                  <img [src]="qr" alt="QR Code" class="rounded-xl" width="280" height="280" />
-                </div>
-              }
-
-              <div class="flex flex-col gap-2">
-                <a
-                  [href]="uri"
-                  class="btn btn-primary btn-block text-lg"
-                >
-                  {{ 'zap.modal.openWallet' | transloco }}
-                </a>
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-block"
-                  (click)="close()"
-                >
-                  {{ 'common.close' | transloco }}
-                </button>
-              </div>
+          } @else if (zap.success()) {
+            <div class="flex flex-col items-center gap-4 py-12">
+              <span class="text-6xl">🫶</span>
+              <p class="text-lg font-semibold">{{ 'zap.modal.success' | transloco }}</p>
+            </div>
+          } @else if (zap.error()) {
+            <div class="flex flex-col items-center gap-4 py-12">
+              <span class="text-6xl">❌</span>
+              <p class="text-lg font-semibold">{{ zap.error() }}</p>
+              <button
+                type="button"
+                class="btn btn-outline"
+                (click)="submit()"
+              >
+                {{ 'common.retry' | transloco }}
+              </button>
             </div>
           } @else {
             <div class="space-y-6">
-              <h2 class="text-2xl font-bold text-base-content leading-tight">
+              <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
                 {{ 'zap.modal.title' | transloco }}
               </h2>
+
+              @if (zap.amountQrPreview(); as qr) {
+                <div class="flex justify-center">
+                  <img [src]="qr" alt="QR Code" class="rounded-xl size-48" />
+                </div>
+              }
 
               <div class="flex items-center justify-center gap-3">
                 @for (preset of presets; track preset.amount) {
@@ -139,7 +141,7 @@ const PRESETS = [
                 [disabled]="amountControl.invalid"
                 (click)="submit()"
               >
-                {{ 'zap.modal.cta' | transloco }}
+                {{ 'zap.modal.cta' | transloco: { amount: amountControl.value } }}
               </button>
             </div>
           }
@@ -151,7 +153,7 @@ const PRESETS = [
     }
   `,
 })
-export class ZapModalComponent {
+export class ZapModalComponent implements OnInit, OnDestroy {
   protected readonly zap = inject(ZapService);
   protected readonly presets = PRESETS;
   protected readonly MIN_AMOUNT = 21;
@@ -163,6 +165,23 @@ export class ZapModalComponent {
     nonNullable: true,
     validators: [Validators.min(21), Validators.max(100_000)],
   });
+
+  private readonly destroy$ = new Subject<void>();
+
+  ngOnInit(): void {
+    this.amountControl.valueChanges
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe((amount) => {
+        this.zap.generateAmountQrPreview(amount);
+      });
+
+    this.zap.generateAmountQrPreview(42);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   protected selectPreset(amount: number): void {
     this.zap.setAmount(amount);

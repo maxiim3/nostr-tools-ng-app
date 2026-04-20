@@ -6,7 +6,8 @@
     "pending": "Pending",
     "approved": "Approved",
     "close": "Close",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "retry": "Retry"
   },
   "authModal": {
     "title": "Connect to Nostr",
@@ -91,11 +92,11 @@
     },
     "modal": {
       "title": "I support with sats",
-      "cta": "Merci ⚡",
+      "cta": "I zap {{amount}} 🫶",
+      "generating": "Generating...",
       "validation": "Between 21 and 100,000 sats",
-      "loading": "Generating invoice...",
-      "invoiceTitle": "Scan or open your wallet",
-      "openWallet": "Open in wallet ⚡"
+      "loading": "Generating...",
+      "success": "🫶 Zap paid!"
     },
     "support": "Thanks ❤️"
   },

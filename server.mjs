@@ -24,8 +24,7 @@ const databasePath = path.join(dataDir, 'pack-requests.sqlite');
 
 mkdirSync(dataDir, { recursive: true });
 
-const database = new Database(databasePath);
-database.exec(`
+const CREATE_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS pack_requests (
     requester_pubkey TEXT PRIMARY KEY,
     requester_npub TEXT NOT NULL,
@@ -37,7 +36,38 @@ database.exec(`
     updated TEXT NOT NULL,
     status TEXT NOT NULL
   )
-`);
+`;
+
+let database = openDatabase();
+
+function openDatabase() {
+  const db = new Database(databasePath);
+  db.exec(CREATE_TABLE_SQL);
+  return db;
+}
+
+function reopenDatabase() {
+  try {
+    database.close();
+  } catch {
+    // already closed or not openable
+  }
+
+  database = openDatabase();
+}
+
+function withDatabase(operation) {
+  try {
+    return operation(database);
+  } catch (error) {
+    if (error.message?.includes('readonly database')) {
+      reopenDatabase();
+      return operation(database);
+    }
+
+    throw error;
+  }
+}
 
 const app = express();
 
@@ -139,74 +169,82 @@ app.listen(PORT, () => {
 
 function findRequestByPubkey(pubkey) {
   return (
-    database
+    withDatabase((db) =>
+      db
+        .prepare(
+          `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
+                  display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
+                  choice_id AS choiceId, created, updated, status
+           FROM pack_requests
+           WHERE requester_pubkey = ?`
+        )
+        .get(pubkey)
+    ) ?? null
+  );
+}
+
+function listPackRequests() {
+  return withDatabase((db) =>
+    db
       .prepare(
         `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
                 display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
                 choice_id AS choiceId, created, updated, status
          FROM pack_requests
-         WHERE requester_pubkey = ?`
+         ORDER BY created ASC`
       )
-      .get(pubkey) ?? null
+      .all()
   );
 }
 
-function listPackRequests() {
-  return database
-    .prepare(
-      `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
-              display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
-              choice_id AS choiceId, created, updated, status
-       FROM pack_requests
-       ORDER BY created ASC`
-    )
-    .all();
-}
-
 function upsertPackRequest(record) {
-  database
-    .prepare(
-      `INSERT INTO pack_requests (
-        requester_pubkey,
-        requester_npub,
-        display_name,
-        image_url,
-        question_id,
-        choice_id,
-        created,
-        updated,
-        status
-      ) VALUES (
-        @requesterPubkey,
-        @requesterNpub,
-        @displayName,
-        @imageUrl,
-        @questionId,
-        @choiceId,
-        @created,
-        @updated,
-        @status
+  withDatabase((db) =>
+    db
+      .prepare(
+        `INSERT INTO pack_requests (
+          requester_pubkey,
+          requester_npub,
+          display_name,
+          image_url,
+          question_id,
+          choice_id,
+          created,
+          updated,
+          status
+        ) VALUES (
+          @requesterPubkey,
+          @requesterNpub,
+          @displayName,
+          @imageUrl,
+          @questionId,
+          @choiceId,
+          @created,
+          @updated,
+          @status
+        )
+        ON CONFLICT(requester_pubkey) DO UPDATE SET
+          requester_npub = excluded.requester_npub,
+          display_name = excluded.display_name,
+          image_url = excluded.image_url,
+          question_id = excluded.question_id,
+          choice_id = excluded.choice_id,
+          created = excluded.created,
+          updated = excluded.updated,
+          status = excluded.status`
       )
-      ON CONFLICT(requester_pubkey) DO UPDATE SET
-        requester_npub = excluded.requester_npub,
-        display_name = excluded.display_name,
-        image_url = excluded.image_url,
-        question_id = excluded.question_id,
-        choice_id = excluded.choice_id,
-        created = excluded.created,
-        updated = excluded.updated,
-        status = excluded.status`
-    )
-    .run(record);
+      .run(record)
+  );
 }
 
 function deletePackRequest(pubkey) {
-  const result = database
-    .prepare(
-      `DELETE FROM pack_requests
-       WHERE requester_pubkey = ?`
-    )
-    .run(pubkey);
+  const result = withDatabase((db) =>
+    db
+      .prepare(
+        `DELETE FROM pack_requests
+         WHERE requester_pubkey = ?`
+      )
+      .run(pubkey)
+  );
 
   if (result.changes === 0) {
     throw createHttpError(404, 'Request not found.');
@@ -219,7 +257,13 @@ async function requireNostrAuth(request, body, requireAdmin = false) {
     throw createHttpError(401, 'Missing Nostr authorization header.');
   }
 
-  const event = await unpackEventFromToken(authorization);
+  let event;
+  try {
+    event = await unpackEventFromToken(authorization);
+  } catch {
+    throw createHttpError(401, 'Invalid Nostr authorization token.');
+  }
+
   const requestUrls = buildCandidateAuthUrls(request);
   const isValid = await validateNostrRequest(event, requestUrls, request.method, body);
 

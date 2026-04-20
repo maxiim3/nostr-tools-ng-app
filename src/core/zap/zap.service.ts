@@ -14,8 +14,9 @@ export class ZapService {
   readonly authRequiredOpen = signal(false);
   readonly selectedAmount = signal(42);
   readonly loading = signal(false);
-  readonly paymentUri = signal<string | null>(null);
-  readonly qrDataUrl = signal<string | null>(null);
+  readonly amountQrPreview = signal<string | null>(null);
+  readonly success = signal(false);
+  readonly error = signal<string | null>(null);
 
   openModal(): void {
     if (!this.session.isAuthenticated()) {
@@ -25,6 +26,7 @@ export class ZapService {
     this.resetState();
     this.selectedAmount.set(42);
     this.modalOpen.set(true);
+    this.generateAmountQrPreview(42);
   }
 
   closeModal(): void {
@@ -45,57 +47,38 @@ export class ZapService {
     this.selectedAmount.set(amount);
   }
 
-  async submit(): Promise<void> {
-    const amountMsat = this.selectedAmount() * 1000;
-    this.loading.set(true);
+  async generateAmountQrPreview(amountSat: number): Promise<void> {
+    const amountMsat = amountSat * 1000;
+    const uri = `lightning:${PROJECT_INFO.zapAddress}?amount=${amountMsat}`;
+    const qr = await QRCode.toDataURL(uri, { width: 192, margin: 2 });
+    this.amountQrPreview.set(qr);
+  }
 
+  async submit(): Promise<void> {
+    this.success.set(false);
+    this.error.set(null);
+    this.loading.set(true);
     try {
-      const pr = await this.fetchInvoice(amountMsat);
-      await this.showPaymentUri(`lightning:${pr}`);
-    } catch {
-      await this.showPaymentUri(
-        `lightning:${PROJECT_INFO.zapAddress}?amount=${amountMsat}`,
-      );
+      const ndk = await this.client.getNdk();
+      const { NDKUser, NDKZapper } = await import('@nostr-dev-kit/ndk');
+      const targetUser = new NDKUser({ npub: PROJECT_INFO.ownerNpub });
+      targetUser.ndk = ndk;
+      const zapper = new NDKZapper(targetUser, this.selectedAmount() * 1000, 'msat', { ndk });
+      await zapper.zap(['nip57']);
+      this.success.set(true);
+      setTimeout(() => this.closeModal(), 2000);
+    } catch (err) {
+      this.error.set('Erreur zap');
+      console.error(err);
     } finally {
       this.loading.set(false);
     }
   }
 
-  private async fetchInvoice(amountMsat: number): Promise<string> {
-    const ndk = await this.client.getNdk();
-    const { NDKUser, NDKZapper } = await import('@nostr-dev-kit/ndk');
-
-    const targetUser = new NDKUser({ npub: PROJECT_INFO.ownerNpub });
-    targetUser.ndk = ndk;
-
-    const invoicePromise = new Promise<string>((resolve, reject) => {
-      const zapper = new NDKZapper(targetUser, amountMsat, 'msat', {
-        ndk,
-        lnPay: async ({ pr }) => {
-          resolve(pr);
-          return { preimage: '' };
-        },
-      });
-
-      zapper.zap(['nip57']).catch(reject);
-    });
-
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Zap request timed out')), 15_000),
-    );
-
-    return Promise.race([invoicePromise, timeoutPromise]);
-  }
-
-  private async showPaymentUri(uri: string): Promise<void> {
-    this.paymentUri.set(uri);
-    const qr = await QRCode.toDataURL(uri, { width: 280, margin: 2 });
-    this.qrDataUrl.set(qr);
-  }
-
   private resetState(): void {
     this.loading.set(false);
-    this.paymentUri.set(null);
-    this.qrDataUrl.set(null);
+    this.amountQrPreview.set(null);
+    this.success.set(false);
+    this.error.set(null);
   }
 }
