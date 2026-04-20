@@ -1,4 +1,3 @@
-import express from 'express';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +7,7 @@ import { nip19, verifyEvent } from 'nostr-tools';
 import { unpackEventFromToken, validateEvent as validateNip98Event } from 'nostr-tools/nip98';
 
 const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
+const MAX_JSON_BODY_BYTES = 50 * 1024;
 const ADMIN_NPUBS = new Set(
   (process.env.ADMIN_NPUBS ??
     'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du')
@@ -19,10 +19,13 @@ const ADMIN_NPUBS = new Set(
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const browserDistDir = path.join(__dirname, 'dist', 'nostr-tools-ng-app', 'browser');
-const dataDir = path.join(__dirname, '.runtime');
-const databasePath = path.join(dataDir, 'pack-requests.sqlite');
+const databasePath = process.env.DATABASE_PATH
+  ? path.resolve(process.env.DATABASE_PATH)
+  : path.join(process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '.runtime'), 'pack-requests.sqlite');
+const browserDistRoot = path.resolve(browserDistDir);
+const indexFilePath = path.join(browserDistDir, 'index.html');
 
-mkdirSync(dataDir, { recursive: true });
+mkdirSync(path.dirname(databasePath), { recursive: true });
 
 const CREATE_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS pack_requests (
@@ -39,6 +42,13 @@ const CREATE_TABLE_SQL = `
 `;
 
 let database = openDatabase();
+
+const server = Bun.serve({
+  port: PORT,
+  fetch: handleRequest
+});
+
+console.log(`Server listening on http://127.0.0.1:${server.port}`);
 
 function openDatabase() {
   const db = new Database(databasePath);
@@ -69,103 +79,167 @@ function withDatabase(operation) {
   }
 }
 
-const app = express();
+async function handleRequest(request) {
+  const requestUrl = buildRequestUrl(request);
+  const corsHeaders = createCorsHeaders(request);
 
-app.set('trust proxy', true);
-app.disable('x-powered-by');
-app.use(express.json({ limit: '50kb' }));
-app.use(withCors);
-
-app.get('/api/health', (_request, response) => {
-  response.json({ ok: true });
-});
-
-app.get('/api/pack-requests/me', async (request, response) => {
-  try {
-    const auth = await requireNostrAuth(request);
-    const record = findRequestByPubkey(auth.pubkey);
-
-    response.json({
-      status: record ? mapRecordStatus(record.status) : 'idle'
-    });
-  } catch (error) {
-    handleApiError(response, error);
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
-});
 
-app.post('/api/pack-requests', async (request, response) => {
-  try {
-    const auth = await requireNostrAuth(request, request.body);
-    const questionId = readRequiredString(request.body?.questionId, 'questionId');
-    const choiceId = readRequiredString(request.body?.choiceId, 'choiceId');
-    const displayName = readRequiredString(request.body?.displayName, 'displayName');
-    const imageUrl = readOptionalString(request.body?.imageUrl);
-    const existingRecord = findRequestByPubkey(auth.pubkey);
-    const now = new Date().toISOString();
-
-    upsertPackRequest({
-      requesterPubkey: auth.pubkey,
-      requesterNpub: auth.npub,
-      displayName,
-      imageUrl,
-      questionId,
-      choiceId,
-      created: existingRecord?.created ?? now,
-      updated: now,
-      status: 'pending'
-    });
-
-    response.status(204).end();
-  } catch (error) {
-    handleApiError(response, error);
+  if (request.method === 'GET' && requestUrl.pathname === '/api/health') {
+    return jsonResponse({ ok: true }, { headers: corsHeaders });
   }
-});
 
-app.get('/api/admin/pack-requests', async (request, response) => {
-  try {
-    await requireNostrAuth(request, undefined, true);
+  if (request.method === 'GET' && requestUrl.pathname === '/api/lnurl') {
+    try {
+      const address = requestUrl.searchParams.get('address');
+      const amount = Number.parseInt(requestUrl.searchParams.get('amount') ?? '', 10);
 
-    const records = listPackRequests()
-      .filter((record) => record.status === 'pending')
-      .reverse()
-      .map(mapAdminRecord);
+      if (!address || !amount || Number.isNaN(amount)) {
+        return jsonResponse(
+          { error: 'Invalid parameters' },
+          { status: 400, headers: corsHeaders }
+        );
+      }
 
-    response.json(records);
-  } catch (error) {
-    handleApiError(response, error);
+      const { name, domain } = parseLightningAddress(address);
+      const metadataResponse = await fetch(
+        `https://${domain}/.well-known/lnurlp/${encodeURIComponent(name)}`
+      );
+
+      if (!metadataResponse.ok) {
+        throw new Error('Lightning address lookup failed');
+      }
+
+      const metadata = await metadataResponse.json();
+      if (typeof metadata.callback !== 'string' || !metadata.callback) {
+        throw new Error('Missing LNURL callback');
+      }
+
+      if (typeof metadata.minSendable === 'number' && amount < metadata.minSendable) {
+        throw new Error('Amount below minimum');
+      }
+
+      if (typeof metadata.maxSendable === 'number' && amount > metadata.maxSendable) {
+        throw new Error('Amount above maximum');
+      }
+
+      const url = new URL(metadata.callback);
+      url.searchParams.set('amount', amount.toString());
+
+      const lnurlResponse = await fetch(url.toString());
+      if (!lnurlResponse.ok) {
+        throw new Error('LNURL request failed');
+      }
+
+      const data = await lnurlResponse.json();
+      if (typeof data.pr !== 'string' || !data.pr) {
+        throw new Error('Invalid invoice response');
+      }
+
+      return jsonResponse({ pr: data.pr }, { headers: corsHeaders });
+    } catch (error) {
+      console.error('LNURL error:', error);
+      return jsonResponse(
+        { error: 'Failed to generate invoice' },
+        { status: 500, headers: corsHeaders }
+      );
+    }
   }
-});
 
-app.post('/api/admin/pack-requests/:pubkey/approve', async (request, response) => {
-  try {
-    await requireNostrAuth(request, request.body, true);
-    deletePackRequest(request.params.pubkey);
+  if (request.method === 'GET' && requestUrl.pathname === '/api/pack-requests/me') {
+    try {
+      const auth = await requireNostrAuth(request, undefined, false, requestUrl);
+      const record = findRequestByPubkey(auth.pubkey);
 
-    response.status(204).end();
-  } catch (error) {
-    handleApiError(response, error);
+      return jsonResponse(
+        {
+          status: record ? mapRecordStatus(record.status) : 'idle'
+        },
+        { headers: corsHeaders }
+      );
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
   }
-});
 
-app.post('/api/admin/pack-requests/:pubkey/reject', async (request, response) => {
-  try {
-    await requireNostrAuth(request, request.body, true);
-    deletePackRequest(request.params.pubkey);
+  if (request.method === 'POST' && requestUrl.pathname === '/api/pack-requests') {
+    try {
+      const body = await readJsonBody(request);
+      const auth = await requireNostrAuth(request, body, false, requestUrl);
+      const questionId = readRequiredString(body?.questionId, 'questionId');
+      const choiceId = readRequiredString(body?.choiceId, 'choiceId');
+      const displayName = readRequiredString(body?.displayName, 'displayName');
+      const imageUrl = readOptionalString(body?.imageUrl);
+      const existingRecord = findRequestByPubkey(auth.pubkey);
+      const now = new Date().toISOString();
 
-    response.status(204).end();
-  } catch (error) {
-    handleApiError(response, error);
+      upsertPackRequest({
+        requesterPubkey: auth.pubkey,
+        requesterNpub: auth.npub,
+        displayName,
+        imageUrl,
+        questionId,
+        choiceId,
+        created: existingRecord?.created ?? now,
+        updated: now,
+        status: 'pending'
+      });
+
+      return new Response(null, { status: 204, headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
   }
-});
 
-app.use(express.static(browserDistDir, { index: false }));
-app.get(/.*/, (_request, response) => {
-  response.sendFile(path.join(browserDistDir, 'index.html'));
-});
+  if (request.method === 'GET' && requestUrl.pathname === '/api/admin/pack-requests') {
+    try {
+      await requireNostrAuth(request, undefined, true, requestUrl);
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://127.0.0.1:${PORT}`);
-});
+      const records = listPackRequests()
+        .filter((record) => record.status === 'pending')
+        .reverse()
+        .map(mapAdminRecord);
+
+      return jsonResponse(records, { headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
+  }
+
+  const approveMatch = matchAdminActionRoute(requestUrl.pathname, 'approve');
+  if (request.method === 'POST' && approveMatch) {
+    try {
+      const body = await readJsonBody(request);
+      await requireNostrAuth(request, body, true, requestUrl);
+      deletePackRequest(approveMatch.pubkey);
+
+      return new Response(null, { status: 204, headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
+  }
+
+  const rejectMatch = matchAdminActionRoute(requestUrl.pathname, 'reject');
+  if (request.method === 'POST' && rejectMatch) {
+    try {
+      const body = await readJsonBody(request);
+      await requireNostrAuth(request, body, true, requestUrl);
+      deletePackRequest(rejectMatch.pubkey);
+
+      return new Response(null, { status: 204, headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
+  }
+
+  if (requestUrl.pathname.startsWith('/api/')) {
+    return jsonResponse({ message: 'Not found.' }, { status: 404, headers: corsHeaders });
+  }
+
+  return serveClientApp(requestUrl.pathname);
+}
 
 function findRequestByPubkey(pubkey) {
   return (
@@ -251,8 +325,8 @@ function deletePackRequest(pubkey) {
   }
 }
 
-async function requireNostrAuth(request, body, requireAdmin = false) {
-  const authorization = request.header('authorization');
+async function requireNostrAuth(request, body, requireAdmin = false, requestUrl = buildRequestUrl(request)) {
+  const authorization = request.headers.get('authorization');
   if (!authorization) {
     throw createHttpError(401, 'Missing Nostr authorization header.');
   }
@@ -264,7 +338,7 @@ async function requireNostrAuth(request, body, requireAdmin = false) {
     throw createHttpError(401, 'Invalid Nostr authorization token.');
   }
 
-  const requestUrls = buildCandidateAuthUrls(request);
+  const requestUrls = buildCandidateAuthUrls(requestUrl);
   const isValid = await validateNostrRequest(event, requestUrls, request.method, body);
 
   if (!isValid) {
@@ -299,22 +373,37 @@ async function validateNostrRequest(event, requestUrls, method, body) {
   return false;
 }
 
-function buildCandidateAuthUrls(request) {
-  const requestUrl = `${request.protocol}://${request.get('host')}${request.originalUrl}`;
+function buildRequestUrl(request) {
+  const url = new URL(request.url);
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const host = forwardedHost || request.headers.get('host');
+
+  if (forwardedProto) {
+    url.protocol = `${forwardedProto}:`;
+  }
+
+  if (host) {
+    url.host = host;
+  }
+
+  return url;
+}
+
+function buildCandidateAuthUrls(requestUrl) {
+  const primaryUrl = requestUrl.toString();
 
   try {
-    const url = new URL(requestUrl);
-    if (!isLoopbackHost(url.hostname)) {
-      return [requestUrl];
+    if (!isLoopbackHost(requestUrl.hostname)) {
+      return [primaryUrl];
     }
 
-    const alternateHost = url.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
-    const alternateUrl = new URL(requestUrl);
-    alternateUrl.hostname = alternateHost;
+    const alternateUrl = new URL(primaryUrl);
+    alternateUrl.hostname = requestUrl.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
 
-    return [requestUrl, alternateUrl.toString()];
+    return [primaryUrl, alternateUrl.toString()];
   } catch {
-    return [requestUrl];
+    return [primaryUrl];
   }
 }
 
@@ -357,20 +446,53 @@ function readOptionalString(value) {
   return value.trim();
 }
 
-function withCors(request, response, next) {
-  const origin = request.header('origin');
+async function readJsonBody(request) {
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && Number.parseInt(contentLength, 10) > MAX_JSON_BODY_BYTES) {
+    throw createHttpError(413, 'Request body too large.');
+  }
+
+  const rawBody = await request.text();
+  if (!rawBody) {
+    return {};
+  }
+
+  if (new TextEncoder().encode(rawBody).byteLength > MAX_JSON_BODY_BYTES) {
+    throw createHttpError(413, 'Request body too large.');
+  }
+
+  try {
+    return JSON.parse(rawBody);
+  } catch {
+    throw createHttpError(400, 'Invalid JSON body.');
+  }
+}
+
+function createCorsHeaders(request) {
+  const headers = new Headers();
+  const origin = request.headers.get('origin');
+
   if (origin === 'http://localhost:4200' || origin === 'http://127.0.0.1:4200') {
-    response.header('Access-Control-Allow-Origin', origin);
-    response.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    response.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    headers.set('Vary', 'Origin');
   }
 
-  if (request.method === 'OPTIONS') {
-    response.status(204).end();
-    return;
+  return headers;
+}
+
+function parseLightningAddress(address) {
+  if (typeof address !== 'string') {
+    throw new Error('Invalid lightning address');
   }
 
-  next();
+  const [name, domain] = address.trim().split('@');
+  if (!name || !domain) {
+    throw new Error('Invalid lightning address');
+  }
+
+  return { name, domain };
 }
 
 function createHttpError(status, message) {
@@ -379,7 +501,7 @@ function createHttpError(status, message) {
   return error;
 }
 
-function handleApiError(response, error) {
+function handleApiError(error, corsHeaders) {
   const status = typeof error?.status === 'number' ? error.status : 500;
   const message = error instanceof Error ? error.message : 'Unexpected server error.';
 
@@ -387,5 +509,76 @@ function handleApiError(response, error) {
     console.error(error);
   }
 
-  response.status(status).json({ message });
+  return jsonResponse({ message }, { status, headers: corsHeaders });
+}
+
+function jsonResponse(body, init = {}) {
+  const headers = new Headers(init.headers);
+  headers.set('Content-Type', 'application/json; charset=utf-8');
+
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers
+  });
+}
+
+function matchAdminActionRoute(pathname, action) {
+  const pattern = new RegExp(`^/api/admin/pack-requests/([^/]+)/${action}$`);
+  const match = pathname.match(pattern);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    pubkey: decodeURIComponent(match[1])
+  };
+}
+
+async function serveClientApp(pathname) {
+  const assetPath = resolveAssetPath(pathname);
+
+  if (assetPath) {
+    const assetFile = Bun.file(assetPath);
+    if (await assetFile.exists()) {
+      return fileResponse(assetFile);
+    }
+  }
+
+  if (path.extname(pathname)) {
+    return new Response('Not found.', { status: 404 });
+  }
+
+  return fileResponse(Bun.file(indexFilePath));
+}
+
+function resolveAssetPath(pathname) {
+  const relativePath = pathname === '/' ? 'index.html' : normalizePathname(pathname);
+  if (!relativePath) {
+    return null;
+  }
+
+  const assetPath = path.resolve(browserDistRoot, relativePath);
+  if (assetPath !== browserDistRoot && !assetPath.startsWith(`${browserDistRoot}${path.sep}`)) {
+    return null;
+  }
+
+  return assetPath;
+}
+
+function normalizePathname(pathname) {
+  try {
+    return decodeURIComponent(pathname).replace(/^\/+/, '');
+  } catch {
+    return null;
+  }
+}
+
+function fileResponse(file) {
+  const headers = new Headers();
+  if (file.type) {
+    headers.set('Content-Type', file.type);
+  }
+
+  return new Response(file, { headers });
 }

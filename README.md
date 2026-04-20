@@ -62,9 +62,16 @@ For more information on using the Angular CLI, including detailed command refere
 
 The project now uses a single SQLite database for API requests:
 
-- Runtime DB: `.runtime/pack-requests.sqlite`
+- Runtime DB: `.runtime/pack-requests.sqlite` by default
 - Empty schema: `pack-requests.schema.sql`
 - SQL dump: `pack-requests.dump.sql`
+
+The runtime path can be overridden with:
+
+- `DATABASE_PATH=/absolute/path/to/pack-requests.sqlite`
+- `DATA_DIR=/absolute/path/to/runtime-dir`
+
+For Railway with a persistent volume, point `DATABASE_PATH` to the mounted volume, for example `/data/pack-requests.sqlite`.
 
 Helper commands:
 

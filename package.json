@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "api": "node server.mjs",
+    "api": "bun server.mjs",
     "db:reset": "sh scripts/db-reset.sh",
     "db:restore": "sh scripts/db-restore.sh",
     "db:dump": "sh scripts/db-dump.sh",
@@ -37,7 +37,6 @@
     "@nostr-dev-kit/ndk": "^3.0.3",
     "@nostr-dev-kit/ndk-cache-dexie": "^2.6.44",
     "better-sqlite3": "^12.9.0",
-    "express": "^5.2.1",
     "nostr-tools": "^2.23.3",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
