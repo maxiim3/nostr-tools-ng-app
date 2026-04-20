@@ -40,6 +40,7 @@
   "request": {
     "title": "Join the francophone starter pack",
     "subtitle": "Connect with Nostr to request access and track your current status.",
+    "connect": "Connect to request access",
     "identity": "Connected account",
     "extensionLogin": "Login with extension",
     "externalLogin": "Open external app",
@@ -62,6 +63,11 @@
       "follow": "Open my profile",
       "zap": "Zap 42 sats"
     }
+  },
+  "home": {
+    "title": "Nostr Tools",
+    "description": "A toolkit for the francophone Nostr community. Request access to the starter pack, follow key profiles, and explore the ecosystem.",
+    "cta": "Join the starter pack"
   },
   "adminRequests": {
     "title": "Access requests",

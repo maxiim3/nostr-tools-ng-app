@@ -1,50 +1,61 @@
-  <main class="space-y-12 p-6 md:p-12">
-    <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
-      <!-- Item is selected -->
-      <!-- left hand side source pack -->
-      <app-profile-card [user]="sourceProfile()" [status]="sourceStatus()" />
+<main class="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6">
+  <div aria-hidden="true" class="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl"></div>
+  <div aria-hidden="true" class="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"></div>
 
-      <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
-      <input type="checkbox" checked="checked" class="checkbox checkbox-success" />
-      <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
+  <div class="relative z-10 max-w-2xl space-y-8 text-center">
+    <h1 class="text-5xl font-black tracking-tight text-base-content md:text-6xl">
+      {{ 'home.title' | transloco }}
+    </h1>
 
-      <!-- right hand side targe pack (mine, must be signed and have write/edit access) -->
-      <app-profile-card [user]="targetProfile()" [status]="targetStatus()" />
-    </div>
+    <p class="text-lg leading-relaxed text-base-content/70">
+      {{ 'home.description' | transloco }}
+    </p>
 
-    <!-- haven't added the overlay -->
-    <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
-      <!-- loading -->
-      <app-profile-card [status]="'skeleton'" />
+    <a routerLink="/packs/francophone/request" class="btn btn-primary btn-lg">
+      {{ 'home.cta' | transloco }}
+    </a>
+  </div>
+</main>
 
-      <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
-      <!-- depends on the line status : success | rejected | idl -->
-      <input type="checkbox" checked="checked" class="checkbox checkbox-primary" />
-      <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
+<!-- Old home content
+<main class="space-y-12 p-6 md:p-12">
+  <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
+    <app-profile-card [user]="sourceProfile()" [status]="sourceStatus()" />
+    <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
+    <input type="checkbox" checked="checked" class="checkbox checkbox-success" />
+    <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
+    <app-profile-card [user]="targetProfile()" [status]="targetStatus()" />
+  </div>
 
-      <app-profile-card [user]="sourceProfile()" [status]="transparentStatus()" />
-    </div>
+  <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
+    <app-profile-card [status]="'skeleton'" />
+    <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
+    <input type="checkbox" checked="checked" class="checkbox checkbox-primary" />
+    <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
+    <app-profile-card [user]="sourceProfile()" [status]="transparentStatus()" />
+  </div>
+</main>
 
-  </main>
-  <footer class="footer sm:footer-horizontal bg-neutral text-neutral-content p-10">
-    <nav>
-      <h6 class="footer-title">Services</h6>
-      <a class="link link-hover">Branding</a>
-      <a class="link link-hover">Design</a>
-      <a class="link link-hover">Marketing</a>
-      <a class="link link-hover">Advertisement</a>
-    </nav>
-    <nav>
-      <h6 class="footer-title">Company</h6>
-      <a class="link link-hover">About us</a>
-      <a class="link link-hover">Contact</a>
-      <a class="link link-hover">Jobs</a>
-      <a class="link link-hover">Press kit</a>
-    </nav>
-    <nav>
-      <h6 class="footer-title">Legal</h6>
-      <a class="link link-hover">Terms of use</a>
-      <a class="link link-hover">Privacy policy</a>
-      <a class="link link-hover">Cookie policy</a>
-    </nav>
-  </footer>
+<footer class="footer sm:footer-horizontal bg-neutral text-neutral-content p-10">
+  <nav>
+    <h6 class="footer-title">Services</h6>
+    <a class="link link-hover">Branding</a>
+    <a class="link link-hover">Design</a>
+    <a class="link link-hover">Marketing</a>
+    <a class="link link-hover">Advertisement</a>
+  </nav>
+  <nav>
+    <h6 class="footer-title">Company</h6>
+    <a class="link link-hover">About us</a>
+    <a class="link link-hover">Contact</a>
+    <a class="link link-hover">Jobs</a>
+    <a class="link link-hover">Press kit</a>
+  </nav>
+  <nav>
+    <h6 class="footer-title">Legal</h6>
+    <a class="link link-hover">Terms of use</a>
+    <a class="link link-hover">Privacy policy</a>
+    <a class="link link-hover">Cookie policy</a>
+  </nav>
+</footer>
+-->

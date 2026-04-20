@@ -91,7 +91,10 @@ export class NostrClientService {
 
   async fetchEvents(filters: NDKFilter | NDKFilter[]): Promise<NDKEvent[]> {
     const ndk = await this.ensureNdk();
-    const events = await ndk.fetchEvents(filters);
+    const events = await Promise.race([
+      ndk.fetchEvents(filters),
+      new Promise<Set<NDKEvent>>((resolve) => setTimeout(() => resolve(new Set()), 10_000))
+    ]);
 
     return [...events].sort((left, right) => (right.created_at ?? 0) - (left.created_at ?? 0));
   }

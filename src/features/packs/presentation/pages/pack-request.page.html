@@ -18,19 +18,19 @@
       @if (!isAuthenticated()) {
         <div class="space-y-4">
           <button class="btn btn-primary btn-lg mx-auto" (click)="connect()">
-            {{ 'packs.request.connect' | transloco }}
+            {{ 'request.connect' | transloco }}
           </button>
         </div>
       } @else {
         @if (requestStatus() === 'idle') {
           <div class="space-y-4">
             <button class="btn btn-primary btn-lg mx-auto" (click)="submitRequest()">
-              {{ 'packs.request.submit' | transloco }}
+              {{ 'request.requestJoin' | transloco }}
             </button>
           </div>
         } @else {
           <div class="badge {{ statusPillClass() }} badge-lg mx-auto">
-            {{ 'packs.request.status.' + requestStatus() | transloco }}
+            {{ 'request.status.' + requestStatus() | transloco }}
           </div>
         }
       }

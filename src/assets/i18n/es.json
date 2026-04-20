@@ -40,6 +40,7 @@
   "request": {
     "title": "Unirse al starter pack francofono",
     "subtitle": "Conectate con Nostr para pedir acceso y seguir el estado de tu solicitud.",
+    "connect": "Conectarse para solicitar acceso",
     "identity": "Cuenta conectada",
     "extensionLogin": "Login con extension",
     "externalLogin": "Abrir app externa",
@@ -62,6 +63,11 @@
       "follow": "Abrir mi perfil",
       "zap": "Zap 42 sats"
     }
+  },
+  "home": {
+    "title": "Nostr Tools",
+    "description": "Una caja de herramientas para la comunidad francofona de Nostr. Solicita acceso al starter pack, sigue perfiles clave y descubre el ecosistema.",
+    "cta": "Unirse al starter pack"
   },
   "adminRequests": {
     "title": "Solicitudes de acceso",
