@@ -4,6 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "api": "node server.mjs",
+    "db:reset": "sh scripts/db-reset.sh",
+    "db:restore": "sh scripts/db-restore.sh",
+    "db:dump": "sh scripts/db-dump.sh",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false"
@@ -32,6 +36,9 @@
     "@jsverse/transloco": "^8.3.0",
     "@nostr-dev-kit/ndk": "^3.0.3",
     "@nostr-dev-kit/ndk-cache-dexie": "^2.6.44",
+    "better-sqlite3": "^12.9.0",
+    "express": "^5.2.1",
+    "nostr-tools": "^2.23.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

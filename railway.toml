@@ -1,7 +1,9 @@
 [build]
-builder = "railpack"
+builder = "NIXPACKS"
+buildCommand = "npm install && npm run build"
 
 [deploy]
+startCommand = "node server.mjs"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
