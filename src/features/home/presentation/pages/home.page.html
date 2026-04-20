@@ -1,80 +1,28 @@
-  <!-- accent bg orange-500 | text white -->
-  <header class="w-full bg-orange-500 gap-16 h-16 flex items-center justify-center">
-    <h1 class="text-white text-3xl font-bold font-sans uppercase">NOSTR TOOLS</h1>  <!-- put eyes follow mouse in the 'OO' of 'TOOLS'  -->
-    <button class="btn btn-primary">Login [ icon: ostrich ]</button>
-    <button class="btn btn-accent">Zap [ icon: zap/lightning/heart ]</button>
-  </header>
-  <main class="p-12">
-    <div class="flex gap-1 justify-stretch items-center">
+  <main class="space-y-12 p-6 md:p-12">
+    <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
       <!-- Item is selected -->
-      <article class="card card-border bg-base-100 w-96 relative overflow-hidden">
-        <section class="card-body">
-          <header class='flex gap-4'>
-            <div class="avatar">
-              <div class="w-12 rounded-full">
-                <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
-              </div>
-            </div>
-            <h2 class="card-title">Catsr</h2>
-          </header>
-          <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
-        </section>
-        <div class="absolute inset-0 bg-white/60"> </div>
-      </article>
+      <!-- left hand side source pack -->
+      <app-profile-card [user]="sourceProfile()" [status]="sourceStatus()" />
 
-      <span class="w-96 h-1 bg-success"></span>
+      <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
       <input type="checkbox" checked="checked" class="checkbox checkbox-success" />
-      <span class="w-96 h-1 bg-success"></span>
+      <span class="h-1 w-full max-w-96 bg-success xl:w-96"></span>
 
-      <article class="card card-border bg-base-100 w-96 relative overflow-hidden">
-        <section class="card-body">
-          <header class='flex gap-4'>
-            <div class="avatar">
-              <div class="w-12 rounded-full">
-                <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
-              </div>
-            </div>
-            <h2 class="card-title">Catsr</h2>
-          </header>
-          <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
-        </section>
-        <div class="absolute inset-0 bg-success/10"> </div>
-      </article>
+      <!-- right hand side targe pack (mine, must be signed and have write/edit access) -->
+      <app-profile-card [user]="targetProfile()" [status]="targetStatus()" />
     </div>
 
     <!-- haven't added the overlay -->
-    <div class="flex gap-1 justify-stretch items-center">
+    <div class="flex flex-col items-center gap-4 xl:flex-row xl:gap-1 xl:justify-stretch">
       <!-- loading -->
-      <article class=" timeline-start card card-border bg-base-100 w-96">
-        <section class="card-body">
-          <header class='flex gap-4'>
-            <div class="avatar">
-              <div class="w-12 skeleton rounded-full"></div>
-            </div>
-            <h2 class="card-title skeleton"><span class="invisible">Card Title</span></h2>
-          </header>
-          <p class="skeleton"><span class="invisible">A card component has a figure, a body part, and inside body there are title and actions parts</span></p>
-        </section>
-      </article>
+      <app-profile-card [status]="'skeleton'" />
 
-      <span class="w-96 h-1 bg-base-300"></span>
+      <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
       <!-- depends on the line status : success | rejected | idl -->
       <input type="checkbox" checked="checked" class="checkbox checkbox-primary" />
-      <span class="w-96 h-1 bg-base-300"></span>
+      <span class="h-1 w-full max-w-96 bg-base-300 xl:w-96"></span>
 
-      <article class="card card-border bg-base-100 w-96">
-        <section class="card-body">
-          <header class='flex gap-4'>
-            <div class="avatar">
-              <div class="w-12 rounded-full">
-                <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
-              </div>
-            </div>
-            <h2 class="card-title">Catsr</h2>
-          </header>
-          <p>A card component has a figure, a body part, and inside body there are title and actions parts</p>
-        </section>
-      </article>
+      <app-profile-card [user]="sourceProfile()" [status]="transparentStatus()" />
     </div>
 
   </main>

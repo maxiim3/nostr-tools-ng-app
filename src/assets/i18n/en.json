@@ -1,0 +1,79 @@
+{
+  "common": {
+    "login": "Connect with Nostr",
+    "logout": "Disconnect",
+    "admin": "Admin",
+    "pending": "Pending",
+    "approved": "Approved",
+    "close": "Close",
+    "loading": "Loading..."
+  },
+  "authModal": {
+    "title": "Connect to Nostr",
+    "subtitle": "Choose your login method.",
+    "extension": {
+      "title": "Browser extension",
+      "body": "Use NIP-07 when your Nostr extension is available in the browser.",
+      "cta": "Connect extension"
+    },
+    "external": {
+      "title": "External app",
+      "body": "On mobile, open a Nostr Connect compatible app and approve the connection there.",
+      "cta": "Generate link",
+      "open": "Open external app",
+      "waiting": "Waiting for approval in your app...",
+      "cancel": "Cancel"
+    },
+    "privateKey": {
+      "title": "Private key",
+      "warning": "Discouraged. Use only if you know exactly what you are doing.",
+      "cta": "Connect with nsec"
+    }
+  },
+  "header": {
+    "menu": "Menu",
+    "home": "Home",
+    "request": "Request",
+    "adminRequests": "Admin requests",
+    "openExternal": "External app"
+  },
+  "request": {
+    "title": "Join the francophone starter pack",
+    "subtitle": "Connect with Nostr to request access and track your current status.",
+    "identity": "Connected account",
+    "extensionLogin": "Login with extension",
+    "externalLogin": "Open external app",
+    "requestJoin": "Request to join",
+    "status": {
+      "idle": "You can submit a request now.",
+      "pending": "Your request is pending review.",
+      "approved": "Your request is approved."
+    },
+    "quiz": {
+      "title": "Tiny francophone captcha",
+      "subtitle": "One question, one correct answer.",
+      "submit": "Submit answer",
+      "error": "Not yet. Pick the correct answer and try again."
+    },
+    "followup": {
+      "title": "While you wait",
+      "subtitle": "You can already open the starter pack, follow me, or send a 42 sats zap.",
+      "starterPack": "Open the starter pack",
+      "follow": "Open my profile",
+      "zap": "Zap 42 sats"
+    }
+  },
+  "adminRequests": {
+    "title": "Access requests",
+    "subtitle": "Nostr requests for the francophone pack.",
+    "empty": "No requests yet.",
+    "primal": "Open on Primal",
+    "approve": "Approve",
+    "reject": "Reject",
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  }
+}

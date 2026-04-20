@@ -1,0 +1,57 @@
+<section class="mx-auto max-w-5xl p-6">
+  <div class="mb-8 space-y-2">
+    <h1 class="text-4xl font-black text-base-content">{{ 'adminRequests.title' | transloco }}</h1>
+    <p class="text-base text-base-content/70">{{ 'adminRequests.subtitle' | transloco }}</p>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  } @else if (entries().length === 0) {
+    <div class="rounded-box border border-base-300 bg-base-100 p-8 text-center text-base-content/70">
+      {{ 'adminRequests.empty' | transloco }}
+    </div>
+  } @else {
+    <div class="space-y-4">
+      @for (entry of entries(); track entry.requesterPubkey) {
+        <article class="card border border-base-300 bg-base-100 shadow-sm">
+          <section class="card-body gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center gap-4">
+              @if (entry.imageUrl) {
+                <img [src]="entry.imageUrl" [alt]="entry.displayName" class="h-14 w-14 rounded-full object-cover" />
+              } @else {
+                <div class="avatar placeholder">
+                  <div class="w-14 rounded-full bg-secondary text-secondary-content">
+                    <span class="text-sm font-semibold">{{ entry.displayName.slice(0, 2).toUpperCase() }}</span>
+                  </div>
+                </div>
+              }
+
+              <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-xl font-bold text-base-content">{{ entry.displayName }}</h2>
+                  <span class="badge badge-outline">{{ ('adminRequests.statuses.' + entry.status) | transloco }}</span>
+                </div>
+                <p class="text-sm text-base-content/60">{{ entry.requesterNpub }}</p>
+                <p class="text-sm text-base-content/50">{{ entry.submittedAtLabel }}</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <a [href]="entry.primalUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
+                {{ 'adminRequests.primal' | transloco }}
+              </a>
+              <button type="button" class="btn btn-success btn-sm" [disabled]="actingOn() === entry.requesterPubkey" (click)="approve(entry)">
+                {{ 'adminRequests.approve' | transloco }}
+              </button>
+              <button type="button" class="btn btn-error btn-sm" [disabled]="actingOn() === entry.requesterPubkey" (click)="reject(entry)">
+                {{ 'adminRequests.reject' | transloco }}
+              </button>
+            </div>
+          </section>
+        </article>
+      }
+    </div>
+  }
+</section>

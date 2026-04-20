@@ -1,0 +1,79 @@
+{
+  "common": {
+    "login": "Connexion Nostr",
+    "logout": "Deconnexion",
+    "admin": "Admin",
+    "pending": "Pending",
+    "approved": "Approved",
+    "close": "Fermer",
+    "loading": "Chargement..."
+  },
+  "authModal": {
+    "title": "Se connecter a Nostr",
+    "subtitle": "Choisis ton mode de connexion.",
+    "extension": {
+      "title": "Extension navigateur",
+      "body": "Utilise NIP-07 si ton extension Nostr est disponible dans le navigateur.",
+      "cta": "Connexion extension"
+    },
+    "external": {
+      "title": "App externe",
+      "body": "Sur mobile, ouvre une app compatible Nostr Connect pour signer depuis ton app.",
+      "cta": "Generer le lien",
+      "open": "Ouvrir l'app externe",
+      "waiting": "En attente de validation dans ton app...",
+      "cancel": "Annuler"
+    },
+    "privateKey": {
+      "title": "Cle privee",
+      "warning": "Deconseille. A utiliser seulement si tu sais ce que tu fais.",
+      "cta": "Connexion avec nsec"
+    }
+  },
+  "header": {
+    "menu": "Menu",
+    "home": "Accueil",
+    "request": "Request",
+    "adminRequests": "Demandes admin",
+    "openExternal": "App externe"
+  },
+  "request": {
+    "title": "Rejoindre le starter pack francophone",
+    "subtitle": "Connecte-toi avec Nostr pour demander l'acces au pack et suivre le statut de ta demande.",
+    "identity": "Compte connecte",
+    "extensionLogin": "Login avec extension",
+    "externalLogin": "Ouvrir une app externe",
+    "requestJoin": "Request to join",
+    "status": {
+      "idle": "Pret a demander l'acces",
+      "pending": "Ta demande est en attente de validation.",
+      "approved": "Ta demande est approuvee."
+    },
+    "quiz": {
+      "title": "Mini captcha francophone",
+      "subtitle": "Une seule question, un seul bon choix.",
+      "submit": "Envoyer la reponse",
+      "error": "Pas encore. Reessaie avec le bon choix."
+    },
+    "followup": {
+      "title": "En attendant",
+      "subtitle": "Tu peux deja ouvrir le starter pack, me follow, ou envoyer un zap de 42 sats.",
+      "starterPack": "Ouvrir le starter pack",
+      "follow": "Voir mon profil",
+      "zap": "Zap 42 sats"
+    }
+  },
+  "adminRequests": {
+    "title": "Demandes d'acces",
+    "subtitle": "Liste des demandes Nostr pour le pack francophone.",
+    "empty": "Aucune demande pour l'instant.",
+    "primal": "Voir sur Primal",
+    "approve": "Accepter",
+    "reject": "Refuser",
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  }
+}
