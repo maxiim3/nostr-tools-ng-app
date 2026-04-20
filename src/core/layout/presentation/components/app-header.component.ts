@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { PROJECT_INFO } from '../../../config/project-info';
+import { LanguageService } from '../../../i18n/language.service';
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
 import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-pack.config';
 
@@ -13,7 +14,10 @@ import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-
   template: `
     <header class="sticky top-0 z-20 w-full bg-orange-500 shadow-sm">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
-        <a routerLink="/" class="shrink-0 text-3xl font-bold font-sans uppercase text-white">
+        <a
+          routerLink="/"
+          class="shrink-0 text-3xl modak-regular font-bold font-sans uppercase text-white"
+        >
           {{ project.name }}
         </a>
 
@@ -43,9 +47,15 @@ import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-
           @if (session.user(); as user) {
             <div class="flex items-center gap-3 rounded-full bg-white/15 px-3 py-1.5 text-white">
               @if (user.imageUrl) {
-                <img [src]="user.imageUrl" [alt]="user.displayName" class="h-10 w-10 rounded-full object-cover" />
+                <img
+                  [src]="user.imageUrl"
+                  [alt]="user.displayName"
+                  class="h-10 w-10 rounded-full object-cover"
+                />
               } @else {
-                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
+                <span
+                  class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white"
+                >
                   {{ initials(user.displayName) }}
                 </span>
               }
@@ -94,13 +104,42 @@ import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-
             </svg>
             <span>Zap</span>
           </a>
+
+          <div
+            class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
+            role="group"
+            aria-label="Language switcher"
+          >
+            @for (lang of language.supportedLanguages; track lang) {
+              @if (language.currentLanguage() === lang) {
+                <button
+                  type="button"
+                  class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-orange-600 transition"
+                  aria-pressed="true"
+                  (click)="language.setLanguage(lang)"
+                >
+                  {{ lang.toUpperCase() }}
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="rounded-full px-3 py-1 text-sm font-medium text-white/60 transition hover:text-white"
+                  aria-pressed="false"
+                  (click)="language.setLanguage(lang)"
+                >
+                  {{ lang.toUpperCase() }}
+                </button>
+              }
+            }
+          </div>
         </div>
       </div>
     </header>
-  `
+  `,
 })
 export class AppHeaderComponent {
   protected readonly project = PROJECT_INFO;
+  protected readonly language = inject(LanguageService);
   protected readonly session = inject(NostrSessionService);
   protected readonly zapHref = FRANCOPHONE_PACK.zapHref;
 

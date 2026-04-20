@@ -1,14 +1,23 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Modak&display=swap');
 
-@plugin "daisyui"{
- themes: light --default, nostr-tools;
+@plugin "daisyui" {
+  themes:
+    light --default,
+    nostr-tools;
+}
+
+.modak-regular {
+  font-family: 'Modak', system-ui;
+  font-weight: 400;
+  font-style: normal;
 }
 
 @plugin "daisyui/theme" {
-  name: "nostr-tools";
+  name: 'nostr-tools';
   default: false;
   prefersdark: false;
-  color-scheme: "light";
+  color-scheme: 'light';
   --color-base-100: oklch(100% 0 0);
   --color-base-200: oklch(97% 0 0);
   --color-base-300: oklch(92% 0 0);
