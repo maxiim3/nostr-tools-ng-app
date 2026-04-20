@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export type ProfileCardStatus = 'skeleton' | 'muted' | 'success' | 'transparent';
 
@@ -10,7 +11,7 @@ export interface ProfileCardUser {
 
 @Component({
   selector: 'app-profile-card',
-  imports: [],
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="card card-border relative h-52 w-96 overflow-hidden bg-base-100">
@@ -45,12 +46,12 @@ export interface ProfileCardUser {
             }
 
             <div class="min-w-0">
-              <h2 class="card-title truncate">{{ user()?.displayName ?? 'Unknown user' }}</h2>
+              <h2 class="card-title truncate">{{ user()?.displayName ?? ('profile.unknownUser' | transloco) }}</h2>
             </div>
           </header>
 
           <p class="line-clamp-2 text-sm leading-6 text-base-content/75">
-            {{ truncatedDescription() }}
+            {{ truncatedDescription() || ('profile.noDescription' | transloco) }}
           </p>
         }
       </section>
@@ -95,8 +96,9 @@ export class ProfileCardComponent {
   });
 
   protected readonly truncatedDescription = computed(() => {
-    const raw = this.user()?.description?.trim() || 'No description published on this Nostr profile yet.';
+    const raw = this.user()?.description?.trim() ?? null;
     const max = 65;
+    if (!raw) return null;
     return raw.length > max ? raw.slice(0, max).trimEnd() + '…' : raw;
   });
 }
