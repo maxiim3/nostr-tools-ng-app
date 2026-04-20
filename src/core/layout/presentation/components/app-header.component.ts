@@ -5,11 +5,11 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../config/project-info';
 import { LanguageService } from '../../../i18n/language.service';
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
-import { ZapButtonComponent } from '../../../zap/presentation/zap-button.component';
+import { ZapService } from '../../../zap/zap.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, TranslocoPipe, ZapButtonComponent],
+  imports: [RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="sticky top-0 z-20 w-full bg-orange-500 shadow-sm">
@@ -22,10 +22,6 @@ import { ZapButtonComponent } from '../../../zap/presentation/zap-button.compone
         </a>
 
         <nav class="hidden flex-1 items-center gap-4 md:flex">
-          <a routerLink="/" class="text-sm font-semibold text-white/80 transition hover:text-white">
-            {{ 'header.home' | transloco }}
-          </a>
-
           <a
             routerLink="/packs/francophone/request"
             class="text-sm font-semibold text-white/80 transition hover:text-white"
@@ -63,11 +59,7 @@ import { ZapButtonComponent } from '../../../zap/presentation/zap-button.compone
               <span class="max-w-36 truncate text-sm font-semibold">{{ user.displayName }}</span>
             </div>
 
-            <button
-              type="button"
-              class="btn btn-primary gap-2"
-              (click)="disconnect()"
-            >
+            <button type="button" class="btn btn-primary gap-2" (click)="disconnect()">
               <svg
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +103,14 @@ import { ZapButtonComponent } from '../../../zap/presentation/zap-button.compone
             </button>
           }
 
-          <app-zap-button />
+          <button
+            type="button"
+            class="btn btn-accent"
+            [attr.aria-label]="'zap.buttonAria' | transloco"
+            (click)="zap.openModal()"
+          >
+            ❤️
+          </button>
 
           <div
             class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
@@ -149,6 +148,7 @@ export class AppHeaderComponent {
   protected readonly project = PROJECT_INFO;
   protected readonly language = inject(LanguageService);
   protected readonly session = inject(NostrSessionService);
+  protected readonly zap = inject(ZapService);
 
   protected initials(value: string): string {
     return value

@@ -113,7 +113,90 @@
   },
   "cgu": {
     "title": "Condiciones generales de uso",
-    "placeholder": "Las condiciones generales de uso estarán disponibles pronto."
+    "lastUpdated": "Última actualización: 21 de abril de 2026",
+    "sections": {
+      "purpose": {
+        "title": "1. Objeto",
+        "body": "Las presentes condiciones generales de uso (en adelante, «CGU») regulan el uso del sitio web Nostr Tools (en adelante, el «Servicio»). Nostr Tools es una plataforma web que permite solicitar el acceso al starter pack francófono de Nostr, seguir perfiles clave del ecosistema y enviar zaps Lightning. Al acceder al Servicio, aceptas sin reservas las presentes CGU."
+      },
+      "definitions": {
+        "title": "2. Definiciones",
+        "items": {
+          "nostr": "Nostr: protocolo descentralizado de publicación de mensajes cortos, que funciona a través de relays.",
+          "relay": "Relay: servidor que retransmite eventos de Nostr entre los usuarios.",
+          "starterPack": "Starter pack: lista de seguimiento predefinida que permite unirse rápidamente a una comunidad de Nostr.",
+          "zap": "Zap: micropago en sats (bitcoin) realizado a través de la red Lightning, directamente entre usuarios.",
+          "nip07": "NIP-07: estándar de interfaz entre el navegador y una extensión de Nostr para la firma de eventos.",
+          "publicKey": "Clave pública: identificador único de un usuario en la red Nostr, visible para todos.",
+          "privateKey": "Clave privada: secreto criptográfico que permite firmar eventos en nombre de un usuario."
+        }
+      },
+      "service": {
+        "title": "3. Descripción del servicio",
+        "body": "El Servicio ofrece las siguientes funcionalidades:",
+        "features": {
+          "request": "Solicitud de acceso al starter pack francófono mediante un cuestionario anti-bot (quiz captcha).",
+          "status": "Seguimiento del estado de su solicitud (pendiente, aprobada, rechazada).",
+          "follow": "Seguimiento de perfiles de Nostr recomendados directamente desde la plataforma.",
+          "zap": "Envío de zaps Lightning en sats a los creadores del Servicio.",
+          "admin": "Interfaz de administración para la gestión de solicitudes de acceso (reservada a los administradores)."
+        }
+      },
+      "access": {
+        "title": "4. Condiciones de acceso",
+        "body": "El acceso al Servicio requiere autenticación a través del protocolo Nostr. Se proponen tres métodos de conexión:",
+        "methods": {
+          "extension": "Extensión de navegador compatible con NIP-07 (recomendada).",
+          "external": "Aplicación externa compatible con Nostr Connect.",
+          "privateKey": "Clave privada de Nostr (no recomendada; utilízala solo si comprendes plenamente los riesgos)."
+        },
+        "quiz": "Para enviar una solicitud de acceso al starter pack, debes responder correctamente a un quiz captcha francófono. Este mecanismo tiene como objetivo verificar que perteneces a la comunidad francófona y limitar las solicitudes automatizadas.",
+        "free": "El Servicio es gratuito. No se exige ningún canon por el uso de las funcionalidades básicas."
+      },
+      "privacy": {
+        "title": "5. Datos personales y vida privada",
+        "body": "El Servicio funciona sobre una arquitectura descentralizada basada en relays de Nostr. En consecuencia:",
+        "items": {
+          "public": "Tu clave pública de Nostr es visible para todos los participantes de la red Nostr.",
+          "noCollection": "El editor del Servicio no recoge, almacena ni trata datos personales en un servidor centralizado.",
+          "relayData": "La información que publicas a través de Nostr (perfil, mensajes, listas de seguimiento) circula por relays públicos y es accesible públicamente.",
+          "rgpd": "De conformidad con el RGPD, tienes derecho a acceder, rectificar y suprimir los datos que te conciernen modificándolos directamente en los relays de Nostr.",
+          "cookies": "El Servicio puede utilizar cookies técnicas necesarias para su funcionamiento (sesión, preferencias de idioma)."
+        }
+      },
+      "zaps": {
+        "title": "6. Zaps y pagos Lightning",
+        "body": "El Servicio permite el envío de zaps (micropagos en sats) a través de la red Lightning. Los zaps son transacciones entre pares entre tu wallet Lightning y el del destinatario.",
+        "disclaimer": "El editor del Servicio actúa únicamente como intermediario técnico para la generación de facturas Lightning. No recoge, almacena ni transfiere fondos. Las transacciones Lightning son irreversibles. En caso de fallo de la transacción, no es posible ningún recurso contra el editor."
+      },
+      "ip": {
+        "title": "7. Propiedad intelectual",
+        "body": "Todos los elementos del Servicio (código fuente, diseño, logotipos, textos) son propiedad del editor, salvo indicación contraria. El contenido publicado por los usuarios en la red Nostr sigue siendo propiedad de estos. El protocolo Nostr y sus estándares asociados (NIPs) son recursos abiertos y de libre uso."
+      },
+      "liability": {
+        "title": "8. Responsabilidad",
+        "body": "El Servicio se proporciona «tal cual», sin garantía de ningún tipo, expresa o implícita. El editor no garantiza:",
+        "items": {
+          "availability": "La disponibilidad continua e ininterrumpida del Servicio o de los relays de Nostr.",
+          "relayContent": "El contenido, la seguridad o la fiabilidad de los relays de Nostr utilizados.",
+          "lightning": "El correcto funcionamiento de la red Lightning o la confirmación de las transacciones.",
+          "thirdParty": "El comportamiento de terceros (extensiones de navegador, aplicaciones externas, wallets)."
+        },
+        "limit": "El editor no podrá ser considerado responsable de los daños directos o indirectos derivados del uso del Servicio, de la indisponibilidad de los relays o de la pérdida de fondos relacionada con transacciones Lightning."
+      },
+      "changes": {
+        "title": "9. Modificaciones",
+        "body": "El editor se reserva el derecho de modificar las presentes CGU en cualquier momento. Las modificaciones entran en vigor desde su publicación en el Servicio. El usuario es responsable de consultar regularmente las CGU. El uso continuado del Servicio tras una modificación implica la aceptación de las nuevas condiciones."
+      },
+      "law": {
+        "title": "10. Derecho aplicable",
+        "body": "Las presentes CGU se rigen por el derecho francés. En caso de litigio relativo a la interpretación o ejecución de las presentes, los tribunales franceses serán los únicos competentes."
+      },
+      "contact": {
+        "title": "11. Contacto",
+        "body": "Para cualquier pregunta relativa a las presentes CGU, puedes contactar con el editor a través de un mensaje privado (DM) de Nostr o enviando un zap con un comentario en el Servicio."
+      }
+    }
   },
   "adminRequests": {
     "title": "Solicitudes de acceso",

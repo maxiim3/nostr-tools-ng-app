@@ -113,7 +113,90 @@
   },
   "cgu": {
     "title": "Terms of use",
-    "placeholder": "The terms of use will be available soon."
+    "lastUpdated": "Last updated: April 21, 2026",
+    "sections": {
+      "purpose": {
+        "title": "1. Purpose",
+        "body": "These terms of use (the \"ToS\") govern the use of the Nostr Tools website (the \"Service\"). Nostr Tools is a web platform that allows users to request access to the francophone Nostr starter pack, follow key profiles in the ecosystem, and send Lightning zaps. By accessing the Service, you accept these ToS without reservation."
+      },
+      "definitions": {
+        "title": "2. Definitions",
+        "items": {
+          "nostr": "Nostr: a decentralized short-message publishing protocol that operates through relays.",
+          "relay": "Relay: a server that relays Nostr events between users.",
+          "starterPack": "Starter pack: a predefined follow list that allows users to quickly join a Nostr community.",
+          "zap": "Zap: a micro-payment in sats (bitcoin) made via the Lightning Network, directly between users.",
+          "nip07": "NIP-07: a standard interface between the browser and a Nostr extension for signing events.",
+          "publicKey": "Public key: a unique identifier of a user on the Nostr network, visible to everyone.",
+          "privateKey": "Private key: a cryptographic secret that allows signing events on behalf of a user."
+        }
+      },
+      "service": {
+        "title": "3. Description of the service",
+        "body": "The Service provides the following features:",
+        "features": {
+          "request": "Access request to the francophone starter pack via an anti-bot quiz captcha.",
+          "status": "Tracking of your request status (pending, approved, rejected).",
+          "follow": "Following recommended Nostr profiles directly from the platform.",
+          "zap": "Sending Lightning zaps in sats to the Service creators.",
+          "admin": "An administration interface for managing access requests (restricted to administrators)."
+        }
+      },
+      "access": {
+        "title": "4. Access conditions",
+        "body": "Access to the Service requires authentication via the Nostr protocol. Three login methods are available:",
+        "methods": {
+          "extension": "NIP-07 compatible browser extension (recommended).",
+          "external": "External application compatible with Nostr Connect.",
+          "privateKey": "Nostr private key (not recommended; use only if you fully understand the risks)."
+        },
+        "quiz": "To submit an access request for the starter pack, you must correctly answer a francophone quiz captcha. This mechanism is designed to verify that you belong to the francophone community and to limit automated requests.",
+        "free": "The Service is free of charge. No fee is required for using the basic features."
+      },
+      "privacy": {
+        "title": "5. Personal data and privacy",
+        "body": "The Service operates on a decentralized architecture relying on Nostr relays. As such:",
+        "items": {
+          "public": "Your Nostr public key is visible to all participants on the Nostr network.",
+          "noCollection": "The Service publisher does not collect, store, or process personal data on a centralized server.",
+          "relayData": "Information you publish via Nostr (profile, messages, follow lists) is transmitted through public relays and is publicly accessible.",
+          "rgpd": "In accordance with the GDPR, you have the right to access, rectify, and delete your personal data by modifying it directly on the Nostr relays.",
+          "cookies": "The Service may use technical cookies necessary for its operation (session, language preferences)."
+        }
+      },
+      "zaps": {
+        "title": "6. Zaps and Lightning payments",
+        "body": "The Service allows sending zaps (micro-payments in sats) via the Lightning Network. Zaps are peer-to-peer transactions between your Lightning wallet and the recipient's wallet.",
+        "disclaimer": "The Service publisher acts solely as a technical intermediary for generating Lightning invoices. It does not collect, store, or transfer any funds. Lightning transactions are irreversible. In the event of a transaction failure, no recourse is available against the publisher."
+      },
+      "ip": {
+        "title": "7. Intellectual property",
+        "body": "All elements of the Service (source code, design, logos, text) are the property of the publisher, unless otherwise stated. Content published by users on the Nostr network remains their property. The Nostr protocol and its associated standards (NIPs) are open and freely available resources."
+      },
+      "liability": {
+        "title": "8. Liability",
+        "body": "The Service is provided \"as is\", without any warranty, express or implied. The publisher does not guarantee:",
+        "items": {
+          "availability": "The continuous and uninterrupted availability of the Service or Nostr relays.",
+          "relayContent": "The content, security, or reliability of the Nostr relays used.",
+          "lightning": "The proper functioning of the Lightning Network or the confirmation of transactions.",
+          "thirdParty": "The behavior of third parties (browser extensions, external applications, wallets)."
+        },
+        "limit": "The publisher shall not be held liable for any direct or indirect damages arising from the use of the Service, the unavailability of relays, or the loss of funds related to Lightning transactions."
+      },
+      "changes": {
+        "title": "9. Amendments",
+        "body": "The publisher reserves the right to amend these ToS at any time. Amendments take effect as soon as they are published on the Service. It is the user's responsibility to regularly review the ToS. Continued use of the Service after an amendment constitutes acceptance of the new terms."
+      },
+      "law": {
+        "title": "10. Governing law",
+        "body": "These ToS are governed by French law. In the event of a dispute relating to the interpretation or performance of these terms, the French courts shall have exclusive jurisdiction."
+      },
+      "contact": {
+        "title": "11. Contact",
+        "body": "For any questions regarding these ToS, you may contact the publisher via Nostr direct message (DM) or by sending a zap with a comment on the Service."
+      }
+    }
   },
   "adminRequests": {
     "title": "Access requests",
