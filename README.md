@@ -57,3 +57,30 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Local database (SQLite only)
+
+The project now uses a single SQLite database for API requests:
+
+- Runtime DB: `.runtime/pack-requests.sqlite`
+- Empty schema: `pack-requests.schema.sql`
+- SQL dump: `pack-requests.dump.sql`
+
+Helper commands:
+
+```bash
+npm run db:reset
+npm run db:dump
+npm run db:restore
+```
+
+- `db:reset`: recreate `.runtime/pack-requests.sqlite` with an empty `pack_requests` table
+- `db:dump`: export current `pack_requests` data to `pack-requests.dump.sql`
+- `db:restore`: recreate `.runtime/pack-requests.sqlite` from `pack-requests.dump.sql`
+
+Restore the dumped data into a fresh SQLite file with:
+
+```bash
+rm -f .runtime/pack-requests.sqlite
+sqlite3 .runtime/pack-requests.sqlite < pack-requests.dump.sql
+```

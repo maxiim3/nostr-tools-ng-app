@@ -54,3 +54,10 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Commit Conventions
+
+- Format: `feat: <short lowercase description>`
+- No scope, no body unless necessary
+- One logical change per commit
+- Group related file changes together (domain, service, component)
