@@ -3,6 +3,7 @@ export const PROJECT_INFO = {
   ownerNpub: 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du',
   contact: 'maxiim3@primal.net',
   zapAddress: 'maxiim3@primal.net',
+  lnurl: 'lnurl1dp68gurn8ghj7urjd9kkzmpwdejhgtewwajkcmpdddhx7amw9akxuatjd3cz7mtp0p5kjmfn8m6rmq',
   calleNpub: 'npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg',
   calleZap: 'npub12rv5lskctqxxs2c8rf2zlzc7xx3qpvzs3w4etgemauy9thegr43sf485vg@npub.cash',
   packFRUrl:

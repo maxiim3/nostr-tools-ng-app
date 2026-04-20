@@ -80,6 +80,10 @@ export class NostrClientService {
     this.cancelExternalAppLogin();
   }
 
+  async getNdk(): Promise<NDK> {
+    return this.ensureNdk();
+  }
+
   async fetchProfile(identifier: string): Promise<SessionUser> {
     const ndk = await this.ensureNdk();
     const { NDKUser } = await this.ndkModulePromise;

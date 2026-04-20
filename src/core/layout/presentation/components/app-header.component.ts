@@ -5,11 +5,11 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../config/project-info';
 import { LanguageService } from '../../../i18n/language.service';
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
-import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-pack.config';
+import { ZapButtonComponent } from '../../../zap/presentation/zap-button.component';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [RouterLink, TranslocoPipe, ZapButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="sticky top-0 z-20 w-full bg-orange-500 shadow-sm">
@@ -63,7 +63,26 @@ import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-
               <span class="max-w-36 truncate text-sm font-semibold">{{ user.displayName }}</span>
             </div>
 
-            <button type="button" class="btn btn-primary gap-2" (click)="disconnect()">
+            <button
+              type="button"
+              class="btn btn-primary gap-2"
+              (click)="disconnect()"
+            >
+              <svg
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                class="size-4"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
               {{ 'common.logout' | transloco }}
             </button>
           } @else {
@@ -92,18 +111,7 @@ import { FRANCOPHONE_PACK } from '../../../../features/packs/domain/francophone-
             </button>
           }
 
-          <a class="btn btn-accent gap-2" [href]="zapHref">
-            <svg
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="size-4"
-            >
-              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
-            </svg>
-            <span>Zap</span>
-          </a>
+          <app-zap-button />
 
           <div
             class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
@@ -141,7 +149,6 @@ export class AppHeaderComponent {
   protected readonly project = PROJECT_INFO;
   protected readonly language = inject(LanguageService);
   protected readonly session = inject(NostrSessionService);
-  protected readonly zapHref = FRANCOPHONE_PACK.zapHref;
 
   protected initials(value: string): string {
     return value
