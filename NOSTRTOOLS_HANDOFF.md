@@ -28,109 +28,60 @@ Il ne doit jamais sauter un gate.
 
 ## 3. Gates obligatoires
 
-### Gate 0 — Setup uniquement
+### Gate 0 — Setup uniquement ✅ VALIDÉ
 
-Le LLM doit uniquement :
+1. ✅ projet Angular créé
+2. ✅ dépendances installées
+3. ✅ socle technique configuré
+4. ✅ i18n configuré (Transloco, fr/en/es)
+5. ✅ Tailwind CSS v4 configuré
+6. ✅ daisyUI v5 configuré (thème custom `nostr-tools`)
+7. ✅ MCP configuré
+8. ✅ `@nostr-dev-kit/ndk` installé et utilisé, `@nostr-dev-kit/ndk-cache-dexie` installé mais **non branché**
+9. ✅ serveur démarre
 
-1. créer le projet Angular
-2. installer les dépendances
-3. configurer le socle technique
-4. configurer l’i18n
-5. configurer Tailwind
-6. configurer daisyUI
-7. configurer les outils MCP
-8. installer `@nostr-dev-kit/ndk` et `@nostr-dev-kit/ndk-cache-dexie`, sans créer de service applicatif ni de composant qui les utilise
-9. lancer le serveur
-10. vérifier que l’app démarre
+### Gate 1 — Règles d'architecture ✅ VALIDÉ
 
-Le LLM ne doit **rien implémenter** côté produit à ce stade.
+1. ✅ architecture feature-first pseudo DDD hexa simplifiée en place
+2. ✅ couches `domain`, `application`, `infrastructure`, `presentation` par feature
+3. ✅ conventions de dossiers respectées
+4. ✅ règles de dépendance entre couches respectées
+5. ✅ `shared` limité aux composants UI génériques (`profile-card`)
+6. ✅ `core` pour les services transverses (Nostr, i18n, zap, layout)
 
-Il ne doit pas créer les pages métier.
-Il ne doit pas créer les composants métier.
-Il ne doit pas implémenter le merge.
-Il ne doit pas implémenter la request page.
-Il ne doit pas implémenter l’admin.
-Il ne doit pas implémenter le feed.
+### Gate 2 — Inventaire UI + Atomic Design ✅ VALIDÉ
 
-Il s’arrête après le boot serveur validé.
+1. ✅ inventaire UI réalisé
+2. ✅ atoms : bouton zap, input auth, langue switch
+3. ✅ molecules : profile-card (avec états skeleton/muted/success/transparent)
+4. ✅ organisms : header, auth-modal, zap-modal, quiz, admin request list
+5. ✅ la page `/design-system` n'a pas été créée mais les composants UI sont utilisés en production
 
-### Gate 1 — Règles d’architecture
+### Gate 3 — Design System ⚠️ PARTIELLEMENT VALIDÉ
 
-Après validation du Gate 0, le LLM doit :
+1. ❌ la page `/design-system` n'existe pas
+2. ✅ les composants UI de base sont implémentés et utilisés
+3. ⚠️ pas de page de référence visuelle dédiée
 
-1. définir les règles d’architecture du projet
-2. définir la pseudo DDD hexa simplifiée
-3. définir les conventions de dossiers
-4. définir les règles de dépendances entre couches
-5. définir ce qui est autorisé
-6. définir ce qui est interdit
+### Gate 4 — Layouts et skeletons ✅ VALIDÉ
 
-Le LLM doit ensuite respecter ces règles sans exception.
+1. ✅ layout principal en place (header + router-outlet)
+2. ✅ pas de template extrait (un seul layout utilisé)
+3. ✅ les pages actives sont structurées
 
-Il s’arrête après validation.
+### Gate 5 — Implémentation réelle ⚠️ PARTIELLEMENT VALIDÉ
 
-### Gate 2 — Inventaire UI + Atomic Design
-
-Après validation du Gate 1, le LLM doit :
-
-1. identifier tous les éléments UI nécessaires
-2. définir ce qu’est un atom
-3. définir ce qu’est une molecule
-4. définir ce qu’est un organism
-5. définir ce qu’est un template
-6. définir ce qu’est une page
-7. définir quand utiliser une variante
-8. définir quand créer un composant séparé
-
-À ce stade, il doit produire seulement les éléments UI nécessaires :
-
-1. textes
-2. titres
-3. boutons
-4. liens
-5. cartes
-
-Il ne doit pas produire les layouts.
-
-Il s’arrête après validation.
-
-### Gate 3 — Design System
-
-Après validation du Gate 2, le LLM doit :
-
-1. créer une page `/design-system`
-2. y afficher tous les éléments UI
-3. y afficher leurs états
-4. y afficher leurs variantes
-5. y afficher les combinaisons utiles
-
-Le design system doit être validé avant toute page produit.
-
-Il s’arrête après validation.
-
-### Gate 4 — Layouts et skeletons
-
-Après validation du Gate 3, le LLM doit :
-
-1. définir les layouts de pages
-2. extraire des templates seulement si c’est justifié
-3. produire les skeletons des pages
-4. ne pas encore finaliser les pages métier
-
-Le LLM doit d’abord montrer les structures de pages.
-
-Il s’arrête après validation.
-
-### Gate 5 — Implémentation réelle
-
-Après validation du Gate 4, le LLM peut :
-
-1. implémenter les pages réelles
-2. brancher la logique Nostr
-3. brancher le merge
-4. brancher la request page
-5. brancher l’admin
-6. brancher le feed
+1. ✅ request page complète (connexion, statut, quiz, soumission, suivi)
+2. ✅ admin requests complète (liste, approve, reject, ajout pack, DM)
+3. ✅ logique Nostr branchée (NDK, NIP-07, NIP-46, nsec, kind 39089, kind 4 DM)
+4. ✅ backend Express + SQLite opérationnel
+5. ❌ merge followers tool — **non implémenté**
+6. ❌ pack landing page (`/packs/francophone`) — **non implémenté**
+7. ❌ feed (`/packs/francophone/feed`) — **non implémenté**
+8. ❌ admin dashboard (`/packs/francophone/admin`) — **non implémenté**
+9. ✅ page CGU (`/legal/cgu`)
+10. ✅ footer global comme composant dédié
+11. ❌ design system page (`/design-system`) — **non implémenté**
 
 ## 4. Stack non négociable
 
@@ -145,88 +96,51 @@ Après validation du Gate 4, le LLM peut :
 9. TypeScript strict
 10. Angular standalone uniquement
 
-## 5. Setup initial attendu
+## 5. Setup initial — ÉTAT ACTUEL ✅
 
-### Création du projet
+Le setup est complet. Voici ce qui est en place.
 
-Commande recommandée :
+### Dépendances principales
 
-```bash
-ng new nostr-tools --package-manager bun
-```
+| Package | Version | Usage |
+|---|---|---|
+| Angular | 21 | Framework |
+| Tailwind CSS | v4 | Styles utilitaires |
+| daisyUI | v5 | Composants UI (thème custom `nostr-tools`) |
+| `@nostr-dev-kit/ndk` | installé | Client Nostr principal |
+| `@nostr-dev-kit/ndk-cache-dexie` | installé | Cache IndexedDB — **non branché** |
+| `@jsverse/transloco` | installé | i18n runtime (fr/en/es) |
 
-### Tailwind CSS
+### Backend
 
-Installation explicite recommandée :
+Le backend est un serveur **Express.js + better-sqlite3** (`server.mjs`), pas du Nostr-only.
 
-```bash
-bun i -D tailwindcss@^4 @tailwindcss/postcss@^4
-```
+| Package | Usage |
+|---|---|
+| `express` | Serveur HTTP |
+| `better-sqlite3` | Base SQLite pour les demandes |
+| `nostr-tools` | Vérification NIP-98 côté serveur |
+| `cors` | CORS middleware |
 
-Note : si le projet a déjà été créé avec le setup Angular/Tailwind attendu, cette étape peut déjà être satisfaite.
+### Déploiement
 
-### daisyUI
-
-Installation obligatoire :
-
-```bash
-bun i -D daisyui@latest
-```
+Config Railway (`railway.toml`) en place. Le backend sert l'API et le frontend buildé.
 
 ### MCP Angular
 
-Références officielles à suivre :
+Références :
 
 1. `https://angular.dev/ai/mcp`
 2. `https://angular.dev/ai/develop-with-ai`
 3. `https://angular.dev/ai/develop-with-ai#angular-cli-mcp-server-setup`
 
-Le projet doit être pensé pour fonctionner avec le **Angular CLI MCP Server**.
-
-Référence de commande :
-
-```bash
-ng mcp
-```
-
-Configuration de référence Angular MCP :
-
-```json
-{
-  "mcpServers": {
-    "angular-cli": {
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
-    }
-  }
-}
-```
-
 ### Support éditeur daisyUI
-
-Référence officielle :
 
 1. `https://daisyui.com/docs/editor/`
 
-Support éditeur via Tailwind IntelliSense + autocomplete daisyUI. Pas de serveur MCP dédié daisyUI à ce jour.
-
 ### Évaluation IA
 
-L’application devra être évaluée ensuite avec :
-
 1. `https://github.com/angular/web-codegen-scorer`
-
-Variables d’environnement à prévoir :
-
-```bash
-export OPENAI_API_KEY="..."
-export XAI_API_KEY="..."
-```
-
-Le LLM doit considérer qu’on utilisera ensuite :
-
-1. OpenAI
-2. Grok / xAI
 
 ## 6. Bonnes pratiques Angular à respecter
 
@@ -314,161 +228,138 @@ Pour l’instant :
 
 Mais l’architecture doit être compatible avec cela plus tard.
 
-## 9. Routes initiales
+## 9. Routes
 
-1. `/`
-2. `/design-system`
-3. `/tools/merge-followers`
-4. `/packs/francophone`
-5. `/packs/francophone/feed`
-6. `/packs/francophone/request`
-7. `/packs/francophone/admin`
-8. `/packs/francophone/admin/requests`
-9. `/legal/cgu`
+### Routes actives
 
-### Visibilité des routes
+| Route | Composant | Implémenté | Accès |
+|---|---|---|---|
+| `/` | `HomePage` | ✅ Landing simplifiée | publique |
+| `/packs/francophone/request` | `PackRequestPage` | ✅ Complet | publique, connexion requise pour agir |
+| `/packs/francophone/admin/requests` | `PackAdminRequestsPage` | ✅ Complet | admin uniquement (guard) |
+| `/legal/cgu` | — | ✅ Complet | publique |
 
-| Route | Type | Accès |
-|---|---|---|
-| `/` | publique | libre |
-| `/design-system` | interne produit | accessible pendant la phase de design/validation |
-| `/tools/merge-followers` | outil admin | admin uniquement |
-| `/packs/francophone` | publique | libre |
-| `/packs/francophone/feed` | publique | libre |
-| `/packs/francophone/request` | publique | libre, connexion requise au moment d’agir |
-| `/packs/francophone/admin` | admin | admin uniquement |
-| `/packs/francophone/admin/requests` | admin | admin uniquement |
-| `/legal/cgu` | publique | libre |
+### Routes en attente (commentées dans `app.routes.ts`)
 
-## 10. Pages et rôle métier
+| Route | Composant | Statut | Accès |
+|---|---|---|---|
+| `/design-system` | — | ❌ Non implémenté | interne |
+| `/tools/merge-followers` | — | ❌ Non implémenté | admin uniquement |
+| `/packs/francophone` | — | ❌ Non implémenté | publique |
+| `/packs/francophone/feed` | — | ❌ Non implémenté | publique |
+| `/packs/francophone/admin` | — | ❌ Non implémenté | admin uniquement |
 
-### `/`
+### Route fallback
 
-Page d’entrée de l’application.
+| Route | Comportement |
+|---|---|
+| `**` | Redirige vers `/` |
 
-Contenu attendu :
+## 10. Pages et rôle métier — ÉTAT ACTUEL
 
-1. nom de l’app
-2. explication courte
-3. navigation principale
-4. bouton connexion Nostr
-5. switch langue
-6. accès au pack francophone
-7. footer global
+### `/` ✅ Landing simplifiée
 
-### `/design-system`
+Page d'entrée fonctionnelle.
 
-Page de référence visuelle.
+Contenu actuel :
 
-But :
+1. ✅ nom de l'app
+2. ✅ description courte
+3. ✅ CTA vers la request page
+4. ❌ navigation principale complète (lien manquants vers feed, landing pack)
+5. ✅ bouton connexion Nostr (dans le header)
+6. ✅ switch langue (dans le header)
+7. ✅ footer global (composant dédié)
 
-1. exposer tous les éléments UI
-2. montrer variantes et états
-3. servir de référence avant toute vraie implémentation de page
+### `/design-system` ❌ Non implémenté
 
-C’est une étape obligatoire avant les skeletons métier.
+La page de design system n'a pas été créée. Les composants UI sont utilisés directement en production.
 
-### `/tools/merge-followers`
+### `/tools/merge-followers` ❌ Non implémenté
 
-Outil opérateur/admin uniquement.
+Aucun composant n'existe pour le merge tool.
 
-But :
+### `/packs/francophone` ❌ Non implémenté
 
-1. charger un pack source
-2. charger le pack cible francophone
-3. comparer les deux
-4. sélectionner qui importer
-5. republier le pack cible
+Aucun composant n'existe pour la landing du pack.
 
-Important :
-cet outil n’est pas public/self-serve au départ.
+### `/packs/francophone/feed` ❌ Non implémenté
 
-### `/packs/francophone`
+Aucun composant n'existe pour le feed.
 
-Landing publique du pack francophone.
+### `/packs/francophone/request` ✅ COMPLET
 
-Contenu attendu :
+Page publique de demande d'accès entièrement fonctionnelle.
 
-1. titre du pack
-2. description
-3. CTA vers le feed
-4. CTA vers la demande d’accès
-5. lien externe vers Following.space
-6. infos contact
-7. footer
+Flow implémenté :
 
-### `/packs/francophone/feed`
+1. ✅ arrivée publique avec explication
+2. ✅ connexion Nostr si nécessaire (modal avec 3 méthodes : NIP-07, NIP-46, nsec)
+3. ✅ vérification automatique du statut (membre / demande existante / idle)
+4. ✅ si déjà membre : message d'information
+5. ✅ si demande en attente (pending) : message d'attente
+6. ✅ si idle ou rejected : quiz francophone puis bouton de demande
+7. ✅ quiz francophone (questions multiples avec sélection aléatoire)
+8. ✅ soumission de la demande au backend Express
+9. ✅ affichage du statut après soumission
+10. ✅ messages de chargement rotatifs
 
-Feed public du pack francophone.
+États gérés : `non connecté`, `idle`, `pending`, `approved`, `rejected`, `already_member`, `loading`, `error`.
 
-But :
+### `/packs/francophone/admin` ❌ Non implémenté
 
-1. afficher les posts des membres du pack
-2. proposer une timeline lisible
-3. rester simple au départ
+Aucun composant n'existe pour le dashboard admin (membres, recherche, ajout/retrait manuel, republier).
 
-### `/packs/francophone/request`
+### `/packs/francophone/admin/requests` ✅ COMPLET
 
-Page publique de demande d’accès.
+Page admin des demandes entièrement fonctionnelle.
 
-But :
+Flow implémenté :
 
-1. connexion Nostr
-2. affichage du statut
-3. soumission d’une demande
-4. suivi de l’état
+1. ✅ liste des demandes pending avec avatar, nom, npub, timestamp
+2. ✅ bouton accepter : ajoute au pack (kind 39089) + envoie DM NIP-04 + met à jour la DB
+3. ✅ bouton refuser : met à jour la DB
+4. ✅ vérification si le demandeur est déjà membre
+5. ✅ guard admin (`francophoneAdminGuard`)
 
-### `/packs/francophone/admin`
+### `/legal/cgu` ✅ IMPLÉMENTÉ
 
-Page admin du pack.
+Page légale CGU fonctionnelle.
 
-But :
+## 11. Scope fonctionnel — ÉTAT ACTUEL
 
-1. voir les membres
-2. rechercher
-3. ajouter manuellement
-4. retirer manuellement
-5. republier le pack
-6. accéder aux demandes
-7. accéder au merge tool
+### Implémenté
 
-### `/packs/francophone/admin/requests`
+1. ✅ auth Nostr (NIP-07, NIP-46 Nostr Connect, nsec)
+2. ✅ request page complète pour le pack francophone
+3. ✅ quiz francophone (questions multiples avec sélection aléatoire)
+4. ✅ admin requests (approve/reject avec ajout pack + DM)
+5. ✅ backend Express + SQLite pour les demandes
+6. ✅ header global avec nav, user, langue, zap
+7. ✅ i18n fr/en/es complet
+8. ✅ landing page simplifiée
+9. ✅ session admin avec guard
+10. ✅ zap via `lightning:` URI
+11. ✅ footer global (composant dédié)
+12. ✅ page CGU (`/legal/cgu`)
+13. ✅ quiz francophone (questions multiples)
 
-Page admin des demandes.
+### Non implémenté (reste à faire)
 
-But :
+1. ❌ pack landing page (`/packs/francophone`)
+2. ❌ feed public (`/packs/francophone/feed`)
+3. ❌ merge followers tool (`/tools/merge-followers`)
+4. ❌ admin dashboard membres (`/packs/francophone/admin`)
+5. ❌ design system page (`/design-system`)
+6. ❌ NDK Dexie cache (installé mais non branché)
 
-1. voir les demandes pending
-2. accepter
-3. refuser
-4. ajouter au pack à l’acceptation
-5. tenter un DM à l’acceptation
+### Architecture compatible multi-pack
 
-### `/legal/cgu`
+L'architecture est pack-aware via `francophone-pack.config.ts`. Les services sont nommés avec le préfixe `francophone` mais la structure permet d'étendre.
 
-Page légale minimale.
+### Backend
 
-## 11. Scope fonctionnel actuel
-
-### Inclus
-
-1. un seul pack public exposé : `francophone`
-2. merge admin-only
-3. request page publique pour ce pack
-4. admin de ce pack
-5. feed de ce pack
-6. architecture compatible multi-pack plus tard
-
-### Exclu pour l’instant
-
-1. création libre de packs par d’autres
-2. merge libre pour n’importe qui
-3. request pages custom pour tous
-4. sous-admins
-5. messages DM custom par pack
-6. `zap to access`
-7. plateforme méta multi-tenant
-8. dark mode
+Contrairement à la spécification initiale (Nostr-only), les demandes sont gérées par un backend Express + SQLite. Les kinds 30100/30101 ne sont pas utilisés.
 
 ## 12. Architecture projet — pseudo DDD hexa simplifiée
 
@@ -771,18 +662,20 @@ Le header doit contenir :
 
 Le merge tool ne doit pas être mis en avant publiquement pour un non-admin.
 
-## 19. Footer global
+## 19. Footer global ✅ IMPLÉMENTÉ
 
-Le footer doit contenir :
+Le footer est un composant dédié, inclus dans le layout global.
 
-1. lien vers CGU
-2. contact
-3. GitHub link placeholder
-4. crédit Following.space
-5. crédit @calle
-6. zap vers Calle
-7. tes coordonnées
-8. ta zap address
+Contenu :
+
+1. ✅ lien vers CGU
+2. ✅ contact
+3. ✅ GitHub link placeholder
+4. ✅ crédit Following.space
+5. ✅ crédit @calle
+6. ✅ zap vers Calle
+7. ✅ tes coordonnées
+8. ✅ ta zap address
 
 ### Données à afficher
 
@@ -845,7 +738,62 @@ Le système de pack cible repose sur le modèle Following.space / kind `39089`.
 
 Le merge doit republier le pack cible mis à jour.
 
-## 21. Merge Followers — spécification
+## 20b. Backend Express + SQLite
+
+### Serveur
+
+Le backend est un serveur Express.js (`server.mjs`) qui gère les demandes d'accès au pack.
+
+### Stack backend
+
+| Composant | Usage |
+|---|---|
+| Express.js | Serveur HTTP |
+| better-sqlite3 | Base SQLite pour les demandes |
+| nostr-tools | Vérification NIP-98 côté serveur |
+| cors | CORS middleware |
+
+### Base de données
+
+Fichier : `.runtime/pack-requests.sqlite`
+
+Scripts de gestion :
+
+1. `scripts/db-dump.sh` — dump SQL
+2. `scripts/db-reset.sh` — réinitialisation
+3. `scripts/db-restore.sh` — restauration depuis dump
+
+### Endpoints API
+
+| Endpoint | Méthode | Auth | Description |
+|---|---|---|---|
+| `/api/health` | GET | non | Health check |
+| `/api/pack-requests/me` | GET | NIP-98 | Statut de la demande de l'user connecté |
+| `/api/pack-requests` | POST | NIP-98 | Soumettre une demande |
+| `/api/admin/pack-requests` | GET | NIP-98 (admin) | Lister toutes les demandes |
+| `/api/admin/pack-requests/:pubkey/approve` | POST | NIP-98 (admin) | Approuver une demande |
+| `/api/admin/pack-requests/:pubkey/reject` | POST | NIP-98 (admin) | Rejeter une demande |
+
+### Déploiement
+
+Configuration Railway (`railway.toml`). Le backend sert l'API et le frontend Angular buildé.
+
+### Auth backend
+
+Tous les endpoints protégés utilisent NIP-98 HTTP auth :
+
+1. le frontend signe un event temporaire via NIP-07
+2. l'event est envoyé en header `Authorization`
+3. le backend vérifie la signature avec `nostr-tools`
+4. la pubkey est extraite et utilisée comme identifiant
+
+### Note architecturale
+
+La spec initiale prévoyait un système Nostr-only (kinds 30100/30101). Le backend SQLite a été choisi pour la simplicité et la fiabilité. L'architecture reste compatible avec une migration future vers du Nostr-only.
+
+## 21. Merge Followers — spécification ❌ NON IMPLÉMENTÉ
+
+Aucun composant ni service de merge n'existe. La spec ci-dessous reste valable pour l'implémentation future.
 
 ## Accès
 
@@ -925,7 +873,9 @@ Pour les membres seulement dans la cible :
 8. prévisualiser le total final
 9. republier le pack cible
 
-## 22. Feed du pack francophone
+## 22. Feed du pack francophone ❌ NON IMPLÉMENTÉ
+
+Aucun composant ni service de feed n'existe. La spec ci-dessous reste valable pour l'implémentation future.
 
 ## Route
 
@@ -946,39 +896,76 @@ Pour les membres seulement dans la cible :
 3. pas de SEO SSR
 4. pas de moteur social riche au départ
 
-## 23. Request Access — spécification
+## 23. Request Access — ✅ IMPLÉMENTÉ
 
-## Route
+### Route
 
 `/packs/francophone/request`
 
-## But
+### Implémentation réelle
 
-Permettre à un utilisateur de demander à être inclus dans le pack francophone.
+Le système de demandes est géré par un **backend Express + SQLite**, pas par des events Nostr.
 
-## Flow
+#### Côté user (`PackRequestPage`)
 
-1. arrivée publique
-2. explication rapide
-3. connexion Nostr si nécessaire
-4. affichage du statut
-5. possibilité de faire une demande
-6. retour visuel d’état
+1. arrivée publique avec explication du pack
+2. connexion Nostr via modal (3 méthodes : NIP-07, NIP-46, nsec)
+3. vérification automatique du statut via `GET /api/pack-requests/me` (NIP-98 auth)
+4. si déjà membre du pack (kind 39089) → message d'information
+5. si demande pending → message d'attente
+6. si idle ou rejected → quiz francophone puis bouton de demande
+7. quiz : 1 question ("Pain au chocolat ou chocolatine?") — le domaine supporte plusieurs questions
+8. soumission via `POST /api/pack-requests` avec NIP-98 auth
+9. affichage du statut pending après soumission
 
-## États à gérer
+#### Côté admin (`PackAdminRequestsPage`)
 
-1. non connecté
-2. connecté sans demande
-3. pending
-4. accepted
-5. rejected
-6. already_member
-7. loading
-8. error
+1. liste des demandes via `GET /api/admin/pack-requests` (NIP-98 auth)
+2. approve : `POST /api/admin/pack-requests/:pubkey/approve`
+   - ajoute au pack (republie kind 39089 via NDK)
+   - envoie un DM NIP-04 (kind 4) via `FrancophonePackNotificationService`
+   - met à jour la DB (status = approved)
+3. reject : `POST /api/admin/pack-requests/:pubkey/reject`
+   - met à jour la DB (status = rejected)
 
-## 24. Admin — spécification
+#### Services impliqués
 
-## `/packs/francophone/admin`
+| Service | Rôle |
+|---|---|
+| `StarterPackRequestService` | HTTP client vers le backend Express |
+| `FrancophonePackMembershipService` | Vérification et ajout au pack (NDK, kind 39089) |
+| `FrancophonePackNotificationService` | Envoi DM NIP-04 à l'approbation |
+| `NostrClientService` | NDK wrapper, auth, publish, DM |
+| `NostrSessionService` | Session state, admin detection |
+
+#### Domaine
+
+| Fichier | Rôle |
+|---|---|
+| `request-status.ts` | Résolution pure du statut à partir des timestamps |
+| `request-quiz.ts` | Modèle du quiz (questions, choix, sélection aléatoire) |
+| `francophone-pack.config.ts` | Config du pack (slug, admins, URLs) |
+
+#### États gérés
+
+1. ✅ non connecté
+2. ✅ connecté sans demande (idle)
+3. ✅ pending
+4. ✅ approved
+5. ✅ rejected
+6. ✅ already_member
+7. ✅ loading
+8. ✅ error
+
+#### Spécification initiale (Nostr events kinds 30100/30101)
+
+Les kinds 30100/30101 définis dans la spec initiale ne sont **pas utilisés**. Le backend SQLite remplace ce système. La spec originale restait dans les sections précédentes comme référence si on souhaite migrer vers du Nostr-only.
+
+## 24. Admin — ÉTAT ACTUEL
+
+### `/packs/francophone/admin` ❌ Non implémenté
+
+Aucun composant n’existe pour le dashboard admin.
 
 Fonctions attendues :
 
@@ -990,50 +977,69 @@ Fonctions attendues :
 6. accéder au merge
 7. accéder aux demandes
 
-## `/packs/francophone/admin/requests`
+### `/packs/francophone/admin/requests` ✅ COMPLET
 
-Fonctions attendues :
+Page admin des demandes entièrement fonctionnelle.
 
-1. lister les demandes pending en priorité
-2. accepter
-3. refuser
-4. voir le profil demandeur
-5. voir s’il est déjà membre
-6. à l’acceptation : ajout + republication + tentative de DM
+Flow implémenté :
 
-## 25. Modèle de demandes Nostr
+1. ✅ lister les demandes pending avec profil (avatar, nom, npub, timestamp)
+2. ✅ accepter : ajout au pack + republication kind 39089 + DM NIP-04 + update DB
+3. ✅ refuser : update DB (status = rejected)
+4. ✅ voir le profil demandeur (avatar, nom affiché)
+5. ✅ indication si déjà membre du pack
+6. ✅ guard admin via `francophoneAdminGuard` (CanMatchFn, compare pubkey avec `FRANCOPHONE_PACK.adminNpubs`)
 
-Le système de demandes doit pouvoir fonctionner sans backend propriétaire obligatoire.
+## 25. Modèle de demandes — IMPLÉMENTATION RÉELLE
 
-## Event de demande
+### Backend Express + SQLite
 
-Recommandation :
+Les demandes sont gérées par un serveur Express avec SQLite, pas par des events Nostr.
 
-1. kind custom paramétré
-2. un event par `pack + requester`
+#### Table `pack_requests`
 
-Proposition :
+| Colonne | Type | Description |
+|---|---|---|
+| `requester_pubkey` | TEXT PK | Pubkey hex du demandeur |
+| `requester_npub` | TEXT | npub du demandeur |
+| `display_name` | TEXT | Nom affiché |
+| `image_url` | TEXT | URL de l’avatar |
+| `question_id` | TEXT | ID de la question du quiz |
+| `choice_id` | TEXT | ID du choix sélectionné |
+| `created` | TEXT | Date de création |
+| `updated` | TEXT | Date de mise à jour |
+| `status` | TEXT | `pending` / `approved` / `rejected` |
 
-1. `kind`: `30100`
-2. `d`: `<packSlug>:<requesterPubkey>`
-3. tag `pack`: `<packSlug>`
-4. contenu JSON minimal avec langue et date
+#### API Endpoints
 
-## Event de décision admin
+| Endpoint | Méthode | Auth | Description |
+|---|---|---|---|
+| `/api/health` | GET | non | Health check |
+| `/api/pack-requests/me` | GET | NIP-98 | Statut de la demande de l’user connecté |
+| `/api/pack-requests` | POST | NIP-98 | Soumettre une demande |
+| `/api/admin/pack-requests` | GET | NIP-98 (admin) | Lister toutes les demandes |
+| `/api/admin/pack-requests/:pubkey/approve` | POST | NIP-98 (admin) | Approuver une demande |
+| `/api/admin/pack-requests/:pubkey/reject` | POST | NIP-98 (admin) | Rejeter une demande |
 
-Proposition :
+#### Auth NIP-98
 
-1. `kind`: `30101`
-2. `d`: `<packSlug>:<requesterPubkey>`
-3. tag `pack`: `<packSlug>`
-4. tag `p`: pubkey du demandeur
-5. contenu JSON avec statut et date
+Tous les endpoints protégés utilisent NIP-98 HTTP auth. Le frontend signe un event temporaire via NIP-07 et l’envoie en header Authorization. Le backend vérifie la signature avec `nostr-tools`.
 
-Note : les `kind 34550/34551` sont réservés par NIP-72. Le pack cible reste en `kind 39089` (Following.space) ; les events de demande et de décision utilisent ici des kinds addressables libres `30100/30101`.
+### Scripts DB
 
-## Statut calculé
+| Script | Rôle |
+|---|---|
+| `scripts/db-dump.sh` | Dump la DB en SQL |
+| `scripts/db-reset.sh` | Réinitialise la DB |
+| `scripts/db-restore.sh` | Restore la DB depuis un dump |
 
-Le statut affiché côté utilisateur doit être déduit à partir :
+### Spécification initiale (kinds 30100/30101) — archivée
+
+La spec initiale prévoyait des events Nostr (kind 30100 pour la demande, kind 30101 pour la décision admin). Cette approche n’a pas été retenue au profit du backend SQLite. Elle reste disponible comme référence si on souhaite migrer vers du Nostr-only.
+
+#### Statut calculé (spec initiale)
+
+Le statut devait être déduit à partir :
 
 1. du pack courant
 2. de la présence ou non dans le pack
@@ -1086,23 +1092,31 @@ Champs minimums à prévoir :
 4. aucun page skeleton avant validation du design system
 5. aucun branchement métier final avant validation des skeletons
 
-## 29. Ce que le LLM doit livrer à terme
+## 29. Livrables — ÉTAT ACTUEL
 
-Après toutes validations successives, le LLM doit être capable de livrer :
+### Livré ✅
 
-1. shell Angular 21 moderne
-2. architecture feature-first pseudo DDD hexa simplifiée
-3. design system complet
-4. routes publiques et admin
-5. merge tool admin-only
-6. pack francophone public
-7. feed public
-8. request page
-9. admin members
-10. admin requests
-11. i18n fr/en/es
-12. footer avec crédits Calle et tes infos
-13. page CGU minimale
+1. ✅ shell Angular 21 moderne
+2. ✅ architecture feature-first pseudo DDD hexa simplifiée
+3. ✅ i18n fr/en/es complet
+4. ✅ request page complète
+5. ✅ admin requests complète
+6. ✅ auth Nostr (NIP-07, NIP-46, nsec)
+7. ✅ backend Express + SQLite
+8. ✅ header global
+9. ✅ landing page simplifiée
+10. ✅ quiz francophone (questions multiples)
+11. ✅ footer global (composant dédié)
+12. ✅ page CGU (`/legal/cgu`)
+
+### Reste à livrer ❌
+
+1. ❌ design system page (`/design-system`)
+2. ❌ merge tool admin-only (`/tools/merge-followers`)
+3. ❌ pack francophone landing (`/packs/francophone`)
+4. ❌ feed public (`/packs/francophone/feed`)
+5. ❌ admin dashboard membres (`/packs/francophone/admin`)
+6. ❌ NDK Dexie cache branché
 
 ## 30. Interdictions explicites
 
