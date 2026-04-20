@@ -1,147 +1,39 @@
-<section class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center justify-center p-6">
-  <article class="card w-full border border-base-300 bg-base-100 shadow-xl">
-    <section class="card-body items-center gap-6 text-center">
-      <div class="space-y-3">
-        <h1 class="text-4xl font-black tracking-tight text-base-content">{{ 'request.title' | transloco }}</h1>
-        <p class="text-base text-base-content/70">{{ 'request.subtitle' | transloco }}</p>
+<section class="relative flex min-h-[calc(100vh-4rem)] pt-48 justify-center overflow-hidden px-6">
+  <div aria-hidden="true" class="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl"></div>
+  <div aria-hidden="true" class="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"></div>
+
+  <div class="relative z-10 max-w-xl space-y-4 text-center">
+    <h1 class="text-4xl font-black tracking-tight text-base-content md:text-5xl">
+      {{ 'request.title' | transloco }}
+    </h1>
+    <p class="text-lg leading-relaxed text-base-content/60">
+      {{ 'request.subtitle' | transloco }}
+    </p>
+
+    @if (loading()) {
+      <div class="flex justify-center">
+        <span class="loading loading-spinner loading-lg"></span>
       </div>
-
-      @if (session.user(); as user) {
-        <div class="flex w-full max-w-lg flex-col items-center gap-4 rounded-box border border-base-300 bg-base-200/60 p-5">
-          @if (user.imageUrl) {
-            <img [src]="user.imageUrl" [alt]="user.displayName" class="h-20 w-20 rounded-full object-cover" />
-          } @else {
-            <div class="avatar placeholder">
-              <div class="w-20 rounded-full bg-secondary text-secondary-content">
-                <span class="text-xl font-semibold">{{ user.displayName.slice(0, 2).toUpperCase() }}</span>
-              </div>
-            </div>
-          }
-
-          <div class="space-y-1">
-            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-base-content/50">
-              {{ 'request.identity' | transloco }}
-            </p>
-            <h2 class="text-2xl font-bold text-base-content">{{ user.displayName }}</h2>
-            <p class="text-sm text-base-content/60">{{ user.npub }}</p>
-          </div>
-
-          @if (loadingStatus()) {
-            <span class="loading loading-spinner loading-md text-primary"></span>
-          } @else {
-            @if (status() === 'pending') {
-              <span class="badge badge-warning badge-lg">{{ 'common.pending' | transloco }}</span>
-              <p class="text-sm text-base-content/70">{{ 'request.status.pending' | transloco }}</p>
-            } @else if (status() === 'approved') {
-              <span class="badge badge-success badge-lg">{{ 'common.approved' | transloco }}</span>
-              <p class="text-sm text-base-content/70">{{ 'request.status.approved' | transloco }}</p>
-            } @else {
-              <p class="text-sm text-base-content/70">{{ 'request.status.idle' | transloco }}</p>
-            }
-
-            @if (status() === 'idle') {
-              <button type="button" class="btn btn-primary btn-wide" (click)="openQuiz()">
-                {{ 'request.requestJoin' | transloco }}
-              </button>
-            }
-          }
-        </div>
-
-        @if (status() === 'pending' || status() === 'approved') {
-          <section class="card w-full max-w-lg border border-primary/20 bg-primary/5 text-left">
-            <div class="card-body gap-4">
-              <div class="space-y-1 text-center md:text-left">
-                <h3 class="text-xl font-bold text-base-content">{{ 'request.followup.title' | transloco }}</h3>
-                <p class="text-sm text-base-content/70">{{ 'request.followup.subtitle' | transloco }}</p>
-              </div>
-
-              <div class="flex flex-col gap-3 md:flex-row">
-                <a [routerLink]="pack.starterPackUrl" class="btn btn-primary flex-1">{{ 'request.followup.starterPack' | transloco }}</a>
-                <a [href]="pack.followUrl" target="_blank" rel="noreferrer" class="btn btn-outline flex-1">{{ 'request.followup.follow' | transloco }}</a>
-                <a [href]="pack.zapHref" class="btn btn-accent flex-1">{{ 'request.followup.zap' | transloco }}</a>
-              </div>
-            </div>
-          </section>
-        }
-      } @else {
-        <div class="flex w-full max-w-lg flex-col gap-4 rounded-box border border-base-300 bg-base-200/60 p-5">
-          <button type="button" class="btn btn-primary btn-wide" [disabled]="session.connecting()" (click)="openAuthModal()">
-            {{ 'common.login' | transloco }}
+    } @else {
+      @if (!isAuthenticated()) {
+        <div class="space-y-4">
+          <button class="btn btn-primary btn-lg mx-auto" (click)="connect()">
+            {{ 'packs.request.connect' | transloco }}
           </button>
         </div>
-      }
-    </section>
-  </article>
-</section>
-
-@if (quizOpen()) {
-  <dialog class="modal modal-open">
-    <div class="modal-box max-w-2xl">
-      @if (quizCompleted()) {
-        <div class="space-y-5">
-          <div class="space-y-2 text-center">
-            <h3 class="text-2xl font-bold text-base-content">{{ 'request.followup.title' | transloco }}</h3>
-            <p class="text-sm text-base-content/70">{{ 'request.followup.subtitle' | transloco }}</p>
-          </div>
-
-          <div class="flex flex-col gap-3 md:flex-row">
-            <a [routerLink]="pack.starterPackUrl" class="btn btn-primary flex-1">{{ 'request.followup.starterPack' | transloco }}</a>
-            <a [href]="pack.followUrl" target="_blank" rel="noreferrer" class="btn btn-outline flex-1">{{ 'request.followup.follow' | transloco }}</a>
-            <a [href]="pack.zapHref" class="btn btn-accent flex-1">{{ 'request.followup.zap' | transloco }}</a>
-          </div>
-
-          <div class="modal-action">
-            <button type="button" class="btn" (click)="closeQuiz()">{{ 'common.close' | transloco }}</button>
-          </div>
-        </div>
       } @else {
-        <div class="space-y-6">
-          <div class="space-y-2">
-            <h3 class="text-2xl font-bold text-base-content">{{ 'request.quiz.title' | transloco }}</h3>
-            <p class="text-sm text-base-content/70">{{ 'request.quiz.subtitle' | transloco }}</p>
-          </div>
-
+        @if (requestStatus() === 'idle') {
           <div class="space-y-4">
-            <p class="text-lg font-semibold text-base-content">{{ currentQuestion().prompt }}</p>
-
-            <div class="space-y-3">
-              @for (choice of currentQuestion().choices; track choice.id) {
-                <label class="flex cursor-pointer items-center gap-3 rounded-box border border-base-300 px-4 py-3 transition hover:border-primary">
-                  <input
-                    type="radio"
-                    class="radio radio-primary"
-                    [checked]="answerControl.value === choice.id"
-                    (change)="answerControl.setValue(choice.id)"
-                  />
-                  <span class="text-base text-base-content">{{ choice.label }}</span>
-                </label>
-              }
-            </div>
-
-            @if (quizError()) {
-              <p class="text-sm font-medium text-error">{{ quizError() === 'request.quiz.error' ? ('request.quiz.error' | transloco) : quizError() }}</p>
-            }
-          </div>
-
-          <div class="modal-action">
-            <button type="button" class="btn btn-ghost" (click)="closeQuiz()">{{ 'common.close' | transloco }}</button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              [disabled]="submitting() || !answerControl.value"
-              (click)="submitQuiz()"
-            >
-              @if (submitting()) {
-                <span class="loading loading-spinner loading-xs"></span>
-              }
-              {{ 'request.quiz.submit' | transloco }}
+            <button class="btn btn-primary btn-lg mx-auto" (click)="submitRequest()">
+              {{ 'packs.request.submit' | transloco }}
             </button>
           </div>
-        </div>
+        } @else {
+          <div class="badge {{ statusPillClass() }} badge-lg mx-auto">
+            {{ 'packs.request.status.' + requestStatus() | transloco }}
+          </div>
+        }
       }
-    </div>
-    <form method="dialog" class="modal-backdrop">
-      <button type="button" (click)="closeQuiz()">close</button>
-    </form>
-  </dialog>
-}
+    }
+  </div>
+</section>

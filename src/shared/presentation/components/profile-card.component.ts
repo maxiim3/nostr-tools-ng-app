@@ -13,7 +13,7 @@ export interface ProfileCardUser {
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="card card-border relative w-full max-w-96 overflow-hidden bg-base-100">
+    <article class="card card-border relative h-52 w-96 overflow-hidden bg-base-100">
       <section class="card-body gap-4">
         @if (status() === 'skeleton') {
           <header class="flex items-center gap-4">
@@ -49,8 +49,8 @@ export interface ProfileCardUser {
             </div>
           </header>
 
-          <p class="min-h-20 text-sm leading-6 text-base-content/75">
-            {{ user()?.description || 'No description published on this Nostr profile yet.' }}
+          <p class="line-clamp-2 text-sm leading-6 text-base-content/75">
+            {{ truncatedDescription() }}
           </p>
         }
       </section>
@@ -92,5 +92,11 @@ export class ProfileCardComponent {
       .slice(0, 2)
       .map((chunk) => chunk[0]?.toUpperCase() ?? '')
       .join('') || '?';
+  });
+
+  protected readonly truncatedDescription = computed(() => {
+    const raw = this.user()?.description?.trim() || 'No description published on this Nostr profile yet.';
+    const max = 65;
+    return raw.length > max ? raw.slice(0, max).trimEnd() + '…' : raw;
   });
 }

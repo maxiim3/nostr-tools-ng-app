@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 
 import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrClientService, type SessionUser } from '../../../../core/nostr/application/nostr-client.service';
-import { ProfileCardComponent, type ProfileCardStatus } from '../../../../../shared/presentation/components/profile-card.component';
+import { ProfileCardComponent, type ProfileCardStatus } from '../../../../shared/presentation/components/profile-card.component';
 
 @Component({
   selector: 'home-page',

@@ -11,10 +11,10 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
   template: `
     @if (session.authModalOpen()) {
       <dialog class="modal modal-open">
-        <div class="modal-box max-w-2xl">
+        <div class="modal-box max-w-lg p-12 bg-base-100/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50">
           <div class="space-y-6">
             <div class="space-y-2">
-              <h2 class="text-2xl font-bold text-base-content">{{ 'authModal.title' | transloco }}</h2>
+              <h2 class="text-3xl font-bold text-base-content leading-tight">{{ 'authModal.title' | transloco }}</h2>
               <p class="text-sm text-base-content/70">{{ 'authModal.subtitle' | transloco }}</p>
             </div>
 
@@ -24,8 +24,8 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
               </div>
             }
 
-            <div class="grid gap-6 md:grid-cols-3">
-              <section class="space-y-3 rounded-box border border-base-300 p-4">
+            <div class="space-y-6">
+              <section class="space-y-3">
                 <h3 class="font-bold text-base-content">{{ 'authModal.extension.title' | transloco }}</h3>
                 <p class="text-sm text-base-content/70">{{ 'authModal.extension.body' | transloco }}</p>
                 <button
@@ -38,7 +38,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 </button>
               </section>
 
-              <section class="space-y-3 rounded-box border border-base-300 p-4">
+              <section class="space-y-3">
                 <h3 class="font-bold text-base-content">{{ 'authModal.external.title' | transloco }}</h3>
                 <p class="text-sm text-base-content/70">{{ 'authModal.external.body' | transloco }}</p>
 
@@ -62,7 +62,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 }
               </section>
 
-              <section class="space-y-3 rounded-box border border-base-300 p-4">
+              <section class="space-y-3">
                 <h3 class="font-bold text-base-content">{{ 'authModal.privateKey.title' | transloco }}</h3>
                 <p class="text-sm text-warning-content">{{ 'authModal.privateKey.warning' | transloco }}</p>
                 <label class="form-control gap-2">
@@ -125,5 +125,15 @@ export class AppAuthModalComponent {
 
   protected cancelExternalApp(): void {
     this.session.cancelExternalAppLogin();
+  }
+
+  protected copyUri(): void {
+    const uri = this.session.externalAuthUri();
+    if (uri) {
+      navigator.clipboard.writeText(uri).then(() => {
+        this.copied.set(true);
+        setTimeout(() => this.copied.set(false), 2000);
+      }).catch((err) => console.error('Failed to copy URI', err));
+    }
   }
 }

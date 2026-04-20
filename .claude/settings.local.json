@@ -4,5 +4,9 @@
       "Bash(opencode --version)",
       "Bash(opencode run *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "angular-cli"
+  ],
+  "enableAllProjectMcpServers": true
 }
