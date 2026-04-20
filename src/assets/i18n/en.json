@@ -26,8 +26,7 @@
     },
     "privateKey": {
       "title": "Private key",
-      "warning": "Discouraged. Use only if you know exactly what you are doing.",
-      "cta": "Connect with nsec"
+      "warning": "Discouraged. Use only if you know exactly what you are doing."
     }
   },
   "header": {
@@ -40,6 +39,13 @@
   "request": {
     "title": "Join the francophone starter pack",
     "subtitle": "Connect with Nostr to request access and track your current status.",
+    "loading": {
+      "1": "This can take a few seconds...",
+      "2": "Fetching from the database...",
+      "3": "Almost there...",
+      "4": "Don't reload, it's taking longer than usual...",
+      "5": "Still working on it..."
+    },
     "connect": "Connect to request access",
     "identity": "Connected account",
     "extensionLogin": "Login with extension",
@@ -48,13 +54,18 @@
     "status": {
       "idle": "You can submit a request now.",
       "pending": "Your request is pending review.",
-      "approved": "Your request is approved."
+      "approved": "Your request is approved.",
+      "alreadyMember": "You are already part of the pack!"
     },
     "quiz": {
       "title": "Tiny francophone captcha",
-      "subtitle": "One question, one correct answer.",
+      "subtitle": "One quick question before sending the request.",
       "submit": "Submit answer",
-      "error": "Not yet. Pick the correct answer and try again."
+      "error": "Pick an answer before submitting.",
+      "authError": "The request signature was rejected. Reconnect and try again.",
+      "forbidden": "You are not allowed to perform this action.",
+      "invalidRequest": "The submitted request is invalid.",
+      "submitError": "Unable to submit the request right now. Please try again shortly."
     },
     "followup": {
       "title": "While you wait",
@@ -76,6 +87,13 @@
     "primal": "Open on Primal",
     "approve": "Approve",
     "reject": "Reject",
+    "yourRequestPending": "Your request is already being processed. Please wait.",
+    "youAreInPack": "You are already part of the pack!",
+    "openPack": "Open the pack",
+    "errors": {
+      "approveFailed": "Unable to complete approval right now (pack update + DM).",
+      "rejectFailed": "Unable to reject the request right now."
+    },
     "statuses": {
       "pending": "Pending",
       "approved": "Approved",

@@ -1,85 +1,103 @@
 {
   "common": {
-    "login": "Connexion Nostr",
-    "logout": "Deconnexion",
+    "login": "Se connecter avec Nostr",
+    "logout": "Se déconnecter",
     "admin": "Admin",
-    "pending": "Pending",
-    "approved": "Approved",
+    "pending": "En attente",
+    "approved": "Approuvé",
     "close": "Fermer",
     "loading": "Chargement..."
   },
   "authModal": {
-    "title": "Se connecter a Nostr",
+    "title": "Se connecter à Nostr",
     "subtitle": "Choisis ton mode de connexion.",
     "extension": {
-      "title": "Extension navigateur",
-      "body": "Utilise NIP-07 si ton extension Nostr est disponible dans le navigateur.",
-      "cta": "Connexion extension"
+      "title": "Extension du navigateur",
+      "body": "Utilise NIP-07 lorsque ton extension Nostr est disponible dans le navigateur.",
+      "cta": "Se connecter avec l'extension"
     },
     "external": {
-      "title": "App externe",
-      "body": "Sur mobile, ouvre une app compatible Nostr Connect pour signer depuis ton app.",
-      "cta": "Generer le lien",
-      "open": "Ouvrir l'app externe",
-      "waiting": "En attente de validation dans ton app...",
+      "title": "Application externe",
+      "body": "Sur mobile, ouvre une application compatible Nostr Connect et approuve la connexion dans celle-ci.",
+      "cta": "Générer le lien",
+      "open": "Ouvrir l'application externe",
+      "waiting": "En attente d'approbation dans ton application...",
       "cancel": "Annuler"
     },
     "privateKey": {
-      "title": "Cle privee",
-      "warning": "Deconseille. A utiliser seulement si tu sais ce que tu fais.",
-      "cta": "Connexion avec nsec"
+      "title": "Clé privée",
+      "warning": "Déconseillé. À utiliser seulement si tu sais exactement ce que tu fais."
     }
   },
   "header": {
     "menu": "Menu",
     "home": "Accueil",
-    "request": "Request",
+    "request": "Demande",
     "adminRequests": "Demandes admin",
     "openExternal": "App externe"
   },
   "request": {
     "title": "Rejoindre le starter pack francophone",
-    "subtitle": "Connecte-toi avec Nostr pour demander l'acces au pack et suivre le statut de ta demande.",
-    "connect": "Se connecter pour demander l'acces",
-    "identity": "Compte connecte",
-    "extensionLogin": "Login avec extension",
-    "externalLogin": "Ouvrir une app externe",
-    "requestJoin": "Request to join",
+    "subtitle": "Connecte-toi avec Nostr pour demander l'accès au pack et suivre le statut de ta demande.",
+    "loading": {
+      "1": "Cela peut prendre quelques secondes...",
+      "2": "Connexion à la base de données...",
+      "3": "On y est presque...",
+      "4": "Ne recharge pas, c'est plus long que d'habitude...",
+      "5": "On travaille encore dessus..."
+    },
+    "connect": "Se connecter pour demander l'accès",
+    "identity": "Compte connecté",
+    "extensionLogin": "Se connecter avec l'extension",
+    "externalLogin": "Ouvrir l'application externe",
+    "requestJoin": "Demander à rejoindre",
     "status": {
-      "idle": "Pret a demander l'acces",
+      "idle": "Tu peux envoyer une demande maintenant.",
       "pending": "Ta demande est en attente de validation.",
-      "approved": "Ta demande est approuvee."
+      "approved": "Ta demande est approuvée.",
+      "alreadyMember": "Vous faites deja parti du pack !"
     },
     "quiz": {
       "title": "Mini captcha francophone",
-      "subtitle": "Une seule question, un seul bon choix.",
-      "submit": "Envoyer la reponse",
-      "error": "Pas encore. Reessaie avec le bon choix."
+      "subtitle": "Une question rapide avant l'envoi de la demande.",
+      "submit": "Envoyer la réponse",
+      "error": "Choisis une réponse avant d'envoyer.",
+      "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
+      "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
+      "invalidRequest": "La demande envoyée est invalide.",
+      "submitError": "Impossible d'envoyer la demande pour le moment. Réessaie dans un instant."
     },
     "followup": {
       "title": "En attendant",
-      "subtitle": "Tu peux deja ouvrir le starter pack, me follow, ou envoyer un zap de 42 sats.",
+      "subtitle": "Tu peux déjà ouvrir le starter pack, me suivre ou envoyer un zap de 42 sats.",
       "starterPack": "Ouvrir le starter pack",
-      "follow": "Voir mon profil",
+      "follow": "Ouvrir mon profil",
       "zap": "Zap 42 sats"
     }
   },
   "home": {
     "title": "Nostr Tools",
-    "description": "Une boite a outils pour la communaute Nostr francophone. Demande l'acces au starter pack, suis les profels cles et decouvre l'ecosysteme.",
+    "description": "Une boîte à outils pour la communauté francophone de Nostr. Demande l'accès au starter pack, suis les profils clés et découvre l'écosystème.",
     "cta": "Rejoindre le starter pack"
   },
   "adminRequests": {
-    "title": "Demandes d'acces",
-    "subtitle": "Liste des demandes Nostr pour le pack francophone.",
-    "empty": "Aucune demande pour l'instant.",
+    "title": "Demandes d'accès",
+    "subtitle": "Demandes Nostr pour le pack francophone.",
+    "empty": "Aucune demande pour le moment.",
     "primal": "Voir sur Primal",
-    "approve": "Accepter",
+    "approve": "Approuver",
     "reject": "Refuser",
+    "yourRequestPending": "Ta demande est déjà en cours de traitement. Merci de patienter.",
+    "youAreInPack": "Vous faites deja parti du pack !",
+    "openPack": "Ouvrir le pack",
+    "errors": {
+      "approveFailed": "Impossible de finaliser l'approbation (pack + DM) pour le moment.",
+      "rejectFailed": "Impossible de refuser la demande pour le moment."
+    },
     "statuses": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté"
     }
   }
 }
