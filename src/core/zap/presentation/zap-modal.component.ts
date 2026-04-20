@@ -67,26 +67,33 @@ const PRESETS = [
         <div
           class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
         >
-          @if (!zap.invoiceQr() && !zap.invoiceError()) {
+          @if (zap.invoiceError()) {
             <div class="flex flex-col items-center gap-4 py-8">
-              <span class="loading loading-spinner loading-lg text-primary"></span>
-              <p class="text-sm text-base-content/70">
-                {{ 'zap.modal.generatingInvoice' | transloco }}
+              <p class="text-base-content/70">
+                {{ 'zap.modal.invoiceError' | transloco }}
               </p>
+              <button
+                type="button"
+                class="btn btn-outline"
+                (click)="retry()"
+              >
+                {{ 'common.retry' | transloco }}
+              </button>
             </div>
-          } @else if (zap.invoiceQr(); as qr) {
+          } @else {
             <div class="space-y-6">
               <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
                 {{ 'zap.modal.title' | transloco }}
               </h2>
 
-              <div class="flex justify-center">
-                <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
-              </div>
-
-              <p class="text-center text-sm text-base-content/70">
-                {{ 'zap.modal.scanToPay' | transloco }}
-              </p>
+              @if (zap.invoiceQr(); as qr) {
+                <div class="flex justify-center">
+                  <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
+                </div>
+                <p class="text-center text-sm text-base-content/70">
+                  {{ 'zap.modal.scanToPay' | transloco }}
+                </p>
+              }
 
               <div class="flex items-center justify-center gap-3">
                 @for (preset of presets; track preset.amount) {
@@ -126,19 +133,6 @@ const PRESETS = [
                 (click)="zapAndClose()"
               >
                 {{ 'zap.modal.cta' | transloco: { amount: amountControl.value } }}
-              </button>
-            </div>
-          } @else if (zap.invoiceError()) {
-            <div class="flex flex-col items-center gap-4 py-8">
-              <p class="text-base-content/70">
-                {{ 'zap.modal.invoiceError' | transloco }}
-              </p>
-              <button
-                type="button"
-                class="btn btn-outline"
-                (click)="retry()"
-              >
-                {{ 'common.retry' | transloco }}
               </button>
             </div>
           }

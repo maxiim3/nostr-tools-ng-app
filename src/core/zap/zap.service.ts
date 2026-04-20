@@ -48,14 +48,14 @@ export class ZapService {
 
   async generateInvoice(): Promise<void> {
     this.invoiceError.set(false);
+    this.invoiceQr.set(null);
     try {
-      const pr = await this.fetchInvoice(this.selectedAmount() * 1000);
+      const pr = await this.fetchLnurlInvoice(this.selectedAmount() * 1000);
       const invoiceUri = `lightning:${pr}`;
       const qr = await QRCode.toDataURL(invoiceUri, { width: 192, margin: 2 });
       this.invoiceQr.set(qr);
     } catch (err) {
       console.error('Invoice error:', err);
-      this.invoiceQr.set(null);
       this.invoiceError.set(true);
     }
   }
@@ -74,25 +74,17 @@ export class ZapService {
     await zapper.zap(['nip57']);
   }
 
-  private async fetchInvoice(amountMsat: number): Promise<string> {
-    const ndk = await this.client.getNdk();
-    const { NDKUser, NDKZapper } = await import('@nostr-dev-kit/ndk');
+  private async fetchLnurlInvoice(amountMsat: number): Promise<string> {
+    const lnurl = PROJECT_INFO.zapAddress;
+    const encodedLnurl = btoa(lnurl);
+    const url = `https://${window.location.host}/api/lnurl?lnurl=${encodedLnurl}&amount=${amountMsat}`;
 
-    const targetUser = new NDKUser({ npub: PROJECT_INFO.ownerNpub });
-    targetUser.ndk = ndk;
-
-    return new Promise<string>((resolve, reject) => {
-      const zapper = new NDKZapper(targetUser, amountMsat, 'msat', {
-        ndk,
-        lnPay: async ({ pr }) => {
-          resolve(pr);
-          return { preimage: '' };
-        },
-      });
-
-      zapper.zap(['nip57']).catch(reject);
-      setTimeout(() => reject(new Error('Invoice timeout')), 15_000);
-    });
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch invoice');
+    }
+    const data = await response.json();
+    return data.pr;
   }
 
   private resetState(): void {
