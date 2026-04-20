@@ -65,13 +65,11 @@ export const routes: Routes = [
   //       (module) => module.PackAdminPageComponent
   //     )
   // },
-  // {
-  //   path: 'legal/cgu',
-  //   loadComponent: () =>
-  //     import('../features/legal/presentation/pages/legal-cgu-page.component').then(
-  //       (module) => module.LegalCguPageComponent
-  //     )
-  // },
+  {
+    path: 'legal/cgu',
+    loadComponent: () =>
+      import('../features/legal/presentation/pages/legal-cgu.page').then((module) => module.LegalCguPage)
+  },
   {
     path: '**',
     redirectTo: ''

@@ -1,6 +1,6 @@
 {
   "common": {
-    "login": "Connect with Nostr",
+    "login": "Connect",
     "logout": "Disconnect",
     "admin": "Admin",
     "pending": "Pending",
@@ -73,12 +73,47 @@
       "starterPack": "Open the starter pack",
       "follow": "Open my profile",
       "zap": "Zap 42 sats"
+    },
+    "follow": {
+      "success": "Followed ✓",
+      "me": "Follow me"
     }
   },
   "home": {
     "title": "Nostr Tools",
     "description": "A toolkit for the francophone Nostr community. Request access to the starter pack, follow key profiles, and explore the ecosystem.",
     "cta": "Join the starter pack"
+  },
+  "zap": {
+    "button": "Zap",
+    "authRequired": {
+      "title": "Please log in first"
+    },
+    "modal": {
+      "title": "I support with sats",
+      "cta": "Merci ⚡",
+      "validation": "Between 21 and 100,000 sats",
+      "loading": "Generating invoice...",
+      "invoiceTitle": "Scan or open your wallet",
+      "openWallet": "Open in wallet ⚡"
+    },
+    "support": "Thanks ❤️"
+  },
+  "profile": {
+    "unknownUser": "Unknown user",
+    "noDescription": "No description published on this Nostr profile yet."
+  },
+  "footer": {
+    "contact": "Contact",
+    "dm": "DM Nostr",
+    "zapMe": "Zap",
+    "credits": "Credits",
+    "legal": "Legal",
+    "cgu": "Terms of use"
+  },
+  "cgu": {
+    "title": "Terms of use",
+    "placeholder": "The terms of use will be available soon."
   },
   "adminRequests": {
     "title": "Access requests",

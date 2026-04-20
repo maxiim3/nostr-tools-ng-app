@@ -1,6 +1,6 @@
 {
   "common": {
-    "login": "Se connecter avec Nostr",
+    "login": "Se connecter",
     "logout": "Se déconnecter",
     "admin": "Admin",
     "pending": "En attente",
@@ -73,12 +73,47 @@
       "starterPack": "Ouvrir le starter pack",
       "follow": "Ouvrir mon profil",
       "zap": "Zap 42 sats"
+    },
+    "follow": {
+      "success": "Suivi ✓",
+      "me": "Suivez-moi"
     }
   },
   "home": {
     "title": "Nostr Tools",
     "description": "Une boîte à outils pour la communauté francophone de Nostr. Demande l'accès au starter pack, suis les profils clés et découvre l'écosystème.",
     "cta": "Rejoindre le starter pack"
+  },
+  "zap": {
+    "button": "Zap",
+    "authRequired": {
+      "title": "Veuillez vous connecter d'abord"
+    },
+    "modal": {
+      "title": "Je soutiens avec des sats",
+      "cta": "Merci ⚡",
+      "validation": "Entre 21 et 100 000 sats",
+      "loading": "Génération de la facture...",
+      "invoiceTitle": "Scannez ou ouvrez votre wallet",
+      "openWallet": "Ouvrir dans le wallet ⚡"
+    },
+    "support": "Merci ❤️"
+  },
+  "profile": {
+    "unknownUser": "Utilisateur inconnu",
+    "noDescription": "Aucune description publiée sur ce profil Nostr pour le moment."
+  },
+  "footer": {
+    "contact": "Contact",
+    "dm": "DM Nostr",
+    "zapMe": "Zap",
+    "credits": "Crédits",
+    "legal": "Legal",
+    "cgu": "CGU"
+  },
+  "cgu": {
+    "title": "Conditions générales d'utilisation",
+    "placeholder": "Les conditions générales d'utilisation seront bientôt disponibles."
   },
   "adminRequests": {
     "title": "Demandes d'accès",
