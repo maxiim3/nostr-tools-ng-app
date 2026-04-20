@@ -1,12 +1,16 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { LanguageService } from '../core/i18n/language.service';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block min-h-screen'
+  },
+  template: '<router-outlet />'
 })
 export class App {
-  protected readonly title = signal('nostr-tools-ng-app');
+  protected readonly language = inject(LanguageService);
 }
