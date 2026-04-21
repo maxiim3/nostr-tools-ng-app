@@ -2,13 +2,11 @@ import type NDK from '@nostr-dev-kit/ndk';
 
 import { PROJECT_INFO } from '../../config/project-info';
 import { DEFAULT_RELAY_URLS } from '../../nostr/infrastructure/relay.config';
+import type { ConnectionAttemptInstructions } from '../domain/connection-attempt';
 import type { ConnectionCapability } from '../domain/connection-capability';
 import { ConnectionDomainError } from '../domain/connection-errors';
-import type {
-  Nip46NostrconnectAttemptHandle,
-  Nip46NostrconnectStarter,
-  Nip46RemoteSigner,
-} from './nip46-nostrconnect-starter';
+import type { Nip46AttemptHandle, Nip46NostrconnectStarter } from './nip46-nostrconnect-starter';
+import { subscribeToNdkNip46AuthUrl, waitForNdkNip46SignerReady } from './ndk-nip46-shared';
 
 const DEFAULT_NOSTRCONNECT_CAPABILITIES: readonly ConnectionCapability[] = [
   'sign-event',
@@ -67,7 +65,7 @@ export class NdkNip46NostrconnectStarter implements Nip46NostrconnectStarter {
     return true;
   }
 
-  async start(): Promise<Nip46NostrconnectAttemptHandle> {
+  async start(): Promise<Nip46AttemptHandle> {
     const ndk = await this.ensureNdk();
     const { NDKNip46Signer } = await this.ndkModulePromise;
     const signer = NDKNip46Signer.nostrconnect(ndk, this.relayUrl, undefined, {
@@ -107,66 +105,31 @@ export class NdkNip46NostrconnectStarter implements Nip46NostrconnectStarter {
   }
 }
 
-class NdkNip46NostrconnectAttemptHandle implements Nip46NostrconnectAttemptHandle {
-  readonly uri: string;
+class NdkNip46NostrconnectAttemptHandle implements Nip46AttemptHandle {
+  readonly instructions: ConnectionAttemptInstructions;
 
   constructor(
     private readonly signer: import('@nostr-dev-kit/ndk').NDKNip46Signer,
     readonly capabilities: readonly ConnectionCapability[],
     private readonly timeoutMs: number
   ) {
-    this.uri = signer.nostrConnectUri ?? '';
-  }
-
-  async waitForConnection(): Promise<Nip46RemoteSigner> {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-    try {
-      await Promise.race([
-        this.signer.blockUntilReady(),
-        new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            this.signer.stop();
-            reject(new ConnectionDomainError('timeout', 'NIP-46 connection timed out.'));
-          }, this.timeoutMs);
-        }),
-      ]);
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    }
-
-    return new NdkNip46RemoteSigner(this.signer);
-  }
-
-  onAuthUrl(listener: (url: string) => void): () => void {
-    this.signer.on('authUrl', listener);
-
-    return () => {
-      this.signer.off('authUrl', listener);
+    const uri = signer.nostrConnectUri ?? '';
+    this.instructions = {
+      launchUrl: uri,
+      copyValue: uri,
+      qrCodeValue: uri,
     };
   }
 
+  async waitForConnection() {
+    return waitForNdkNip46SignerReady(this.signer, this.timeoutMs);
+  }
+
+  onAuthUrl(listener: (url: string) => void): () => void {
+    return subscribeToNdkNip46AuthUrl(this.signer, listener);
+  }
+
   async cancel(): Promise<void> {
-    this.signer.stop();
-  }
-}
-
-class NdkNip46RemoteSigner implements Nip46RemoteSigner {
-  constructor(private readonly signer: import('@nostr-dev-kit/ndk').NDKNip46Signer) {}
-
-  async getPublicKey(): Promise<string> {
-    return this.signer.getPublicKey();
-  }
-
-  async sign(
-    event: Parameters<import('@nostr-dev-kit/ndk').NDKNip46Signer['sign']>[0]
-  ): Promise<string> {
-    return this.signer.sign(event);
-  }
-
-  stop(): void {
     this.signer.stop();
   }
 }
