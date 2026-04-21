@@ -44,7 +44,7 @@ describe('server.mjs integration', () => {
     it('returns CORS headers for allowed origins on OPTIONS', async () => {
       const res = await fetch(`${BASE}/api/health`, {
         method: 'OPTIONS',
-        headers: { Origin: 'http://localhost:4200' }
+        headers: { Origin: 'http://localhost:4200' },
       });
       expect(res.status).toBe(204);
       expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:4200');
@@ -54,7 +54,7 @@ describe('server.mjs integration', () => {
     it('returns CORS headers for 127.0.0.1 origin', async () => {
       const res = await fetch(`${BASE}/api/health`, {
         method: 'OPTIONS',
-        headers: { Origin: 'http://127.0.0.1:4200' }
+        headers: { Origin: 'http://127.0.0.1:4200' },
       });
       expect(res.status).toBe(204);
       expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://127.0.0.1:4200');
@@ -63,7 +63,7 @@ describe('server.mjs integration', () => {
     it('does not return CORS headers for unknown origin', async () => {
       const res = await fetch(`${BASE}/api/health`, {
         method: 'OPTIONS',
-        headers: { Origin: 'https://evil.example.com' }
+        headers: { Origin: 'https://evil.example.com' },
       });
       expect(res.status).toBe(204);
       expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
@@ -71,7 +71,7 @@ describe('server.mjs integration', () => {
 
     it('sets CORS headers on GET responses for allowed origin', async () => {
       const res = await fetch(`${BASE}/api/health`, {
-        headers: { Origin: 'http://localhost:4200' }
+        headers: { Origin: 'http://localhost:4200' },
       });
       expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:4200');
     });
@@ -94,7 +94,9 @@ describe('server.mjs integration', () => {
     });
 
     it('POST /api/admin/pack-requests/:pubkey/approve returns 401 without auth', async () => {
-      const res = await fetch(`${BASE}/api/admin/pack-requests/somekey/approve`, { method: 'POST' });
+      const res = await fetch(`${BASE}/api/admin/pack-requests/somekey/approve`, {
+        method: 'POST',
+      });
       expect(res.status).toBe(401);
     });
 

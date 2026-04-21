@@ -14,8 +14,7 @@ const { Database } = await import('bun:sqlite');
 const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
 const MAX_JSON_BODY_BYTES = 50 * 1024;
 const ADMIN_NPUBS = new Set(
-  (process.env.ADMIN_NPUBS ??
-    'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du')
+  (process.env.ADMIN_NPUBS ?? 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
@@ -26,7 +25,10 @@ const __dirname = path.dirname(__filename);
 const browserDistDir = path.join(__dirname, 'dist', 'nostr-tools-ng-app', 'browser');
 const databasePath = process.env.DATABASE_PATH
   ? path.resolve(process.env.DATABASE_PATH)
-  : path.join(process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '.runtime'), 'pack-requests.sqlite');
+  : path.join(
+      process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '.runtime'),
+      'pack-requests.sqlite'
+    );
 const browserDistRoot = path.resolve(browserDistDir);
 const indexFilePath = path.join(browserDistDir, 'index.html');
 
@@ -50,7 +52,7 @@ let database = openDatabase();
 
 const server = Bun.serve({
   port: PORT,
-  fetch: handleRequest
+  fetch: handleRequest,
 });
 
 console.log(`Server listening on http://127.0.0.1:${server.port}`);
@@ -102,10 +104,7 @@ async function handleRequest(request) {
       const amount = Number.parseInt(requestUrl.searchParams.get('amount') ?? '', 10);
 
       if (!address || !amount || Number.isNaN(amount)) {
-        return jsonResponse(
-          { error: 'Invalid parameters' },
-          { status: 400, headers: corsHeaders }
-        );
+        return jsonResponse({ error: 'Invalid parameters' }, { status: 400, headers: corsHeaders });
       }
 
       const { name, domain } = parseLightningAddress(address);
@@ -160,7 +159,7 @@ async function handleRequest(request) {
 
       return jsonResponse(
         {
-          status: record ? mapRecordStatus(record.status) : 'idle'
+          status: record ? mapRecordStatus(record.status) : 'idle',
         },
         { headers: corsHeaders }
       );
@@ -189,7 +188,7 @@ async function handleRequest(request) {
         choiceId,
         created: existingRecord?.created ?? now,
         updated: now,
-        status: 'pending'
+        status: 'pending',
       });
 
       return new Response(null, { status: 204, headers: corsHeaders });
@@ -251,14 +250,13 @@ function findRequestByPubkey(pubkey) {
     withDatabase((db) =>
       createStatement(
         db,
-        
-          `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
+
+        `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
                   display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
                   choice_id AS choiceId, created, updated, status
             FROM pack_requests
             WHERE requester_pubkey = ?`
-        )
-        .get(pubkey)
+      ).get(pubkey)
     ) ?? null
   );
 }
@@ -267,13 +265,12 @@ function listPackRequests() {
   return withDatabase((db) =>
     createStatement(
       db,
-        `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
+      `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
                 display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
                 choice_id AS choiceId, created, updated, status
           FROM pack_requests
           ORDER BY created ASC`
-      )
-      .all()
+    ).all()
   );
 }
 
@@ -281,7 +278,7 @@ function upsertPackRequest(record) {
   withDatabase((db) =>
     createStatement(
       db,
-        `INSERT INTO pack_requests (
+      `INSERT INTO pack_requests (
           requester_pubkey,
           requester_npub,
           display_name,
@@ -311,8 +308,7 @@ function upsertPackRequest(record) {
           created = excluded.created,
           updated = excluded.updated,
           status = excluded.status`
-      )
-      .run(record)
+    ).run(record)
   );
 }
 
@@ -330,7 +326,12 @@ function deletePackRequest(pubkey) {
   );
 }
 
-async function requireNostrAuth(request, body, requireAdmin = false, requestUrl = buildRequestUrl(request)) {
+async function requireNostrAuth(
+  request,
+  body,
+  requireAdmin = false,
+  requestUrl = buildRequestUrl(request)
+) {
   const authorization = request.headers.get('authorization');
   if (!authorization) {
     throw createHttpError(401, 'Missing Nostr authorization header.');
@@ -357,7 +358,7 @@ async function requireNostrAuth(request, body, requireAdmin = false, requestUrl 
 
   return {
     pubkey: event.pubkey,
-    npub
+    npub,
   };
 }
 
@@ -431,7 +432,7 @@ function mapAdminRecord(record) {
     displayName: record.displayName,
     imageUrl: record.imageUrl ?? null,
     created: record.created,
-    status: record.status
+    status: record.status,
   };
 }
 
@@ -527,7 +528,7 @@ function jsonResponse(body, init = {}) {
 
   return new Response(JSON.stringify(body), {
     ...init,
-    headers
+    headers,
   });
 }
 
@@ -540,7 +541,7 @@ function matchAdminActionRoute(pathname, action) {
   }
 
   return {
-    pubkey: decodeURIComponent(match[1])
+    pubkey: decodeURIComponent(match[1]),
   };
 }
 

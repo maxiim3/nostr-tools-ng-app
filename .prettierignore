@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.angular/
+bun.lock
+package-lock.json
+coverage/
+tmp/
+.DS_Store

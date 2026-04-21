@@ -102,22 +102,22 @@ Le setup est complet. Voici ce qui est en place.
 
 ### Dépendances principales
 
-| Package | Version | Usage |
-|---|---|---|
-| Angular | 21 | Framework |
-| Tailwind CSS | v4 | Styles utilitaires |
-| daisyUI | v5 | Composants UI (thème custom `nostr-tools`) |
-| `@nostr-dev-kit/ndk` | installé | Client Nostr principal |
-| `@nostr-dev-kit/ndk-cache-dexie` | installé | Cache IndexedDB — **non branché** |
-| `@jsverse/transloco` | installé | i18n runtime (fr/en/es) |
+| Package                          | Version  | Usage                                      |
+| -------------------------------- | -------- | ------------------------------------------ |
+| Angular                          | 21       | Framework                                  |
+| Tailwind CSS                     | v4       | Styles utilitaires                         |
+| daisyUI                          | v5       | Composants UI (thème custom `nostr-tools`) |
+| `@nostr-dev-kit/ndk`             | installé | Client Nostr principal                     |
+| `@nostr-dev-kit/ndk-cache-dexie` | installé | Cache IndexedDB — **non branché**          |
+| `@jsverse/transloco`             | installé | i18n runtime (fr/en/es)                    |
 
 ### Backend
 
 Le backend est un serveur **Bun + bun:sqlite** (`server.mjs`), pas du Nostr-only.
 
-| Package | Usage |
-|---|---|
-| `Bun` | Runtime HTTP et SQLite |
+| Package       | Usage                            |
+| ------------- | -------------------------------- |
+| `Bun`         | Runtime HTTP et SQLite           |
 | `nostr-tools` | Vérification NIP-98 côté serveur |
 
 ### Déploiement
@@ -230,28 +230,28 @@ Mais l’architecture doit être compatible avec cela plus tard.
 
 ### Routes actives
 
-| Route | Composant | Implémenté | Accès |
-|---|---|---|---|
-| `/` | `HomePage` | ✅ Landing simplifiée | publique |
-| `/packs/francophone/request` | `PackRequestPage` | ✅ Complet | publique, connexion requise pour agir |
-| `/packs/francophone/admin/requests` | `PackAdminRequestsPage` | ✅ Complet | admin uniquement (guard) |
-| `/legal/cgu` | — | ✅ Complet | publique |
+| Route                               | Composant               | Implémenté            | Accès                                 |
+| ----------------------------------- | ----------------------- | --------------------- | ------------------------------------- |
+| `/`                                 | `HomePage`              | ✅ Landing simplifiée | publique                              |
+| `/packs/francophone/request`        | `PackRequestPage`       | ✅ Complet            | publique, connexion requise pour agir |
+| `/packs/francophone/admin/requests` | `PackAdminRequestsPage` | ✅ Complet            | admin uniquement (guard)              |
+| `/legal/cgu`                        | —                       | ✅ Complet            | publique                              |
 
 ### Routes en attente (commentées dans `app.routes.ts`)
 
-| Route | Composant | Statut | Accès |
-|---|---|---|---|
-| `/design-system` | — | ❌ Non implémenté | interne |
-| `/tools/merge-followers` | — | ❌ Non implémenté | admin uniquement |
-| `/packs/francophone` | — | ❌ Non implémenté | publique |
-| `/packs/francophone/feed` | — | ❌ Non implémenté | publique |
-| `/packs/francophone/admin` | — | ❌ Non implémenté | admin uniquement |
+| Route                      | Composant | Statut            | Accès            |
+| -------------------------- | --------- | ----------------- | ---------------- |
+| `/design-system`           | —         | ❌ Non implémenté | interne          |
+| `/tools/merge-followers`   | —         | ❌ Non implémenté | admin uniquement |
+| `/packs/francophone`       | —         | ❌ Non implémenté | publique         |
+| `/packs/francophone/feed`  | —         | ❌ Non implémenté | publique         |
+| `/packs/francophone/admin` | —         | ❌ Non implémenté | admin uniquement |
 
 ### Route fallback
 
-| Route | Comportement |
-|---|---|
-| `**` | Redirige vers `/` |
+| Route | Comportement      |
+| ----- | ----------------- |
+| `**`  | Redirige vers `/` |
 
 ## 10. Pages et rôle métier — ÉTAT ACTUEL
 
@@ -550,6 +550,7 @@ Ces éléments constituent la base du design system.
 ### États à prévoir
 
 #### Texte
+
 1. body
 2. muted
 3. caption
@@ -557,12 +558,14 @@ Ces éléments constituent la base du design system.
 5. danger si nécessaire
 
 #### Titre
+
 1. display
 2. page title
 3. section title
 4. card title
 
 #### Bouton
+
 1. primary
 2. secondary
 3. ghost
@@ -572,12 +575,14 @@ Ces éléments constituent la base du design system.
 7. loading
 
 #### Lien
+
 1. standard
 2. muted
 3. external
 4. inline action
 
 #### Carte
+
 1. neutral
 2. selectable
 3. selected
@@ -744,10 +749,10 @@ Le backend est un serveur Bun (`server.mjs`) qui gère les demandes d'accès au 
 
 ### Stack backend
 
-| Composant | Usage |
-|---|---|
-| Bun | Runtime HTTP et SQLite via `bun:sqlite` |
-| nostr-tools | Vérification NIP-98 côté serveur |
+| Composant   | Usage                                   |
+| ----------- | --------------------------------------- |
+| Bun         | Runtime HTTP et SQLite via `bun:sqlite` |
+| nostr-tools | Vérification NIP-98 côté serveur        |
 
 ### Base de données
 
@@ -761,14 +766,14 @@ Scripts de gestion :
 
 ### Endpoints API
 
-| Endpoint | Méthode | Auth | Description |
-|---|---|---|---|
-| `/api/health` | GET | non | Health check |
-| `/api/pack-requests/me` | GET | NIP-98 | Statut de la demande de l'user connecté |
-| `/api/pack-requests` | POST | NIP-98 | Soumettre une demande |
-| `/api/admin/pack-requests` | GET | NIP-98 (admin) | Lister toutes les demandes |
-| `/api/admin/pack-requests/:pubkey/approve` | POST | NIP-98 (admin) | Approuver une demande |
-| `/api/admin/pack-requests/:pubkey/reject` | POST | NIP-98 (admin) | Rejeter une demande |
+| Endpoint                                   | Méthode | Auth           | Description                             |
+| ------------------------------------------ | ------- | -------------- | --------------------------------------- |
+| `/api/health`                              | GET     | non            | Health check                            |
+| `/api/pack-requests/me`                    | GET     | NIP-98         | Statut de la demande de l'user connecté |
+| `/api/pack-requests`                       | POST    | NIP-98         | Soumettre une demande                   |
+| `/api/admin/pack-requests`                 | GET     | NIP-98 (admin) | Lister toutes les demandes              |
+| `/api/admin/pack-requests/:pubkey/approve` | POST    | NIP-98 (admin) | Approuver une demande                   |
+| `/api/admin/pack-requests/:pubkey/reject`  | POST    | NIP-98 (admin) | Rejeter une demande                     |
 
 ### Déploiement
 
@@ -819,17 +824,20 @@ Au minimum :
 ## Ordre de présentation obligatoire
 
 ### Groupe 1
+
 Membres présents dans la source et absents de la cible.
 
 Ce sont les candidats à importer.
 Ils apparaissent en premier.
 
 ### Groupe 2
+
 Membres déjà présents dans la source et dans la cible.
 
 Ils apparaissent ensuite.
 
 ### Groupe 3
+
 Membres présents seulement dans la cible.
 
 Ils restent visibles à droite.
@@ -926,21 +934,21 @@ Le système de demandes est géré par un **backend Express + SQLite**, pas par 
 
 #### Services impliqués
 
-| Service | Rôle |
-|---|---|
-| `StarterPackRequestService` | HTTP client vers le backend Express |
-| `FrancophonePackMembershipService` | Vérification et ajout au pack (NDK, kind 39089) |
-| `FrancophonePackNotificationService` | Envoi DM NIP-04 à l'approbation |
-| `NostrClientService` | NDK wrapper, auth, publish, DM |
-| `NostrSessionService` | Session state, admin detection |
+| Service                              | Rôle                                            |
+| ------------------------------------ | ----------------------------------------------- |
+| `StarterPackRequestService`          | HTTP client vers le backend Express             |
+| `FrancophonePackMembershipService`   | Vérification et ajout au pack (NDK, kind 39089) |
+| `FrancophonePackNotificationService` | Envoi DM NIP-04 à l'approbation                 |
+| `NostrClientService`                 | NDK wrapper, auth, publish, DM                  |
+| `NostrSessionService`                | Session state, admin detection                  |
 
 #### Domaine
 
-| Fichier | Rôle |
-|---|---|
-| `request-status.ts` | Résolution pure du statut à partir des timestamps |
-| `request-quiz.ts` | Modèle du quiz (questions, choix, sélection aléatoire) |
-| `francophone-pack.config.ts` | Config du pack (slug, admins, URLs) |
+| Fichier                      | Rôle                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| `request-status.ts`          | Résolution pure du statut à partir des timestamps      |
+| `request-quiz.ts`            | Modèle du quiz (questions, choix, sélection aléatoire) |
+| `francophone-pack.config.ts` | Config du pack (slug, admins, URLs)                    |
 
 #### États gérés
 
@@ -994,28 +1002,28 @@ Les demandes sont gérées par un serveur Express avec SQLite, pas par des event
 
 #### Table `pack_requests`
 
-| Colonne | Type | Description |
-|---|---|---|
-| `requester_pubkey` | TEXT PK | Pubkey hex du demandeur |
-| `requester_npub` | TEXT | npub du demandeur |
-| `display_name` | TEXT | Nom affiché |
-| `image_url` | TEXT | URL de l’avatar |
-| `question_id` | TEXT | ID de la question du quiz |
-| `choice_id` | TEXT | ID du choix sélectionné |
-| `created` | TEXT | Date de création |
-| `updated` | TEXT | Date de mise à jour |
-| `status` | TEXT | `pending` / `approved` / `rejected` |
+| Colonne            | Type    | Description                         |
+| ------------------ | ------- | ----------------------------------- |
+| `requester_pubkey` | TEXT PK | Pubkey hex du demandeur             |
+| `requester_npub`   | TEXT    | npub du demandeur                   |
+| `display_name`     | TEXT    | Nom affiché                         |
+| `image_url`        | TEXT    | URL de l’avatar                     |
+| `question_id`      | TEXT    | ID de la question du quiz           |
+| `choice_id`        | TEXT    | ID du choix sélectionné             |
+| `created`          | TEXT    | Date de création                    |
+| `updated`          | TEXT    | Date de mise à jour                 |
+| `status`           | TEXT    | `pending` / `approved` / `rejected` |
 
 #### API Endpoints
 
-| Endpoint | Méthode | Auth | Description |
-|---|---|---|---|
-| `/api/health` | GET | non | Health check |
-| `/api/pack-requests/me` | GET | NIP-98 | Statut de la demande de l’user connecté |
-| `/api/pack-requests` | POST | NIP-98 | Soumettre une demande |
-| `/api/admin/pack-requests` | GET | NIP-98 (admin) | Lister toutes les demandes |
-| `/api/admin/pack-requests/:pubkey/approve` | POST | NIP-98 (admin) | Approuver une demande |
-| `/api/admin/pack-requests/:pubkey/reject` | POST | NIP-98 (admin) | Rejeter une demande |
+| Endpoint                                   | Méthode | Auth           | Description                             |
+| ------------------------------------------ | ------- | -------------- | --------------------------------------- |
+| `/api/health`                              | GET     | non            | Health check                            |
+| `/api/pack-requests/me`                    | GET     | NIP-98         | Statut de la demande de l’user connecté |
+| `/api/pack-requests`                       | POST    | NIP-98         | Soumettre une demande                   |
+| `/api/admin/pack-requests`                 | GET     | NIP-98 (admin) | Lister toutes les demandes              |
+| `/api/admin/pack-requests/:pubkey/approve` | POST    | NIP-98 (admin) | Approuver une demande                   |
+| `/api/admin/pack-requests/:pubkey/reject`  | POST    | NIP-98 (admin) | Rejeter une demande                     |
 
 #### Auth NIP-98
 
@@ -1023,10 +1031,10 @@ Tous les endpoints protégés utilisent NIP-98 HTTP auth. Le frontend signe un e
 
 ### Scripts DB
 
-| Script | Rôle |
-|---|---|
-| `scripts/db-dump.sh` | Dump la DB en SQL |
-| `scripts/db-reset.sh` | Réinitialise la DB |
+| Script                  | Rôle                         |
+| ----------------------- | ---------------------------- |
+| `scripts/db-dump.sh`    | Dump la DB en SQL            |
+| `scripts/db-reset.sh`   | Réinitialise la DB           |
 | `scripts/db-restore.sh` | Restore la DB depuis un dump |
 
 ### Spécification initiale (kinds 30100/30101) — archivée
@@ -1128,34 +1136,41 @@ Champs minimums à prévoir :
 ## 31. Références officielles à suivre
 
 ### Angular
+
 1. `https://angular.dev/ai/mcp`
 2. `https://angular.dev/ai/develop-with-ai`
 3. `https://angular.dev/ai/develop-with-ai#angular-cli-mcp-server-setup`
 
 ### daisyUI
+
 1. `https://daisyui.com/docs/editor/`
 
 ### Évaluation
+
 1. `https://github.com/angular/web-codegen-scorer`
 
 ## 32. Commandes et setup attendus au Gate 0
 
 ### Création
+
 ```bash
 ng new nostr-tools --package-manager bun
 ```
 
 ### daisyUI
+
 ```bash
 bun i -D daisyui@latest
 ```
 
 ### Angular MCP
+
 ```bash
 ng mcp
 ```
 
 ### Serveur
+
 Le LLM doit lancer le serveur de dev et vérifier que le projet démarre.
 
 Il s’arrête ensuite et attend validation.
