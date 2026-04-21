@@ -233,7 +233,7 @@ export class NostrClientService {
   }
 }
 
-function normalizeHexPubkey(pubkey: string): string | null {
+export function normalizeHexPubkey(pubkey: string): string | null {
   const trimmedPubkey = pubkey.trim().toLowerCase();
   return /^[0-9a-f]{64}$/.test(trimmedPubkey) ? trimmedPubkey : null;
 }

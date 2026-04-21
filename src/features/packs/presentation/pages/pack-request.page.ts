@@ -181,7 +181,7 @@ export class PackRequestPage implements OnDestroy {
   }
 }
 
-function resolveRequestStatus(state: UserRequestState, isPackMember: boolean): UserRequestStatus {
+export function resolveRequestStatus(state: UserRequestState, isPackMember: boolean): UserRequestStatus {
   if (isPackMember) {
     return 'idle';
   }
@@ -189,7 +189,7 @@ function resolveRequestStatus(state: UserRequestState, isPackMember: boolean): U
   return state.status === 'pending' ? 'pending' : 'idle';
 }
 
-function resolveSubmitErrorKey(error: unknown): string {
+export function resolveSubmitErrorKey(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401) {
       return 'request.quiz.authError';
