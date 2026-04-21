@@ -26,6 +26,12 @@ describe('request status helpers', () => {
     );
   });
 
+  it('returns pending when a request is newer than an approval', () => {
+    expect(resolveUserRequestStatus({ createdAt: 30 }, { createdAt: 20, status: 'approved' })).toBe(
+      'pending',
+    );
+  });
+
   it('returns approved when the latest decision approves the request', () => {
     expect(resolveUserRequestStatus({ createdAt: 20 }, { createdAt: 30, status: 'approved' })).toBe('approved');
   });
@@ -63,6 +69,12 @@ describe('request status helpers', () => {
   it('returns decision status for admin when timestamps are equal', () => {
     expect(resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 20, status: 'approved' })).toBe(
       'approved',
+    );
+  });
+
+  it('returns rejected for admin when timestamps are equal and decision is rejected', () => {
+    expect(resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 20, status: 'rejected' })).toBe(
+      'rejected',
     );
   });
 

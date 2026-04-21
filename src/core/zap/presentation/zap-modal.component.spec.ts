@@ -1,5 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ZapService } from '../zap.service';
 import { ZapModalComponent } from './zap-modal.component';
@@ -43,6 +43,7 @@ function createZapServiceMock(): ZapServiceMock {
 }
 
 describe('ZapModalComponent', () => {
+  let fixture: ComponentFixture<ZapModalComponent>;
   let component: ZapModalComponent;
   let zap: ZapServiceMock;
 
@@ -54,7 +55,7 @@ describe('ZapModalComponent', () => {
       providers: [{ provide: ZapService, useValue: zap }],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(ZapModalComponent);
+    fixture = TestBed.createComponent(ZapModalComponent);
     component = fixture.componentInstance;
   });
 
@@ -141,5 +142,27 @@ describe('ZapModalComponent', () => {
     expect(zap.setAmount).not.toHaveBeenCalled();
     expect(zap.generateInvoice).not.toHaveBeenCalled();
     expect(zap.clearInvoice).not.toHaveBeenCalled();
+  });
+
+  it('disables submit button when amount or invoice state is invalid', () => {
+    zap.modalOpen.set(true);
+    fixture.detectChanges();
+
+    const submitButton = fixture.nativeElement.querySelector('button.btn-block') as HTMLButtonElement;
+    expect(submitButton.disabled).toBe(false);
+
+    component['amountControl'].setValue(20, { emitEvent: false });
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(true);
+
+    component['amountControl'].setValue(42, { emitEvent: false });
+    zap.invoiceLoading.set(true);
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(true);
+
+    zap.invoiceLoading.set(false);
+    zap.invoiceQr.set(null);
+    fixture.detectChanges();
+    expect(submitButton.disabled).toBe(true);
   });
 });

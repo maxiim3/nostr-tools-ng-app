@@ -190,6 +190,73 @@ describe('NostrSessionService', () => {
     expect(session.waitingForExternalAuth()).toBe(false);
     expect(session.error()).toBe('Signer rejected the connection.');
   });
+
+  it('closes the auth modal', () => {
+    const session = createService(client);
+    session.openAuthModal();
+    expect(session.authModalOpen()).toBe(true);
+
+    session.closeAuthModal();
+    expect(session.authModalOpen()).toBe(false);
+  });
+
+  it('resets state on disconnect', async () => {
+    (globalThis as NostrGlobal).nostr = {
+      getPublicKey: vi.fn<() => Promise<string>>().mockResolvedValue(sessionUser.pubkey),
+    };
+    client.connectWithExtension.mockResolvedValue(sessionUser);
+    client.clearSigner.mockResolvedValue(undefined);
+
+    const session = createService(client);
+    await session.connectWithExtension();
+    expect(session.user()).toEqual(sessionUser);
+
+    await session.disconnect();
+
+    expect(client.clearSigner).toHaveBeenCalledTimes(1);
+    expect(session.user()).toBeNull();
+    expect(session.error()).toBeNull();
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+  });
+
+  it('exposes isAuthenticated as a computed signal reflecting user presence', async () => {
+    (globalThis as NostrGlobal).nostr = {
+      getPublicKey: vi.fn<() => Promise<string>>().mockResolvedValue(sessionUser.pubkey),
+    };
+    client.connectWithExtension.mockResolvedValue(sessionUser);
+    client.clearSigner.mockResolvedValue(undefined);
+
+    const session = createService(client);
+    expect(session.isAuthenticated()).toBe(false);
+
+    await session.connectWithExtension();
+    expect(session.isAuthenticated()).toBe(true);
+
+    await session.disconnect();
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
+  it('identifies admin users via isAdmin', async () => {
+    const adminUser: SessionUser = {
+      ...sessionUser,
+      npub: 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du',
+    };
+    (globalThis as NostrGlobal).nostr = {
+      getPublicKey: vi.fn<() => Promise<string>>().mockResolvedValue(adminUser.pubkey),
+    };
+    client.connectWithExtension.mockResolvedValue(adminUser);
+    client.clearSigner.mockResolvedValue(undefined);
+
+    const session = createService(client);
+    expect(session.isAdmin()).toBe(false);
+
+    await session.connectWithExtension();
+    expect(session.isAdmin()).toBe(true);
+
+    await session.disconnect();
+    expect(session.isAdmin()).toBe(false);
+  });
 });
 
 function createService(client: NostrClientMock): NostrSessionService {

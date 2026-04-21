@@ -6,6 +6,8 @@ describe('request quiz', () => {
   });
 
   it('defines non-empty unique identifiers and labels', () => {
+    expect(REQUEST_QUIZ_QUESTIONS.length).toBeGreaterThan(0);
+
     const questionIds = new Set<string>();
 
     for (const question of REQUEST_QUIZ_QUESTIONS) {
