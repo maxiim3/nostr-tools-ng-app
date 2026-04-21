@@ -1,0 +1,242 @@
+import { Pipe, PipeTransform, signal, WritableSignal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoPipe } from '@jsverse/transloco';
+
+import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
+import { AppAuthModalComponent } from './app-auth-modal.component';
+
+const { toDataUrlMock } = vi.hoisted(() => ({
+  toDataUrlMock: vi.fn<(uri: string) => Promise<string | null>>(),
+}));
+
+vi.mock('qrcode', () => ({
+  default: {
+    toDataURL: toDataUrlMock,
+  },
+}));
+
+@Pipe({
+  name: 'transloco',
+})
+class MockTranslocoPipe implements PipeTransform {
+  transform(value: string): string {
+    return value;
+  }
+}
+
+interface SessionServiceMock {
+  authModalOpen: WritableSignal<boolean>;
+  extensionAvailable: WritableSignal<boolean>;
+  connecting: WritableSignal<boolean>;
+  error: WritableSignal<string | null>;
+  externalAuthUri: WritableSignal<string | null>;
+  waitingForExternalAuth: WritableSignal<boolean>;
+  connectWithExtension: ReturnType<typeof vi.fn>;
+  connectWithPrivateKey: ReturnType<typeof vi.fn>;
+  beginExternalAppLogin: ReturnType<typeof vi.fn>;
+  cancelExternalAppLogin: ReturnType<typeof vi.fn>;
+  closeAuthModal: ReturnType<typeof vi.fn>;
+}
+
+describe('AppAuthModalComponent', () => {
+  let fixture: ComponentFixture<AppAuthModalComponent>;
+  let component: AppAuthModalComponent;
+  let session: SessionServiceMock;
+
+  beforeEach(async () => {
+    session = createSessionServiceMock();
+    toDataUrlMock.mockResolvedValue('data:image/png;base64,qr-code');
+    Object.defineProperty(globalThis.navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: vi.fn<(value: string) => Promise<void>>().mockResolvedValue(undefined),
+      },
+    });
+
+    TestBed.overrideComponent(AppAuthModalComponent, {
+      remove: { imports: [TranslocoPipe] },
+      add: { imports: [MockTranslocoPipe] },
+    });
+
+    await TestBed.configureTestingModule({
+      imports: [AppAuthModalComponent],
+      providers: [{ provide: NostrSessionService, useValue: session }],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppAuthModalComponent);
+    component = fixture.componentInstance;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    TestBed.resetTestingModule();
+  });
+
+  it('calls extension auth when the extension CTA is clicked', async () => {
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.extension.cta');
+    await fixture.whenStable();
+
+    expect(session.connectWithExtension).toHaveBeenCalledTimes(1);
+    expect(component['privateKeyControl'].value).toBe('');
+  });
+
+  it('submits the provided private key and clears the field', async () => {
+    fixture.detectChanges();
+
+    component['privateKeyControl'].setValue('nsec1componenttest');
+    fixture.detectChanges();
+
+    clickButton(fixture, 'Go');
+    await fixture.whenStable();
+
+    expect(session.connectWithPrivateKey).toHaveBeenCalledWith('nsec1componenttest');
+    expect(component['privateKeyControl'].value).toBe('');
+  });
+
+  it('starts external auth, shows the waiting state, and renders a QR code', async () => {
+    fixture.detectChanges();
+
+    await component['startExternalApp']();
+    fixture.detectChanges();
+
+    expect(session.beginExternalAppLogin).toHaveBeenCalledTimes(1);
+    expect(session.externalAuthUri()).toBe('nostrconnect://example');
+    expect(session.waitingForExternalAuth()).toBe(true);
+    expect(toDataUrlMock).toHaveBeenCalledWith('nostrconnect://example', { width: 192, margin: 2 });
+    expect(component['externalAuthQr']()).toBe('data:image/png;base64,qr-code');
+
+    const link = fixture.nativeElement.querySelector('a[href="nostrconnect://example"]') as HTMLAnchorElement | null;
+
+    expect(link).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
+  });
+
+  it('copies the external auth URI and resets the copied state after a delay', async () => {
+    vi.useFakeTimers();
+    session.externalAuthUri.set('nostrconnect://copy-me');
+    session.waitingForExternalAuth.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.external.copy');
+    await flushAsync();
+    fixture.detectChanges();
+
+    expect(globalThis.navigator.clipboard.writeText).toHaveBeenCalledWith('nostrconnect://copy-me');
+    expect(fixture.nativeElement.textContent).toContain('authModal.external.copied');
+
+    vi.advanceTimersByTime(2000);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.external.copy');
+  });
+
+  it('cancels pending external auth when the modal is closed', () => {
+    session.externalAuthUri.set('nostrconnect://close');
+    session.waitingForExternalAuth.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'common.close');
+
+    expect(session.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
+    expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render the dialog when authModalOpen is false', () => {
+    session.authModalOpen.set(false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('dialog')).toBeNull();
+  });
+
+  it('does not copy when externalAuthUri is null', async () => {
+    session.externalAuthUri.set(null);
+    fixture.detectChanges();
+
+    await component['copyUri']();
+
+    expect(globalThis.navigator.clipboard.writeText).not.toHaveBeenCalled();
+    expect(component['copied']()).toBe(false);
+  });
+
+  it('clears QR and copied state when startExternalApp returns null', async () => {
+    session.beginExternalAppLogin.mockResolvedValue(null);
+
+    await component['startExternalApp']();
+
+    expect(component['externalAuthQr']()).toBeNull();
+    expect(component['copied']()).toBe(false);
+  });
+
+  it('resets local state on cancelExternalApp', () => {
+    component['copied'].set(true);
+    component['externalAuthQr'].set('data:image/png;base64,qr');
+
+    component['cancelExternalApp']();
+
+    expect(component['copied']()).toBe(false);
+    expect(component['externalAuthQr']()).toBeNull();
+    expect(session.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets local state when closing the modal without active external auth', () => {
+    component['privateKeyControl'].setValue('nsec1abc');
+    component['copied'].set(true);
+    component['externalAuthQr'].set('data:image/png;base64,qr');
+
+    component['close']();
+
+    expect(component['privateKeyControl'].value).toBe('');
+    expect(component['copied']()).toBe(false);
+    expect(component['externalAuthQr']()).toBeNull();
+    expect(session.cancelExternalAppLogin).not.toHaveBeenCalled();
+    expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
+  });
+});
+
+function createSessionServiceMock(): SessionServiceMock {
+  const session = {
+    authModalOpen: signal(true),
+    extensionAvailable: signal(true),
+    connecting: signal(false),
+    error: signal<string | null>(null),
+    externalAuthUri: signal<string | null>(null),
+    waitingForExternalAuth: signal(false),
+    connectWithExtension: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
+    connectWithPrivateKey: vi.fn<(value: string) => Promise<boolean>>().mockResolvedValue(true),
+    beginExternalAppLogin: vi.fn<() => Promise<string | null>>().mockImplementation(async () => {
+      session.externalAuthUri.set('nostrconnect://example');
+      session.waitingForExternalAuth.set(true);
+      return 'nostrconnect://example';
+    }),
+    cancelExternalAppLogin: vi.fn<() => void>().mockImplementation(() => {
+      session.externalAuthUri.set(null);
+      session.waitingForExternalAuth.set(false);
+    }),
+    closeAuthModal: vi.fn<() => void>().mockImplementation(() => {
+      session.authModalOpen.set(false);
+    }),
+  } satisfies SessionServiceMock;
+
+  return session;
+}
+
+function clickButton(fixture: ComponentFixture<AppAuthModalComponent>, text: string): void {
+  const button = [...fixture.nativeElement.querySelectorAll('button')].find((element) =>
+    element.textContent?.includes(text),
+  ) as HTMLButtonElement | undefined;
+
+  if (!button) {
+    throw new Error(`Button containing "${text}" not found.`);
+  }
+
+  button.click();
+  fixture.detectChanges();
+}
+
+async function flushAsync(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
