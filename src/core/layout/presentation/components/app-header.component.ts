@@ -12,19 +12,20 @@ import { ZapService } from '../../../zap/zap.service';
   imports: [RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="sticky top-0 z-20 w-full bg-orange-500 shadow-sm">
+    <header class="sticky top-0 z-20 w-full border-b-[3px] border-[#0a0a0a] bg-[#FF5C00]">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <a
           routerLink="/"
-          class="shrink-0 text-3xl modak-regular font-bold font-sans uppercase text-white"
+          class="modak-regular shrink-0 text-3xl font-bold uppercase text-white"
+          style="text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2)"
         >
           {{ project.name }}
         </a>
 
-        <nav class="hidden flex-1 items-center gap-4 md:flex">
+        <nav class="hidden flex-1 items-center gap-6 md:flex">
           <a
             routerLink="/packs/francophone/request"
-            class="text-sm font-semibold text-white/80 transition hover:text-white"
+            class="text-sm font-bold text-white decoration-white/30 decoration-[3px] underline underline-offset-4 transition-all hover:decoration-white"
           >
             {{ 'header.request' | transloco }}
           </a>
@@ -32,34 +33,36 @@ import { ZapService } from '../../../zap/zap.service';
           @if (session.isAdmin()) {
             <a
               routerLink="/packs/francophone/admin/requests"
-              class="text-sm font-semibold text-white/80 transition hover:text-white"
+              class="text-sm font-bold text-white decoration-white/30 decoration-[3px] underline underline-offset-4 transition-all hover:decoration-white"
             >
               {{ 'header.adminRequests' | transloco }}
             </a>
           }
         </nav>
 
-        <div class="hidden md:flex ml-auto items-center gap-3">
+        <div class="ml-auto hidden items-center gap-3 md:flex">
           @if (session.user(); as user) {
-            <div class="flex items-center gap-3 rounded-full bg-white/15 px-3 py-1.5 text-white">
+            <div
+              class="flex items-center gap-3 border-[3px] border-[#0a0a0a] bg-white/15 px-3 py-1.5 text-white"
+            >
               @if (user.imageUrl) {
                 <img
                   [src]="user.imageUrl"
                   [alt]="user.displayName"
-                  class="h-10 w-10 rounded-full object-cover"
+                  class="h-10 w-10 border-[2px] border-[#0a0a0a] object-cover"
                 />
               } @else {
                 <span
-                  class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white"
+                  class="flex h-10 w-10 items-center justify-center border-[2px] border-[#0a0a0a] bg-white/25 text-sm font-bold text-white"
                 >
                   {{ initials(user.displayName) }}
                 </span>
               }
 
-              <span class="max-w-36 truncate text-sm font-semibold">{{ user.displayName }}</span>
+              <span class="max-w-36 truncate text-sm font-bold">{{ user.displayName }}</span>
             </div>
 
-            <button type="button" class="btn btn-primary gap-2" (click)="disconnect()">
+            <button type="button" class="btn btn-sm bg-white text-[#0a0a0a]" (click)="disconnect()">
               <svg
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +83,7 @@ import { ZapService } from '../../../zap/zap.service';
           } @else {
             <button
               type="button"
-              class="btn btn-primary gap-2"
+              class="btn btn-sm bg-white text-[#0a0a0a]"
               [disabled]="session.connecting()"
               (click)="openAuthModal()"
             >
@@ -103,17 +106,18 @@ import { ZapService } from '../../../zap/zap.service';
             </button>
           }
 
-          <button
-            type="button"
-            class="btn btn-accent"
-            [attr.aria-label]="'zap.buttonAria' | transloco"
-            (click)="zap.openModal()"
-          >
-            ❤️
-          </button>
+          @if (session.user()) {
+            <button
+              type="button"
+              class="text-sm font-semibold text-white/80 transition hover:text-white"
+              (click)="zap.openModal()"
+            >
+              {{ 'header.support' | transloco }}
+            </button>
+          }
 
           <div
-            class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
+            class="inline-flex items-center border-[3px] border-[#0a0a0a] bg-white"
             role="group"
             aria-label="Language switcher"
           >
@@ -121,7 +125,7 @@ import { ZapService } from '../../../zap/zap.service';
               @if (language.currentLanguage() === lang) {
                 <button
                   type="button"
-                  class="rounded-full bg-white px-3 py-1 text-sm font-semibold text-orange-600 transition"
+                  class="bg-[#0a0a0a] px-3 py-1 text-sm font-bold text-white"
                   aria-pressed="true"
                   (click)="language.setLanguage(lang)"
                 >
@@ -130,7 +134,7 @@ import { ZapService } from '../../../zap/zap.service';
               } @else {
                 <button
                   type="button"
-                  class="rounded-full px-3 py-1 text-sm font-medium text-white/60 transition hover:text-white"
+                  class="px-3 py-1 text-sm font-medium text-[#0a0a0a] transition-colors hover:bg-[#0a0a0a]/5"
                   aria-pressed="false"
                   (click)="language.setLanguage(lang)"
                 >
@@ -141,10 +145,9 @@ import { ZapService } from '../../../zap/zap.service';
           </div>
         </div>
 
-        <!-- Mobile hamburger -->
         <button
           type="button"
-          class="ml-auto md:hidden flex items-center justify-center size-10 rounded-lg text-white transition hover:bg-white/10"
+          class="ml-auto flex size-10 items-center justify-center border-[3px] border-[#0a0a0a] bg-white text-[#0a0a0a] md:hidden"
           aria-label="Toggle menu"
           (click)="toggleMobileMenu()"
         >
@@ -155,8 +158,8 @@ import { ZapService } from '../../../zap/zap.service';
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
-            class="size-6"
+            stroke-width="2.5"
+            class="size-5"
           >
             @if (mobileMenuOpen()) {
               <path d="M18 6L6 18" />
@@ -171,14 +174,11 @@ import { ZapService } from '../../../zap/zap.service';
       </div>
 
       @if (mobileMenuOpen()) {
-        <nav
-          class="absolute inset-x-0 top-16 mx-auto max-w-7xl border-t border-white/10 bg-orange-500 shadow-2xl md:hidden"
-        >
-          <!-- Nav section -->
-          <div class="p-4 space-y-1">
+        <nav class="border-t-[3px] border-[#0a0a0a] bg-[#FF5C00] md:hidden">
+          <div class="space-y-0 p-4">
             <a
               routerLink="/packs/francophone/request"
-              class="mx-auto block max-w-xs w-full rounded-xl py-4 px-6 text-lg font-semibold text-white/90 transition hover:bg-white/10"
+              class="block border-[3px] border-[#0a0a0a] bg-white px-6 py-4 text-center text-lg font-bold text-[#0a0a0a] transition-colors hover:bg-[#FFE600]"
               (click)="closeMobileMenu()"
             >
               {{ 'header.request' | transloco }}
@@ -186,7 +186,7 @@ import { ZapService } from '../../../zap/zap.service';
             @if (session.isAdmin()) {
               <a
                 routerLink="/packs/francophone/admin/requests"
-                class="mx-auto block max-w-xs w-full rounded-xl py-4 px-6 text-lg font-semibold text-white/90 transition hover:bg-white/10"
+                class="mt-1 block border-[3px] border-[#0a0a0a] bg-white px-6 py-4 text-center text-lg font-bold text-[#0a0a0a] transition-colors hover:bg-[#FFE600]"
                 (click)="closeMobileMenu()"
               >
                 {{ 'header.adminRequests' | transloco }}
@@ -194,32 +194,27 @@ import { ZapService } from '../../../zap/zap.service';
             }
           </div>
 
-          <hr class="border-white/20" />
-
-          <!-- Profile section -->
-          <div class="border-t border-white/20 bg-white/5 p-4">
+          <div class="border-t-[3px] border-[#0a0a0a] p-4">
             @if (session.user(); as user) {
               <div class="mb-4 flex items-center gap-4">
                 @if (user.imageUrl) {
                   <img
                     [src]="user.imageUrl"
                     [alt]="user.displayName"
-                    class="h-12 w-12 flex-shrink-0 rounded-full object-cover"
+                    class="h-12 w-12 shrink-0 border-[3px] border-[#0a0a0a] object-cover"
                   />
                 } @else {
                   <span
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white flex-shrink-0"
+                    class="flex h-12 w-12 shrink-0 items-center justify-center border-[3px] border-[#0a0a0a] bg-white/25 text-base font-bold text-white"
                   >
                     {{ initials(user.displayName) }}
                   </span>
                 }
-                <span class="truncate text-base font-semibold text-white">{{
-                  user.displayName
-                }}</span>
+                <span class="truncate text-base font-bold text-white">{{ user.displayName }}</span>
               </div>
               <button
                 type="button"
-                class="mx-auto block max-w-xs w-full h-12 rounded-xl bg-white/10 px-4 text-base font-semibold text-white transition hover:bg-white/20"
+                class="block w-full border-[3px] border-[#0a0a0a] bg-white px-4 py-3 text-center text-base font-bold text-[#0a0a0a] transition-colors hover:bg-[#FFE600]"
                 (click)="disconnect(); closeMobileMenu()"
               >
                 <svg
@@ -231,7 +226,7 @@ import { ZapService } from '../../../zap/zap.service';
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  class="inline size-5 mr-2"
+                  class="mr-2 inline size-5"
                 >
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <path d="M16 17l5-5-5-5" />
@@ -242,7 +237,7 @@ import { ZapService } from '../../../zap/zap.service';
             } @else {
               <button
                 type="button"
-                class="mx-auto block max-w-xs w-full h-14 rounded-xl btn btn-primary text-base"
+                class="block w-full border-[3px] border-[#0a0a0a] bg-white px-4 py-4 text-center text-lg font-bold text-[#0a0a0a] transition-colors hover:bg-[#FFE600]"
                 [disabled]="session.connecting()"
                 (click)="openAuthModal(); closeMobileMenu()"
               >
@@ -255,7 +250,7 @@ import { ZapService } from '../../../zap/zap.service';
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  class="inline size-5 mr-2"
+                  class="mr-2 inline size-5"
                 >
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                   <path d="M10 17l5-5-5-5" />
@@ -263,21 +258,13 @@ import { ZapService } from '../../../zap/zap.service';
                 </svg>
                 {{ 'common.login' | transloco }}
               </button>
-              <button
-                type="button"
-                class="mx-auto mt-3 block max-w-xs w-full h-14 rounded-xl bg-white/10 px-6 py-3 text-lg font-semibold text-white transition hover:bg-white/20"
-                [attr.aria-label]="'zap.buttonAria' | transloco"
-                (click)="zap.openModal(); closeMobileMenu()"
-              >
-                ❤️ Zaps
-              </button>
             }
           </div>
 
-          <div class="border-t border-white/20 p-4">
-            <div class="flex gap-2 justify-center">
+          <div class="border-t-[3px] border-[#0a0a0a] p-4">
+            <div class="flex justify-center">
               <div
-                class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
+                class="inline-flex items-center border-[3px] border-[#0a0a0a] bg-white"
                 role="group"
                 aria-label="Language switcher"
               >
@@ -285,7 +272,7 @@ import { ZapService } from '../../../zap/zap.service';
                   @if (language.currentLanguage() === lang) {
                     <button
                       type="button"
-                      class="rounded-full bg-white px-4 py-2 text-base font-semibold text-orange-600 transition"
+                      class="bg-[#0a0a0a] px-4 py-2 text-base font-bold text-white"
                       aria-pressed="true"
                       (click)="language.setLanguage(lang); closeMobileMenu()"
                     >
@@ -294,7 +281,7 @@ import { ZapService } from '../../../zap/zap.service';
                   } @else {
                     <button
                       type="button"
-                      class="rounded-full px-4 py-2 text-base font-medium text-white/70 transition hover:text-white hover:bg-white/10"
+                      class="px-4 py-2 text-base font-medium text-[#0a0a0a] hover:bg-[#0a0a0a]/5"
                       aria-pressed="false"
                       (click)="language.setLanguage(lang); closeMobileMenu()"
                     >
