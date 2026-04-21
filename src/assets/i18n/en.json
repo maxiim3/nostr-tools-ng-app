@@ -15,13 +15,15 @@
     "extension": {
       "title": "Browser extension",
       "body": "Use NIP-07 when your Nostr extension is available in the browser.",
-      "cta": "Connect extension"
+      "cta": "Use extension"
     },
     "external": {
       "title": "External app",
       "body": "On mobile, open a Nostr Connect compatible app and approve the connection there.",
       "cta": "Generate link",
-      "open": "Open external app",
+      "open": "Open app",
+      "copy": "Copy link",
+      "copied": "Link copied",
       "waiting": "Waiting for approval in your app...",
       "cancel": "Cancel"
     },
@@ -47,11 +49,11 @@
       "4": "Don't reload, it's taking longer than usual...",
       "5": "Still working on it..."
     },
-    "connect": "Connect to request access",
+    "connect": "Connect",
     "identity": "Connected account",
     "extensionLogin": "Login with extension",
     "externalLogin": "Open external app",
-    "requestJoin": "Request to join",
+    "requestJoin": "Request access",
     "status": {
       "idle": "You can submit a request now.",
       "pending": "Your request is pending review.",
@@ -71,7 +73,7 @@
     "followup": {
       "title": "While you wait",
       "subtitle": "You can already open the starter pack, follow me, or send a 42 sats zap.",
-      "starterPack": "Open the starter pack",
+      "starterPack": "Open pack",
       "follow": "Open my profile",
       "zap": "Zap 42 sats"
     },

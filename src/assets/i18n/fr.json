@@ -15,13 +15,15 @@
     "extension": {
       "title": "Extension du navigateur",
       "body": "Utilise NIP-07 lorsque ton extension Nostr est disponible dans le navigateur.",
-      "cta": "Se connecter avec l'extension"
+      "cta": "Avec l'extension"
     },
     "external": {
       "title": "Application externe",
       "body": "Sur mobile, ouvre une application compatible Nostr Connect et approuve la connexion dans celle-ci.",
       "cta": "Générer le lien",
-      "open": "Ouvrir l'application externe",
+      "open": "Ouvrir l'app",
+      "copy": "Copier le lien",
+      "copied": "Lien copié",
       "waiting": "En attente d'approbation dans ton application...",
       "cancel": "Annuler"
     },
@@ -47,11 +49,11 @@
       "4": "Ne recharge pas, c'est plus long que d'habitude...",
       "5": "On travaille encore dessus..."
     },
-    "connect": "Se connecter pour demander l'accès",
+    "connect": "Se connecter",
     "identity": "Compte connecté",
     "extensionLogin": "Se connecter avec l'extension",
     "externalLogin": "Ouvrir l'application externe",
-    "requestJoin": "Demander à rejoindre",
+    "requestJoin": "Demander l'accès",
     "status": {
       "idle": "Tu peux envoyer une demande maintenant.",
       "pending": "Ta demande est en attente de validation.",
@@ -71,7 +73,7 @@
     "followup": {
       "title": "En attendant",
       "subtitle": "Tu peux déjà ouvrir le starter pack, me suivre ou envoyer un zap de 42 sats.",
-      "starterPack": "Ouvrir le starter pack",
+      "starterPack": "Ouvrir le pack",
       "follow": "Ouvrir mon profil",
       "zap": "Zap 42 sats"
     },

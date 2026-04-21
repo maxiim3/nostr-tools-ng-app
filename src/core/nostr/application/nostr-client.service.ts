@@ -3,6 +3,7 @@ import type NDK from '@nostr-dev-kit/ndk';
 import type { NDKEvent, NDKFilter, NDKSigner, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import type { Event, EventTemplate } from 'nostr-tools';
 
+import { PROJECT_INFO } from '../../config/project-info';
 import { DEFAULT_RELAY_URLS } from '../infrastructure/relay.config';
 
 const EXTERNAL_AUTH_RELAY_URL = 'wss://relay.nsec.app';
@@ -43,10 +44,15 @@ export class NostrClientService {
   async beginExternalAppLogin(): Promise<string> {
     const ndk = await this.ensureNdk();
     const { NDKNip46Signer } = await this.ndkModulePromise;
+    const appUrl = typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
 
     this.pendingExternalSigner?.stop();
 
-    const signer = NDKNip46Signer.nostrconnect(ndk, EXTERNAL_AUTH_RELAY_URL);
+    const signer = NDKNip46Signer.nostrconnect(ndk, EXTERNAL_AUTH_RELAY_URL, undefined, {
+      name: PROJECT_INFO.name,
+      url: appUrl,
+      image: appUrl ? `${appUrl}/favicon.ico` : undefined,
+    });
     this.pendingExternalSigner = signer;
 
     if (!signer.nostrConnectUri) {

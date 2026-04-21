@@ -38,7 +38,10 @@
     </button>
     } @else if (!isAuthenticated()) {
     <div class="space-y-4">
-      <button class="btn btn-primary btn-lg mx-auto" (click)="connect()">
+      <button
+        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+        (click)="connect()"
+      >
         {{ 'request.connect' | transloco }}
       </button>
     </div>
@@ -46,12 +49,20 @@
     <div class="alert alert-info">
       <span>{{ 'request.status.alreadyMember' | transloco }}</span>
     </div>
-    <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-primary btn-sm mx-auto">
+    <a
+      [href]="packFRUrl"
+      target="_blank"
+      rel="noreferrer"
+      class="btn btn-primary btn-sm mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+    >
       {{ 'request.followup.starterPack' | transloco }}
     </a>
     } @else if (requestStatus() === 'idle') {
     <div class="space-y-4">
-      <button class="btn btn-primary btn-lg mx-auto" (click)="startQuiz()">
+      <button
+        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+        (click)="startQuiz()"
+      >
         {{ 'request.requestJoin' | transloco }}
       </button>
     </div>
@@ -61,10 +72,10 @@
     </div>
     }
     <!--ICI-->
-    <div class="flex items-center justify-center gap-3 pt-2">
+    <div class="flex flex-col items-stretch justify-center gap-3 pt-2 sm:flex-row sm:items-center">
       <button
         type="button"
-        class="btn btn-ghost gap-2"
+        class="btn btn-ghost h-auto w-full gap-2 px-4 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
         [disabled]="followLoading() || !isAuthenticated()"
         (click)="isAuthenticated() ? followOwner() : connect()"
       >
@@ -81,8 +92,12 @@
 {{ 'request.follow.me' | transloco }}
         }
       </button>
-      <button type="button" class="btn btn-outline gap-2" (click)="openZap()">
-{{ 'zap.support' | transloco }}
+      <button
+        type="button"
+        class="btn btn-outline h-auto w-full gap-2 px-4 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+        (click)="openZap()"
+      >
+ {{ 'zap.support' | transloco }}
       </button>
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
+import QRCode from 'qrcode';
 
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
 
@@ -12,11 +13,11 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
     @if (session.authModalOpen()) {
       <dialog class="modal modal-open">
         <div
-          class="modal-box max-w-lg bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50 md:px-12 md:pt-12 md:pb-8"
+          class="modal-box max-w-lg rounded-3xl border border-base-200/50 bg-base-100/95 px-5 pt-8 pb-6 shadow-2xl backdrop-blur-xl sm:px-8 sm:pt-10 md:px-12 md:pt-12 md:pb-8"
         >
           <div class="space-y-6">
             <div class="space-y-2">
-              <h2 class="text-3xl font-bold text-base-content leading-tight">
+              <h2 class="text-2xl leading-tight font-bold text-base-content sm:text-3xl">
                 {{ 'authModal.title' | transloco }}
               </h2>
               <p class="text-sm text-base-content/70">{{ 'authModal.subtitle' | transloco }}</p>
@@ -40,7 +41,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 </p>
                 <button
                   type="button"
-                  class="btn btn-primary w-full"
+                  class="btn btn-primary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                   [disabled]="!session.extensionAvailable() || session.connecting()"
                   (click)="loginWithExtension()"
                 >
@@ -58,9 +59,25 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
 
                 @if (session.externalAuthUri()) {
                   <div class="space-y-3">
-                    <a [href]="session.externalAuthUri()!" class="btn btn-outline w-full">{{
+                    <a
+                      [href]="session.externalAuthUri()!"
+                      class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                      rel="noreferrer"
+                    >{{
                       'authModal.external.open' | transloco
                     }}</a>
+                    <button
+                      type="button"
+                      class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                      (click)="copyUri()"
+                    >
+                      {{ (copied() ? 'authModal.external.copied' : 'authModal.external.copy') | transloco }}
+                    </button>
+                    @if (externalAuthQr()) {
+                      <div class="flex justify-center">
+                        <img [src]="externalAuthQr()!" alt="Nostr Connect QR code" class="rounded-xl size-40" />
+                      </div>
+                    }
                     <p
                       class="break-all rounded-box bg-base-200 px-3 py-2 text-xs text-base-content/70"
                     >
@@ -73,7 +90,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                     }
                     <button
                       type="button"
-                      class="btn btn-ghost btn-sm w-full"
+                      class="btn btn-ghost btn-sm h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:whitespace-nowrap"
                       (click)="cancelExternalApp()"
                     >
                       {{ 'authModal.external.cancel' | transloco }}
@@ -82,7 +99,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 } @else {
                   <button
                     type="button"
-                    class="btn btn-outline w-full"
+                    class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                     [disabled]="session.connecting()"
                     (click)="startExternalApp()"
                   >
@@ -104,7 +121,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                   />
                   <button
                     type="button"
-                    class="btn btn-outline w-full flex-0"
+                    class="btn btn-outline flex-0 text-sm sm:text-base"
                     [disabled]="session.connecting() || privateKeyControl.invalid"
                     (click)="loginWithPrivateKey()"
                   >
@@ -138,9 +155,17 @@ export class AppAuthModalComponent {
     validators: [Validators.required],
   });
   protected readonly copied = signal(false);
+  protected readonly externalAuthQr = signal<string | null>(null);
 
   protected close(): void {
     this.privateKeyControl.setValue('');
+    this.copied.set(false);
+    this.externalAuthQr.set(null);
+
+    if (this.session.externalAuthUri() || this.session.waitingForExternalAuth()) {
+      this.session.cancelExternalAppLogin();
+    }
+
     this.session.closeAuthModal();
   }
 
@@ -156,13 +181,20 @@ export class AppAuthModalComponent {
 
   protected async startExternalApp(): Promise<void> {
     const uri = await this.session.beginExternalAppLogin();
+    this.copied.set(false);
 
-    if (uri && typeof window !== 'undefined') {
-      window.location.href = uri;
+    if (!uri) {
+      this.externalAuthQr.set(null);
+      return;
     }
+
+    const qr = await QRCode.toDataURL(uri, { width: 192, margin: 2 }).catch(() => null);
+    this.externalAuthQr.set(qr);
   }
 
   protected cancelExternalApp(): void {
+    this.copied.set(false);
+    this.externalAuthQr.set(null);
     this.session.cancelExternalAppLogin();
   }
 
