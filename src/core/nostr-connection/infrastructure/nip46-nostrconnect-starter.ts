@@ -1,3 +1,4 @@
+import type { ConnectionAttemptInstructions } from '../domain/connection-attempt';
 import type { ConnectionCapability } from '../domain/connection-capability';
 import type { UnsignedNostrEvent } from '../domain/nostr-event';
 
@@ -7,8 +8,8 @@ export interface Nip46RemoteSigner {
   stop(): void;
 }
 
-export interface Nip46NostrconnectAttemptHandle {
-  readonly uri: string;
+export interface Nip46AttemptHandle {
+  readonly instructions: ConnectionAttemptInstructions | null;
   readonly capabilities: readonly ConnectionCapability[];
 
   waitForConnection(): Promise<Nip46RemoteSigner>;
@@ -18,5 +19,5 @@ export interface Nip46NostrconnectAttemptHandle {
 
 export interface Nip46NostrconnectStarter {
   isAvailable(): Promise<boolean>;
-  start(): Promise<Nip46NostrconnectAttemptHandle>;
+  start(): Promise<Nip46AttemptHandle>;
 }

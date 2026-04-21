@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ConnectionMethod } from '../../domain/connection-method';
 import type { ConnectionMethodId } from '../../domain/connection-method-id';
+import type { ConnectionRequest } from '../../domain/connection-method';
 
 export interface ConnectionMethodContractHarness {
   expectedId: ConnectionMethodId;
@@ -8,6 +9,9 @@ export interface ConnectionMethodContractHarness {
   createUnavailableMethod(): ConnectionMethod;
   createRejectedMethod(): ConnectionMethod;
   createIdentityChangingMethod(): ConnectionMethod;
+  availableRequest?: ConnectionRequest;
+  rejectedRequest?: ConnectionRequest;
+  identityChangingRequest?: ConnectionRequest;
 }
 
 export function runConnectionMethodContract(harness: ConnectionMethodContractHarness): void {
@@ -22,7 +26,9 @@ export function runConnectionMethodContract(harness: ConnectionMethodContractHar
       const method = harness.createAvailableMethod();
       await expect(method.isAvailable()).resolves.toBe(true);
 
-      const attempt = await method.start({ reason: 'interactive-login' });
+      const attempt = await method.start(
+        harness.availableRequest ?? { reason: 'interactive-login' }
+      );
       const connection = await attempt.complete();
       const session = connection.getSession();
 
@@ -43,7 +49,7 @@ export function runConnectionMethodContract(harness: ConnectionMethodContractHar
     it('surfaces user rejection as a domain error', async () => {
       const method = harness.createRejectedMethod();
 
-      const attempt = await method.start();
+      const attempt = await method.start(harness.rejectedRequest);
 
       await expect(attempt.complete()).rejects.toMatchObject({
         code: 'user_rejected',
@@ -52,7 +58,7 @@ export function runConnectionMethodContract(harness: ConnectionMethodContractHar
 
     it('revalidates identity changes explicitly', async () => {
       const method = harness.createIdentityChangingMethod();
-      const attempt = await method.start();
+      const attempt = await method.start(harness.identityChangingRequest);
       const connection = await attempt.complete();
 
       const revalidation = await connection.revalidate();

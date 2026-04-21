@@ -16,8 +16,7 @@ import { ZapService } from '../../../zap/zap.service';
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <a
           routerLink="/"
-          class="modak-regular shrink-0 text-3xl font-bold uppercase text-white"
-          style="text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2)"
+          class="shrink-0 text-3xl font-extrabold uppercase text-white tracking-tight"
         >
           {{ project.name }}
         </a>

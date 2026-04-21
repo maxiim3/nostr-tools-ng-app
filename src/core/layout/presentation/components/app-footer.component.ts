@@ -103,7 +103,7 @@ import { ZapService } from '../../../zap/zap.service';
         </div>
 
         <div class="mt-10 border-t border-white/10 pt-6 text-center">
-          <span class="modak-regular text-2xl text-white/30">ToolStr</span>
+          <span class="text-2xl font-extrabold text-white/30 uppercase tracking-tight">ToolStr</span>
         </div>
       </div>
     </footer>

@@ -5,6 +5,7 @@ export type ConnectionReason = 'interactive-login' | 'background-restore' | 'sen
 
 export interface ConnectionRequest {
   readonly reason: ConnectionReason;
+  readonly connectionToken?: string;
 }
 
 export interface ConnectionMethod {

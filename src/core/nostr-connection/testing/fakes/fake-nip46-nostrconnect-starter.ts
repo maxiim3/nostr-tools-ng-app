@@ -1,6 +1,6 @@
 import type { ConnectionCapability } from '../../domain/connection-capability';
 import type {
-  Nip46NostrconnectAttemptHandle,
+  Nip46AttemptHandle,
   Nip46NostrconnectStarter,
   Nip46RemoteSigner,
 } from '../../infrastructure/nip46-nostrconnect-starter';
@@ -13,8 +13,8 @@ export interface FakeNip46NostrconnectAttemptHandleOptions {
   waitError?: Error;
 }
 
-export class FakeNip46NostrconnectAttemptHandle implements Nip46NostrconnectAttemptHandle {
-  readonly uri: string;
+export class FakeNip46NostrconnectAttemptHandle implements Nip46AttemptHandle {
+  readonly instructions;
   readonly capabilities: readonly ConnectionCapability[];
 
   cancelCalls = 0;
@@ -25,7 +25,12 @@ export class FakeNip46NostrconnectAttemptHandle implements Nip46NostrconnectAtte
   private readonly waitError?: Error;
 
   constructor(options: FakeNip46NostrconnectAttemptHandleOptions = {}) {
-    this.uri = options.uri ?? 'nostrconnect://example';
+    const uri = options.uri ?? 'nostrconnect://example';
+    this.instructions = {
+      launchUrl: uri,
+      copyValue: uri,
+      qrCodeValue: uri,
+    };
     this.capabilities = options.capabilities ?? [
       'sign-event',
       'nip98-auth',
@@ -68,7 +73,7 @@ export class FakeNip46NostrconnectAttemptHandle implements Nip46NostrconnectAtte
 export interface FakeNip46NostrconnectStarterOptions {
   available?: boolean;
   startError?: Error;
-  attempt?: Nip46NostrconnectAttemptHandle;
+  attempt?: Nip46AttemptHandle;
 }
 
 export class FakeNip46NostrconnectStarter implements Nip46NostrconnectStarter {
@@ -77,7 +82,7 @@ export class FakeNip46NostrconnectStarter implements Nip46NostrconnectStarter {
 
   private readonly available: boolean;
   private readonly startError?: Error;
-  private readonly attempt: Nip46NostrconnectAttemptHandle;
+  private readonly attempt: Nip46AttemptHandle;
 
   constructor(options: FakeNip46NostrconnectStarterOptions = {}) {
     this.available = options.available ?? true;
@@ -90,7 +95,7 @@ export class FakeNip46NostrconnectStarter implements Nip46NostrconnectStarter {
     return this.available;
   }
 
-  async start(): Promise<Nip46NostrconnectAttemptHandle> {
+  async start(): Promise<Nip46AttemptHandle> {
     this.startCalls += 1;
 
     if (this.startError) {
@@ -100,3 +105,5 @@ export class FakeNip46NostrconnectStarter implements Nip46NostrconnectStarter {
     return this.attempt;
   }
 }
+
+export { FakeNip46NostrconnectAttemptHandle as FakeNip46AttemptHandle };

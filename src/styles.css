@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Modak&family=Onest:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
 @import 'tailwindcss';
 
 @plugin "daisyui" {
@@ -52,12 +52,6 @@ h4,
 h5,
 h6 {
   font-family: 'Syne', 'Onest', system-ui, sans-serif;
-}
-
-.modak-regular {
-  font-family: 'Modak', system-ui;
-  font-weight: 400;
-  font-style: normal;
 }
 
 /* ─── Background Patterns ─── */
