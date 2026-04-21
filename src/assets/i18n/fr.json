@@ -40,7 +40,8 @@
     "home": "Accueil",
     "request": "Demande",
     "adminRequests": "Demandes admin",
-    "openExternal": "App externe"
+    "openExternal": "App externe",
+    "support": "Soutenir ⚡"
   },
   "request": {
     "title": "Rejoindre le starter pack francophone",
@@ -90,6 +91,12 @@
     "description": "Une boîte à outils pour la communauté francophone de Nostr. Demande l'accès au starter pack, suis les profils clés et découvre l'écosystème.",
     "cta": "Rejoindre\nle Starter Pack"
   },
+  "supportCard": {
+    "message": "Ensemble, faisons grandir Nostr, le réseau décentralisé et souverain.",
+    "follow": "Suivre",
+    "followed": "Suivi ✓",
+    "zap": "Envoyer un zap ⚡"
+  },
   "zap": {
     "button": "Zap",
     "authRequired": {
@@ -106,8 +113,7 @@
       "invoiceError": "Erreur de génération",
       "validation": "Entre 21 et 100 000 sats",
       "loading": "Génération..."
-    },
-    "support": "Merci ❤️"
+    }
   },
   "profile": {
     "unknownUser": "Utilisateur inconnu",
@@ -116,7 +122,9 @@
   "footer": {
     "contact": "Contact",
     "dm": "Mon profil",
-    "zapMe": "Zap me 🫶",
+    "follow": "Me suivre",
+    "followed": "Suivi ✓",
+    "support": "Soutenir ⚡",
     "credits": "Crédits",
     "legal": "Legal",
     "cgu": "CGU"

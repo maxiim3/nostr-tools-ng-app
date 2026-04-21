@@ -40,7 +40,8 @@
     "home": "Home",
     "request": "Request",
     "adminRequests": "Admin requests",
-    "openExternal": "External app"
+    "openExternal": "External app",
+    "support": "Support ⚡"
   },
   "request": {
     "title": "Join the francophone starter pack",
@@ -90,6 +91,12 @@
     "description": "A toolkit for the francophone Nostr community. Request access to the starter pack, follow key profiles, and explore the ecosystem.",
     "cta": "Join the starter pack"
   },
+  "supportCard": {
+    "message": "Together, let's grow Nostr, the decentralized and sovereign network.",
+    "follow": "Follow",
+    "followed": "Followed ✓",
+    "zap": "Send a zap ⚡"
+  },
   "zap": {
     "button": "Zap",
     "authRequired": {
@@ -106,8 +113,7 @@
       "invoiceError": "Failed to generate invoice",
       "validation": "Between 21 and 100,000 sats",
       "loading": "Generating..."
-    },
-    "support": "Thanks ❤️"
+    }
   },
   "profile": {
     "unknownUser": "Unknown user",
@@ -116,7 +122,9 @@
   "footer": {
     "contact": "Contact",
     "dm": "My profile",
-    "zapMe": "Zap me 🫶",
+    "follow": "Follow me",
+    "followed": "Following ✓",
+    "support": "Support ⚡",
     "credits": "Credits",
     "legal": "Legal",
     "cgu": "Terms of use"
