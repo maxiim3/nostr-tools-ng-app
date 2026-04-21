@@ -1,4 +1,0 @@
-[deploy]
-healthcheckPath = "/api/health"
-healthcheckTimeout = 100
-restartPolicyType = "ON_FAILURE"
