@@ -1,4 +1,5 @@
 import type { ConnectionRevalidationResult } from '../domain/active-connection';
+import type { ConnectionAttempt } from '../domain/connection-attempt';
 import type { ConnectionMethod, ConnectionRequest } from '../domain/connection-method';
 import { ConnectionDomainError } from '../domain/connection-errors';
 import type { ConnectionMethodId } from '../domain/connection-method-id';
@@ -34,10 +35,10 @@ export class ConnectionOrchestrator {
     return this.store.getCurrent()?.getSession() ?? null;
   }
 
-  async connect(
+  async start(
     methodId: ConnectionMethodId,
     request: ConnectionRequest = { reason: 'interactive-login' }
-  ): Promise<ConnectionSession> {
+  ): Promise<ConnectionAttempt> {
     const method = this.methodsById.get(methodId);
     if (!method) {
       throw new ConnectionDomainError(
@@ -46,7 +47,10 @@ export class ConnectionOrchestrator {
       );
     }
 
-    const attempt = await method.start(request);
+    return method.start(request);
+  }
+
+  async completeAttempt(attempt: ConnectionAttempt): Promise<ConnectionSession> {
     const nextConnection = await attempt.complete();
     const previousConnection = this.store.getCurrent();
 
@@ -57,6 +61,14 @@ export class ConnectionOrchestrator {
     }
 
     return nextConnection.getSession();
+  }
+
+  async connect(
+    methodId: ConnectionMethodId,
+    request: ConnectionRequest = { reason: 'interactive-login' }
+  ): Promise<ConnectionSession> {
+    const attempt = await this.start(methodId, request);
+    return this.completeAttempt(attempt);
   }
 
   async revalidateCurrent(): Promise<ConnectionRevalidationResult | null> {

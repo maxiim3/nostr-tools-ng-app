@@ -14,21 +14,21 @@ export interface ProfileCardUser {
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="card card-border relative h-52 w-96 overflow-hidden bg-base-100">
-      <section class="card-body gap-4">
+    <article class="border-[3px] border-[#0a0a0a] brutal-shadow relative h-52 w-96 overflow-hidden bg-white">
+      <section class="p-5">
         @if (status() === 'skeleton') {
           <header class="flex items-center gap-4">
-            <div class="h-12 w-12 rounded-full skeleton"></div>
+            <div class="h-12 w-12 bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
             <div class="space-y-2">
-              <div class="h-5 w-32 rounded-full skeleton"></div>
-              <div class="h-4 w-24 rounded-full skeleton"></div>
+              <div class="h-5 w-32 bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
+              <div class="h-4 w-24 bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
             </div>
           </header>
 
-          <div class="space-y-2">
-            <div class="h-4 w-full rounded-full skeleton"></div>
-            <div class="h-4 w-11/12 rounded-full skeleton"></div>
-            <div class="h-4 w-8/12 rounded-full skeleton"></div>
+          <div class="mt-4 space-y-2">
+            <div class="h-4 w-full bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
+            <div class="h-4 w-11/12 bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
+            <div class="h-4 w-8/12 bg-[#0a0a0a]/5 border-[2px] border-[#0a0a0a]/10"></div>
           </div>
         } @else {
           <header class="flex items-center gap-4">
@@ -36,32 +36,32 @@ export interface ProfileCardUser {
               <img
                 [src]="imageUrl"
                 [alt]="avatarAlt()"
-                class="h-12 w-12 rounded-full object-cover"
+                class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
                 loading="lazy"
               />
             } @else {
               <span
-                class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-content"
+                class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#ffe600] text-sm font-bold text-[#0a0a0a]"
               >
                 {{ initials() }}
               </span>
             }
 
             <div class="min-w-0">
-              <h2 class="card-title truncate">
+              <h2 class="truncate font-extrabold text-[#0a0a0a]">
                 {{ user()?.displayName ?? ('profile.unknownUser' | transloco) }}
               </h2>
             </div>
           </header>
 
-          <p class="line-clamp-2 text-sm leading-6 text-base-content/75">
+          <p class="mt-3 line-clamp-2 text-sm leading-6 text-[#0a0a0a]/70">
             {{ truncatedDescription() || ('profile.noDescription' | transloco) }}
           </p>
         }
       </section>
 
-      @if (overlayClass(); as overlayClass) {
-        <div [class]="overlayClass" aria-hidden="true"></div>
+      @if (overlayClass(); as cls) {
+        <div [class]="cls" aria-hidden="true"></div>
       }
     </article>
   `,
@@ -75,7 +75,7 @@ export class ProfileCardComponent {
       case 'muted':
         return 'absolute inset-0 bg-white/60';
       case 'success':
-        return 'absolute inset-0 bg-success/10';
+        return 'absolute inset-0 bg-[#00c853]/10';
       case 'transparent':
         return 'absolute inset-0 bg-transparent';
       default:

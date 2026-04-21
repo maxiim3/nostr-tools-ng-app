@@ -1,10 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Modak&family=Onest:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Modak&display=swap');
 
 @plugin "daisyui" {
-  themes:
-    light --default,
-    nostr-tools;
+  themes: brutal --default;
+}
+
+@plugin "daisyui/theme" {
+  name: 'brutal';
+  default: false;
+  prefersdark: false;
+  color-scheme: 'light';
+  --color-base-100: oklch(98.5% 0.003 80);
+  --color-base-200: oklch(96% 0.005 80);
+  --color-base-300: oklch(92% 0.008 80);
+  --color-base-content: oklch(10% 0 0);
+  --color-primary: oklch(68% 0.23 45);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(93% 0.19 100);
+  --color-secondary-content: oklch(10% 0 0);
+  --color-accent: oklch(10% 0 0);
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: oklch(20% 0 0);
+  --color-neutral-content: oklch(95% 0 0);
+  --color-info: oklch(55% 0.18 250);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(65% 0.2 155);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(93% 0.19 100);
+  --color-warning-content: oklch(10% 0 0);
+  --color-error: oklch(60% 0.22 25);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 0;
+  --radius-field: 0;
+  --radius-box: 0;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 3px;
+  --depth: 0;
+  --noise: 0;
+}
+
+html {
+  font-family: 'Onest', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Syne', 'Onest', system-ui, sans-serif;
 }
 
 .modak-regular {
@@ -13,37 +60,226 @@
   font-style: normal;
 }
 
-@plugin "daisyui/theme" {
-  name: 'nostr-tools';
-  default: false;
-  prefersdark: false;
-  color-scheme: 'light';
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0 0);
-  --color-base-300: oklch(92% 0 0);
-  --color-base-content: oklch(20% 0 0);
-  --color-primary: oklch(85% 0.199 91.936);
-  --color-primary-content: oklch(42% 0.095 57.708);
-  --color-secondary: oklch(75% 0.183 55.934);
-  --color-secondary-content: oklch(40% 0.123 38.172);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(37% 0.01 67.558);
-  --color-neutral-content: oklch(92% 0.003 48.717);
-  --color-info: oklch(74% 0.16 232.661);
-  --color-info-content: oklch(39% 0.09 240.876);
-  --color-success: oklch(76% 0.177 163.223);
-  --color-success-content: oklch(37% 0.077 168.94);
-  --color-warning: oklch(82% 0.189 84.429);
-  --color-warning-content: oklch(41% 0.112 45.904);
-  --color-error: oklch(70% 0.191 22.216);
-  --color-error-content: oklch(39% 0.141 25.723);
-  --radius-selector: 2rem;
-  --radius-field: 2rem;
-  --radius-box: 2rem;
-  --size-selector: 0.28125rem;
-  --size-field: 0.21875rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 1;
+/* ─── Background Patterns ─── */
+.brutal-grid {
+  background-image: radial-gradient(circle, rgba(10, 10, 10, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.brutal-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    #ffe600,
+    #ffe600 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+/* ─── Sticker ─── */
+.brutal-sticker {
+  border: 3px solid #0a0a0a;
+  box-shadow: 3px 3px 0 #0a0a0a;
+  display: inline-block;
+  padding: 0.25rem 1rem;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Shadows ─── */
+.brutal-shadow {
+  box-shadow: 5px 5px 0 #0a0a0a;
+  transition:
+    transform 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brutal-shadow:hover {
+  box-shadow: 2px 2px 0 #0a0a0a;
+  transform: translate(3px, 3px);
+}
+
+.brutal-shadow:active {
+  box-shadow: 0 0 0 #0a0a0a;
+  transform: translate(5px, 5px);
+}
+
+.brutal-shadow-sm {
+  box-shadow: 3px 3px 0 #0a0a0a;
+}
+
+/* ─── Button System ─── */
+.btn {
+  border: 3px solid #0a0a0a;
+  border-radius: 0;
+  font-family: 'Onest', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  position: relative;
+  box-shadow: 4px 4px 0 #0a0a0a;
+  transition:
+    transform 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #0a0a0a;
+}
+
+.btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 #0a0a0a;
+}
+
+.btn[disabled] {
+  opacity: 0.4;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Primary — asymmetric shadow */
+.btn-primary {
+  box-shadow: 5px 4px 0 #0a0a0a;
+}
+
+.btn-primary:hover {
+  transform: translate(3px, 2px);
+  box-shadow: 2px 2px 0 #0a0a0a;
+}
+
+.btn-primary:active {
+  transform: translate(5px, 4px);
+  box-shadow: 0 0 0 #0a0a0a;
+}
+
+/* Secondary — vertical bias */
+.btn-secondary {
+  box-shadow: 4px 6px 0 #0a0a0a;
+}
+
+.btn-secondary:hover {
+  transform: translate(2px, 4px);
+  box-shadow: 2px 2px 0 #0a0a0a;
+}
+
+/* Outline — ring expansion on hover */
+.btn-outline {
+  box-shadow: none;
+}
+
+.btn-outline:hover {
+  box-shadow:
+    0 0 0 3px white,
+    0 0 0 6px #0a0a0a;
+  transform: none;
+}
+
+/* Ghost — underline slides in */
+.btn-ghost {
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
+}
+
+.btn-ghost::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 150ms ease;
+}
+
+.btn-ghost:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-ghost:hover::after {
+  transform: scaleX(1);
+}
+
+/* Error & Success */
+.btn-error {
+  box-shadow: 4px 4px 0 #0a0a0a;
+}
+
+.btn-success {
+  box-shadow: 4px 4px 0 #0a0a0a;
+}
+
+/* CTA — hero action, orange shadow on black */
+.btn-cta {
+  background: #0a0a0a;
+  color: white;
+  border-color: #0a0a0a;
+  box-shadow: 6px 6px 0 #ff5c00;
+}
+
+.btn-cta:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0 #ff5c00;
+}
+
+.btn-cta:active {
+  transform: translate(6px, 6px);
+  box-shadow: 0 0 0 #ff5c00;
+}
+
+/* ─── Components ─── */
+.card {
+  border-color: #0a0a0a;
+  box-shadow: 5px 5px 0 #0a0a0a;
+}
+
+.badge {
+  border-color: #0a0a0a;
+  box-shadow: 2px 2px 0 #0a0a0a;
+}
+
+.alert {
+  border-color: #0a0a0a;
+  box-shadow: 5px 5px 0 #0a0a0a;
+}
+
+.modal-box {
+  border: 3px solid #0a0a0a;
+  box-shadow: 10px 10px 0 #0a0a0a;
+  border-radius: 0;
+}
+
+.input {
+  border-color: #0a0a0a;
+}
+
+.input:focus {
+  box-shadow: 4px 4px 0 #0a0a0a;
+  outline: none;
+}
+
+/* ─── Quiz & Zap ─── */
+.quiz-selected {
+  background-color: #0a0a0a !important;
+  color: white !important;
+  box-shadow: 2px 2px 0 #0a0a0a !important;
+  transform: translate(3px, 3px);
+}
+
+.preset-active {
+  background-color: #0a0a0a !important;
+  color: white !important;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: #ff5c00;
+  color: white;
 }

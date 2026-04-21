@@ -12,31 +12,27 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
   template: `
     @if (session.authModalOpen()) {
       <dialog class="modal modal-open">
-        <div
-          class="modal-box max-w-lg rounded-3xl border border-base-200/50 bg-base-100/95 px-5 pt-8 pb-6 shadow-2xl backdrop-blur-xl sm:px-8 sm:pt-10 md:px-12 md:pt-12 md:pb-8"
-        >
+        <div class="modal-box max-w-lg bg-white px-5 pt-8 pb-6 sm:px-8 sm:pt-10 md:px-12 md:pt-12 md:pb-8">
           <div class="space-y-6">
             <div class="space-y-2">
-              <h2 class="text-2xl leading-tight font-bold text-base-content sm:text-3xl">
+              <h2 class="text-2xl font-extrabold text-[#0a0a0a] sm:text-3xl">
                 {{ 'authModal.title' | transloco }}
               </h2>
-              <p class="text-sm text-base-content/70">{{ 'authModal.subtitle' | transloco }}</p>
+              <p class="text-sm text-[#0a0a0a]/60">{{ 'authModal.subtitle' | transloco }}</p>
             </div>
 
             @if (session.error()) {
-              <div
-                class="rounded-box border border-error/30 bg-error/10 px-4 py-3 text-sm font-medium text-error"
-              >
+              <div class="border-[3px] border-error bg-error/10 px-4 py-3 text-sm font-bold text-error">
                 {{ session.error() }}
               </div>
             }
 
             <div class="space-y-6">
               <section class="space-y-3">
-                <h3 class="font-bold text-base-content">
+                <h3 class="font-bold text-[#0a0a0a]">
                   {{ 'authModal.extension.title' | transloco }}
                 </h3>
-                <p class="text-sm text-base-content/70">
+                <p class="text-sm text-[#0a0a0a]/60">
                   {{ 'authModal.extension.body' | transloco }}
                 </p>
                 <button
@@ -49,11 +45,13 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 </button>
               </section>
 
+              <hr class="border-[#0a0a0a]" style="border-width: 3px" />
+
               <section class="space-y-3">
-                <h3 class="font-bold text-base-content">
+                <h3 class="font-bold text-[#0a0a0a]">
                   {{ 'authModal.external.title' | transloco }}
                 </h3>
-                <p class="text-sm text-base-content/70">
+                <p class="text-sm text-[#0a0a0a]/60">
                   {{ 'authModal.external.body' | transloco }}
                 </p>
 
@@ -63,8 +61,9 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                       [href]="session.externalAuthUri()!"
                       class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                       rel="noreferrer"
-                      >{{ 'authModal.external.open' | transloco }}</a
                     >
+                      {{ 'authModal.external.open' | transloco }}
+                    </a>
                     <button
                       type="button"
                       class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
@@ -80,17 +79,17 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                         <img
                           [src]="externalAuthQr()!"
                           alt="Nostr Connect QR code"
-                          class="rounded-xl size-40"
+                          class="border-[3px] border-[#0a0a0a] size-40"
                         />
                       </div>
                     }
                     <p
-                      class="break-all rounded-box bg-base-200 px-3 py-2 text-xs text-base-content/70"
+                      class="break-all border-[3px] border-[#0a0a0a] bg-[#FFE600]/10 px-3 py-2 text-xs text-[#0a0a0a]/70"
                     >
                       {{ session.externalAuthUri() }}
                     </p>
                     @if (session.waitingForExternalAuth()) {
-                      <p class="text-xs font-medium text-base-content/60">
+                      <p class="text-xs font-bold text-[#0a0a0a]/50">
                         {{ 'authModal.external.waiting' | transloco }}
                       </p>
                     }
@@ -105,7 +104,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                     }
                     <button
                       type="button"
-                      class="btn btn-ghost btn-sm h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:whitespace-nowrap"
+                      class="btn btn-ghost btn-sm h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                       (click)="cancelExternalApp()"
                     >
                       {{ 'authModal.external.cancel' | transloco }}
@@ -123,27 +122,29 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                 }
               </section>
 
+              <hr class="border-[#0a0a0a]" style="border-width: 3px" />
+
               <section class="space-y-3">
-                <h3 class="font-bold text-base-content">
+                <h3 class="font-bold text-[#0a0a0a]">
                   {{ 'authModal.privateKey.title' | transloco }}
                 </h3>
                 <div class="flex gap-2">
                   <input
-                    class="input input-bordered flex-1"
+                    class="input flex-1"
                     [formControl]="privateKeyControl"
                     type="password"
                     placeholder="nsec / hex"
                   />
                   <button
                     type="button"
-                    class="btn btn-outline flex-0 text-sm sm:text-base"
+                    class="btn btn-primary flex-shrink-0 text-sm sm:text-base"
                     [disabled]="session.connecting() || privateKeyControl.invalid"
                     (click)="loginWithPrivateKey()"
                   >
                     Go
                   </button>
                 </div>
-                <p class="text-sm text-warning-content text-xs">
+                <p class="text-xs font-bold text-warning">
                   {{ 'authModal.privateKey.warning' | transloco }}
                 </p>
               </section>
@@ -151,7 +152,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
           </div>
 
           <div class="modal-action">
-            <button type="button" class="btn" (click)="close()">
+            <button type="button" class="btn btn-ghost" (click)="close()">
               {{ 'common.close' | transloco }}
             </button>
           </div>

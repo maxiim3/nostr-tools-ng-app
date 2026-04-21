@@ -9,20 +9,20 @@ import { type RequestQuizChoice, type RequestQuizQuestion } from '../../domain/r
   template: `
     <div class="space-y-6">
       <div class="space-y-2">
-        <h3 class="text-lg font-semibold text-base-content">
+        <h3 class="text-lg font-bold text-[#0a0a0a]">
           {{ 'request.quiz.title' | transloco }}
         </h3>
-        <p class="text-sm text-base-content/60">{{ 'request.quiz.subtitle' | transloco }}</p>
+        <p class="text-sm text-[#0a0a0a]/60">{{ 'request.quiz.subtitle' | transloco }}</p>
       </div>
 
-      <p class="text-base font-medium text-base-content">{{ question().prompt }}</p>
+      <p class="text-base font-bold text-[#0a0a0a]">{{ question().prompt }}</p>
 
       <div class="space-y-3">
         @for (choice of question().choices; track choice.id) {
           <button
             type="button"
-            class="btn btn-outline w-full justify-start text-left"
-            [class.btn-primary]="selectedChoice()?.id === choice.id"
+            class="btn w-full justify-start text-left border-[3px] border-[#0a0a0a] font-bold"
+            [class.quiz-selected]="selectedChoice()?.id === choice.id"
             [disabled]="submitting()"
             (click)="selectChoice(choice)"
           >
@@ -32,9 +32,9 @@ import { type RequestQuizChoice, type RequestQuizQuestion } from '../../domain/r
       </div>
 
       @if (submitError()) {
-        <p class="text-sm text-error">{{ submitError()! | transloco }}</p>
+        <p class="text-sm font-bold text-error">{{ submitError()! | transloco }}</p>
       } @else if (error()) {
-        <p class="text-sm text-error">{{ 'request.quiz.error' | transloco }}</p>
+        <p class="text-sm font-bold text-error">{{ 'request.quiz.error' | transloco }}</p>
       }
 
       <button

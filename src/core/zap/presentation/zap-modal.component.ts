@@ -18,11 +18,9 @@ const PRESETS = [
   template: `
     @if (zap.authRequiredOpen()) {
       <dialog class="modal modal-open">
-        <div
-          class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
-        >
+        <div class="modal-box max-w-md bg-white px-8 pt-10 pb-6">
           <div class="space-y-6">
-            <h2 class="text-2xl font-bold text-base-content leading-tight">
+            <h2 class="text-2xl font-extrabold text-[#0a0a0a]">
               {{ 'zap.authRequired.title' | transloco }}
             </h2>
 
@@ -54,27 +52,25 @@ const PRESETS = [
 
     @if (zap.modalOpen()) {
       <dialog class="modal modal-open">
-        <div
-          class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
-        >
+        <div class="modal-box max-w-md bg-white px-8 pt-10 pb-6">
           @if (zap.zapStatus() === 'submitting') {
             <div class="flex flex-col items-center gap-4 py-12 text-center">
-              <span class="loading loading-spinner loading-lg text-primary"></span>
-              <p class="text-base-content/70">
+              <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
+              <p class="text-[#0a0a0a]/70">
                 {{ 'zap.modal.processing' | transloco }}
               </p>
             </div>
           } @else if (zap.zapStatus() === 'success') {
             <div class="flex flex-col items-center gap-4 py-12 text-center">
               <span class="text-6xl" aria-hidden="true">🫶</span>
-              <p class="text-base-content">
+              <p class="font-bold text-[#0a0a0a]">
                 {{ 'zap.modal.success' | transloco }}
               </p>
             </div>
           } @else if (zap.zapStatus() === 'error') {
             <div class="flex flex-col items-center gap-4 py-12 text-center">
               <span class="text-6xl" aria-hidden="true">❌</span>
-              <p class="text-base-content">
+              <p class="font-bold text-[#0a0a0a]">
                 {{ 'zap.modal.error' | transloco }}
               </p>
               <button type="button" class="btn btn-outline" (click)="submitZap()">
@@ -83,7 +79,7 @@ const PRESETS = [
             </div>
           } @else if (zap.invoiceError()) {
             <div class="flex flex-col items-center gap-4 py-8">
-              <p class="text-base-content/70">
+              <p class="text-[#0a0a0a]/70">
                 {{ 'zap.modal.invoiceError' | transloco }}
               </p>
               <button type="button" class="btn btn-outline" (click)="retry()">
@@ -92,21 +88,23 @@ const PRESETS = [
             </div>
           } @else {
             <div class="space-y-6">
-              <h2 class="text-2xl font-bold text-base-content leading-tight text-center">
+              <h2 class="text-center text-2xl font-extrabold text-[#0a0a0a]">
                 {{ 'zap.modal.title' | transloco }}
               </h2>
 
               @if (zap.invoiceQr(); as qr) {
                 <div class="flex justify-center">
-                  <img [src]="qr" alt="Invoice QR" class="rounded-xl size-48" />
+                  <img [src]="qr" alt="Invoice QR" class="border-[3px] border-[#0a0a0a] size-48" />
                 </div>
-                <p class="text-center text-sm text-base-content/70">
+                <p class="text-center text-sm text-[#0a0a0a]/70">
                   {{ 'zap.modal.scanToPay' | transloco }}
                 </p>
               } @else {
                 <div class="flex justify-center">
-                  <div class="flex size-48 items-center justify-center rounded-xl bg-base-200/50">
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                  <div
+                    class="flex size-48 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#0a0a0a]/5"
+                  >
+                    <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
                   </div>
                 </div>
               }
@@ -115,9 +113,8 @@ const PRESETS = [
                 @for (preset of presets; track preset.amount) {
                   <button
                     type="button"
-                    class="btn btn-sm rounded-full px-5 transition-all"
-                    [class.btn-primary]="selectedAmount() === preset.amount"
-                    [class.btn-outline]="selectedAmount() !== preset.amount"
+                    class="btn btn-sm border-[3px] border-[#0a0a0a] px-5"
+                    [class.preset-active]="selectedAmount() === preset.amount"
                     (click)="selectPreset(preset.amount)"
                   >
                     {{ preset.amount }} {{ preset.emoji }}
@@ -128,7 +125,7 @@ const PRESETS = [
               <div class="form-control">
                 <input
                   type="number"
-                  class="input input-bordered w-full text-center text-lg font-semibold"
+                  class="input w-full text-center text-lg font-bold"
                   [formControl]="amountControl"
                   [min]="MIN_AMOUNT"
                   [max]="MAX_AMOUNT"

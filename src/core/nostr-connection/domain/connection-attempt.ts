@@ -5,6 +5,7 @@ export interface ConnectionAttemptInstructions {
   launchUrl?: string;
   copyValue?: string;
   qrCodeValue?: string;
+  authUrl?: string;
 }
 
 export interface ConnectionAttempt {

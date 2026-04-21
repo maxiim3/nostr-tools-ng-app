@@ -1,15 +1,17 @@
-<section class="mx-auto max-w-5xl p-6">
+<section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-5xl p-6">
   <div class="mb-8 space-y-2">
-    <h1 class="text-4xl font-black text-base-content">{{ 'adminRequests.title' | transloco }}</h1>
-    <p class="text-base text-base-content/70">{{ 'adminRequests.subtitle' | transloco }}</p>
+    <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
+      {{ 'adminRequests.title' | transloco }}
+    </h1>
+    <p class="text-base text-[#0a0a0a]/60">{{ 'adminRequests.subtitle' | transloco }}</p>
   </div>
 
   @if (isPackMember()) {
     <div class="alert alert-success mb-6">
-      <span>{{ 'adminRequests.youAreInPack' | transloco }}</span>
-      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">{{
-        'adminRequests.openPack' | transloco
-      }}</a>
+      <span class="font-bold">{{ 'adminRequests.youAreInPack' | transloco }}</span>
+      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">
+        {{ 'adminRequests.openPack' | transloco }}
+      </a>
     </div>
   } @else if (userRequestStatus() === 'pending') {
     <div class="alert alert-info mb-6">
@@ -19,51 +21,47 @@
 
   @if (actionError()) {
     <div role="alert" class="alert alert-error mb-6">
-      <span>{{ actionError()! | transloco }}</span>
+      <span class="font-bold">{{ actionError()! | transloco }}</span>
     </div>
   }
 
   @if (loading()) {
     <div class="flex justify-center py-12">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
+      <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
     </div>
   } @else if (entries().length === 0) {
-    <div
-      class="rounded-box border border-base-300 bg-base-100 p-8 text-center text-base-content/70"
-    >
+    <div class="brutal-shadow border-[3px] border-[#0a0a0a] bg-white p-8 text-center text-[#0a0a0a]/60">
       {{ 'adminRequests.empty' | transloco }}
     </div>
   } @else {
     <div class="space-y-4">
       @for (entry of entries(); track entry.requesterPubkey) {
-        <article class="card border border-base-300 bg-base-100 shadow-sm">
-          <section class="card-body gap-4 md:flex-row md:items-center md:justify-between">
+        <article class="brutal-shadow border-[3px] border-[#0a0a0a] bg-white">
+          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
             <div class="flex items-center gap-4">
               @if (entry.imageUrl) {
                 <img
                   [src]="entry.imageUrl"
                   [alt]="entry.displayName"
-                  class="h-14 w-14 rounded-full object-cover"
+                  class="h-14 w-14 border-[3px] border-[#0a0a0a] object-cover"
                 />
               } @else {
-                <div class="avatar placeholder">
-                  <div class="w-14 rounded-full bg-secondary text-secondary-content">
-                    <span class="text-sm font-semibold">{{
-                      entry.displayName.slice(0, 2).toUpperCase()
-                    }}</span>
-                  </div>
+                <div
+                  class="flex h-14 w-14 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-lg font-bold text-[#0a0a0a]"
+                >
+                  {{ entry.displayName.slice(0, 2).toUpperCase() }}
                 </div>
               }
 
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="text-xl font-bold text-base-content">{{ entry.displayName }}</h2>
-                  <span class="badge badge-outline">{{
-                    'adminRequests.statuses.' + entry.status | transloco
-                  }}</span>
+                  <h2 class="text-xl font-bold text-[#0a0a0a]">{{ entry.displayName }}</h2>
+                  <span class="brutal-sticker bg-[#FFE600] text-[#0a0a0a] px-2 py-0 text-xs">
+                    {{ 'adminRequests.statuses.' + entry.status | transloco }}
+                  </span>
                 </div>
-                <p class="text-sm text-base-content/60">{{ entry.requesterNpub }}</p>
-                <p class="text-sm text-base-content/50">{{ entry.submittedAtLabel }}</p>
+                <p class="text-sm text-[#0a0a0a]/50">{{ entry.requesterNpub }}</p>
+                <p class="text-xs text-[#0a0a0a]/40">{{ entry.submittedAtLabel }}</p>
               </div>
             </div>
 
@@ -96,7 +94,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  class="h-4 w-4"
+                  class="size-4"
                 >
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
@@ -118,14 +116,14 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  class="h-4 w-4"
+                  class="size-4"
                 >
                   <path d="m18 6-12 12" />
                   <path d="m6 6 12 12" />
                 </svg>
               </button>
             </div>
-          </section>
+          </div>
         </article>
       }
     </div>
