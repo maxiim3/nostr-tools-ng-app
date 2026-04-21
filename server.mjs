@@ -1,10 +1,14 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Database from 'better-sqlite3';
 
 import { nip19, verifyEvent } from 'nostr-tools';
 import { unpackEventFromToken, validateEvent as validateNip98Event } from 'nostr-tools/nip98';
+
+const sqliteModule = typeof Bun !== 'undefined'
+  ? await import('bun:sqlite')
+  : await import('better-sqlite3');
+const Database = 'Database' in sqliteModule ? sqliteModule.Database : sqliteModule.default;
 
 const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
 const MAX_JSON_BODY_BYTES = 50 * 1024;
@@ -244,13 +248,14 @@ async function handleRequest(request) {
 function findRequestByPubkey(pubkey) {
   return (
     withDatabase((db) =>
-      db
-        .prepare(
+      createStatement(
+        db,
+        
           `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
                   display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
                   choice_id AS choiceId, created, updated, status
-           FROM pack_requests
-           WHERE requester_pubkey = ?`
+            FROM pack_requests
+            WHERE requester_pubkey = ?`
         )
         .get(pubkey)
     ) ?? null
@@ -259,13 +264,13 @@ function findRequestByPubkey(pubkey) {
 
 function listPackRequests() {
   return withDatabase((db) =>
-    db
-      .prepare(
+    createStatement(
+      db,
         `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
                 display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
                 choice_id AS choiceId, created, updated, status
-         FROM pack_requests
-         ORDER BY created ASC`
+          FROM pack_requests
+          ORDER BY created ASC`
       )
       .all()
   );
@@ -273,8 +278,8 @@ function listPackRequests() {
 
 function upsertPackRequest(record) {
   withDatabase((db) =>
-    db
-      .prepare(
+    createStatement(
+      db,
         `INSERT INTO pack_requests (
           requester_pubkey,
           requester_npub,
@@ -311,18 +316,17 @@ function upsertPackRequest(record) {
 }
 
 function deletePackRequest(pubkey) {
-  const result = withDatabase((db) =>
-    db
-      .prepare(
-        `DELETE FROM pack_requests
-         WHERE requester_pubkey = ?`
-      )
-      .run(pubkey)
-  );
-
-  if (result.changes === 0) {
+  if (!findRequestByPubkey(pubkey)) {
     throw createHttpError(404, 'Request not found.');
   }
+
+  withDatabase((db) =>
+    createStatement(
+      db,
+      `DELETE FROM pack_requests
+        WHERE requester_pubkey = ?`
+    ).run(pubkey)
+  );
 }
 
 async function requireNostrAuth(request, body, requireAdmin = false, requestUrl = buildRequestUrl(request)) {
@@ -493,6 +497,10 @@ function parseLightningAddress(address) {
   }
 
   return { name, domain };
+}
+
+function createStatement(database, sql) {
+  return typeof database.prepare === 'function' ? database.prepare(sql) : database.query(sql);
 }
 
 function createHttpError(status, message) {

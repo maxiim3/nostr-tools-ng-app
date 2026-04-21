@@ -67,7 +67,35 @@ const PRESETS = [
         <div
           class="modal-box max-w-md bg-base-100/95 px-8 pt-10 pb-6 backdrop-blur-xl rounded-3xl shadow-2xl border border-base-200/50"
         >
-          @if (zap.invoiceError()) {
+          @if (zap.zapStatus() === 'submitting') {
+            <div class="flex flex-col items-center gap-4 py-12 text-center">
+              <span class="loading loading-spinner loading-lg text-primary"></span>
+              <p class="text-base-content/70">
+                {{ 'zap.modal.processing' | transloco }}
+              </p>
+            </div>
+          } @else if (zap.zapStatus() === 'success') {
+            <div class="flex flex-col items-center gap-4 py-12 text-center">
+              <span class="text-6xl" aria-hidden="true">🫶</span>
+              <p class="text-base-content">
+                {{ 'zap.modal.success' | transloco }}
+              </p>
+            </div>
+          } @else if (zap.zapStatus() === 'error') {
+            <div class="flex flex-col items-center gap-4 py-12 text-center">
+              <span class="text-6xl" aria-hidden="true">❌</span>
+              <p class="text-base-content">
+                {{ 'zap.modal.error' | transloco }}
+              </p>
+              <button
+                type="button"
+                class="btn btn-outline"
+                (click)="submitZap()"
+              >
+                {{ 'common.retry' | transloco }}
+              </button>
+            </div>
+          } @else if (zap.invoiceError()) {
             <div class="flex flex-col items-center gap-4 py-8">
               <p class="text-base-content/70">
                 {{ 'zap.modal.invoiceError' | transloco }}
@@ -93,6 +121,12 @@ const PRESETS = [
                 <p class="text-center text-sm text-base-content/70">
                   {{ 'zap.modal.scanToPay' | transloco }}
                 </p>
+              } @else {
+                <div class="flex justify-center">
+                  <div class="flex size-48 items-center justify-center rounded-xl bg-base-200/50">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                  </div>
+                </div>
               }
 
               <div class="flex items-center justify-center gap-3">
@@ -130,7 +164,8 @@ const PRESETS = [
               <button
                 type="button"
                 class="btn btn-primary btn-block text-lg"
-                (click)="zapAndClose()"
+                [disabled]="amountControl.invalid || zap.invoiceLoading() || !zap.invoiceQr()"
+                (click)="submitZap()"
               >
                 {{ 'zap.modal.cta' | transloco: { amount: amountControl.value } }}
               </button>
@@ -163,7 +198,13 @@ export class ZapModalComponent implements OnInit, OnDestroy {
     this.amountControl.valueChanges
       .pipe(debounceTime(500), takeUntil(this.destroy$))
       .subscribe((amount) => {
+        if (this.amountControl.invalid) {
+          this.zap.clearInvoice();
+          return;
+        }
+
         this.zap.setAmount(amount);
+        void this.zap.generateInvoice();
       });
   }
 
@@ -174,7 +215,8 @@ export class ZapModalComponent implements OnInit, OnDestroy {
 
   protected selectPreset(amount: number): void {
     this.zap.setAmount(amount);
-    this.amountControl.setValue(amount);
+    this.amountControl.setValue(amount, { emitEvent: false });
+    void this.zap.generateInvoice();
   }
 
   protected close(): void {
@@ -190,11 +232,10 @@ export class ZapModalComponent implements OnInit, OnDestroy {
   }
 
   protected retry(): void {
-    this.zap.generateInvoice();
+    void this.zap.generateInvoice();
   }
 
-  protected zapAndClose(): void {
-    this.zap.sendZapEvent();
-    this.close();
+  protected submitZap(): void {
+    void this.zap.sendZapEvent();
   }
 }
