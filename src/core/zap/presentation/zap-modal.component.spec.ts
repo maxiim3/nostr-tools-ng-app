@@ -1,8 +1,18 @@
-import { signal, WritableSignal } from '@angular/core';
+import { Pipe, PipeTransform, signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { ZapService } from '../zap.service';
 import { ZapModalComponent } from './zap-modal.component';
+
+@Pipe({
+  name: 'transloco',
+})
+class MockTranslocoPipe implements PipeTransform {
+  transform(value: string): string {
+    return value;
+  }
+}
 
 type ZapStatus = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -50,6 +60,11 @@ describe('ZapModalComponent', () => {
   beforeEach(async () => {
     zap = createZapServiceMock();
 
+    TestBed.overrideComponent(ZapModalComponent, {
+      remove: { imports: [TranslocoPipe] },
+      add: { imports: [MockTranslocoPipe] },
+    });
+
     await TestBed.configureTestingModule({
       imports: [ZapModalComponent],
       providers: [{ provide: ZapService, useValue: zap }],
@@ -62,6 +77,7 @@ describe('ZapModalComponent', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    TestBed.resetTestingModule();
   });
 
   it('validates amount boundaries on the form control', () => {
