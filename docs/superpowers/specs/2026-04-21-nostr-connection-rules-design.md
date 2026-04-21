@@ -53,6 +53,7 @@ Le nouveau systeme de connexion suit les regles suivantes:
 - il est consomme via une nouvelle modale separee;
 - il n'y a pas de switch runtime entre ancien et nouveau systeme;
 - il repose sur un strategy pattern par methode de connexion;
+- une methode de connexion ouvre une tentative de connexion explicite avant de produire une connexion active;
 - le domaine metier et l'UI ne dependent jamais directement de `window.nostr`, `nostrconnect://`, `bunker://` ou `nostrsigner:`;
 - les objets NDK, fournisseurs navigateurs et details de transport restent confines aux adaptateurs;
 - la source de verite cryptographique est le signer, pas un etat UI local;
@@ -64,7 +65,9 @@ Le nouveau domaine doit introduire un vocabulaire explicite et stable.
 
 ### Connection method
 
-Une methode de connexion est une strategie capable d'etablir une session normalisee a partir d'un protocole de signature ou d'un transport Nostr.
+Une methode de connexion est une strategie capable d'ouvrir une tentative de connexion a partir d'un protocole de signature ou d'un transport Nostr.
+
+Elle ne retourne pas directement une session finale. Elle retourne d'abord une tentative qui peut exposer des informations intermediaires a l'UI, par exemple un URI, une valeur a copier ou un QR code.
 
 Exemples:
 
@@ -72,6 +75,17 @@ Exemples:
 - `nip46-nostrconnect`;
 - `nip46-bunker`;
 - `nip55-android`.
+
+### Connection attempt
+
+Une tentative de connexion represente une phase intermediaire entre le choix d'une strategie et l'obtention d'une connexion active.
+
+Elle expose:
+
+- le `methodId`;
+- des instructions eventuelles pour l'utilisateur;
+- une operation `complete()` qui attend ou finalise la connexion;
+- une operation `cancel()` pour abandonner proprement le flow.
 
 ### Signer
 
@@ -217,11 +231,13 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 
 1. La nouvelle modale decouvre les methodes disponibles.
 2. Elle n'affiche que les strategies supportees dans le contexte courant.
-3. La methode choisie etablit une session normalisee.
-4. Le domaine charge l'identite publique associee a la `pubkey` finale.
-5. L'application utilise cette session pour les besoins UI et metier.
-6. Avant toute action sensible, la `pubkey` est revalidee.
-7. Au logout, tous les artefacts de session et de transport sont nettoyes.
+3. La methode choisie ouvre une tentative de connexion.
+4. La tentative peut exposer des instructions intermediaires a l'utilisateur.
+5. La tentative est completee et produit une connexion active puis une session normalisee.
+6. Le domaine charge l'identite publique associee a la `pubkey` finale.
+7. L'application utilise cette session pour les besoins UI et metier.
+8. Avant toute action sensible, la `pubkey` est revalidee.
+9. Au logout, tous les artefacts de session et de transport sont nettoyes.
 
 ### Flow NIP-07
 
