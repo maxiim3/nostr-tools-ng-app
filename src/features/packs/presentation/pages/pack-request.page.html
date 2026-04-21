@@ -1,23 +1,18 @@
-<section class="relative flex min-h-[calc(100vh-4rem)] pt-48 justify-center overflow-hidden px-6">
-  <div
-    aria-hidden="true"
-    class="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/10 blur-3xl"
-  ></div>
-  <div
-    aria-hidden="true"
-    class="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"
-  ></div>
-
-  <div class="relative z-10 max-w-xl space-y-4 text-center">
-    <h1 class="text-4xl font-black tracking-tight text-base-content md:text-5xl">
+<section
+  class="brutal-grid relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-6 py-16"
+>
+  <div class="relative z-10 max-w-xl space-y-6 text-center">
+    <h1 class="text-4xl font-extrabold tracking-tight text-[#0a0a0a] md:text-5xl">
       {{ 'request.title' | transloco }}
     </h1>
-    <p class="text-lg leading-relaxed text-base-content/60">{{ 'request.subtitle' | transloco }}</p>
+    <p class="text-base leading-relaxed text-[#0a0a0a]/60">
+      {{ 'request.subtitle' | transloco }}
+    </p>
 
     @if (loading() && !quizQuestion()) {
-      <div class="flex flex-col items-center gap-4">
-        <span class="loading loading-spinner loading-lg"></span>
-        <p class="text-sm text-base-content/60">{{ loadingMessage() | transloco }}</p>
+      <div class="flex flex-col items-center gap-4 py-8">
+        <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
+        <p class="text-sm text-[#0a0a0a]/60">{{ loadingMessage() | transloco }}</p>
       </div>
     } @else if (quizQuestion()) {
       <div class="flex justify-center">
@@ -37,17 +32,15 @@
         {{ 'common.close' | transloco }}
       </button>
     } @else if (!isAuthenticated()) {
-      <div class="space-y-4">
-        <button
-          class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-          (click)="connect()"
-        >
-          {{ 'request.connect' | transloco }}
-        </button>
-      </div>
+      <button
+        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+        (click)="connect()"
+      >
+        {{ 'request.connect' | transloco }}
+      </button>
     } @else if (isPackMember()) {
-      <div class="alert alert-info">
-        <span>{{ 'request.status.alreadyMember' | transloco }}</span>
+      <div class="alert alert-success">
+        <span class="font-bold">{{ 'request.status.alreadyMember' | transloco }}</span>
       </div>
       <a
         [href]="packFRUrl"
@@ -58,47 +51,20 @@
         {{ 'request.followup.starterPack' | transloco }}
       </a>
     } @else if (requestStatus() === 'idle') {
-      <div class="space-y-4">
-        <button
-          class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-          (click)="startQuiz()"
-        >
-          {{ 'request.requestJoin' | transloco }}
-        </button>
-      </div>
+      <button
+        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+        (click)="startQuiz()"
+      >
+        {{ 'request.requestJoin' | transloco }}
+      </button>
     } @else {
-      <div class="badge {{ statusPillClass() }} badge-lg mx-auto">
+      <div class="brutal-sticker bg-[#FFE600] text-[#0a0a0a] text-sm rotate-1">
         {{ 'request.status.' + requestStatus() | transloco }}
       </div>
     }
-    <!--ICI-->
-    <div class="flex flex-col items-stretch justify-center gap-3 pt-2 sm:flex-row sm:items-center">
-      <button
-        type="button"
-        class="btn btn-ghost h-auto w-full gap-2 px-4 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-        [disabled]="followLoading() || !isAuthenticated()"
-        (click)="isAuthenticated() ? followOwner() : connect()"
-      >
-        <img
-          [src]="ownerAvatarUrl"
-          width="24"
-          height="24"
-          class="size-6 rounded-full object-cover"
-          alt=""
-        />
-        @if (followSuccess()) {
-          {{ 'request.follow.success' | transloco }}
-        } @else {
-          {{ 'request.follow.me' | transloco }}
-        }
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline h-auto w-full gap-2 px-4 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-        (click)="openZap()"
-      >
-        {{ 'zap.support' | transloco }}
-      </button>
-    </div>
+
+    @if (isAuthenticated()) {
+      <owner-support-card />
+    }
   </div>
 </section>

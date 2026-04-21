@@ -10,9 +10,7 @@ import {
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../../core/config/project-info';
-import { FollowService } from '../../../../core/nostr/application/follow.service';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
-import { ZapService } from '../../../../core/zap/zap.service';
 import { FrancophonePackMembershipService } from '../../application/francophone-pack-membership.service';
 import {
   StarterPackRequestService,
@@ -24,7 +22,8 @@ import {
   type RequestQuizChoice,
   type RequestQuizQuestion,
 } from '../../domain/request-quiz';
-import { PackQuizComponent } from '../../presentation/components/pack-quiz.component';
+import { OwnerSupportCardComponent } from '../components/owner-support-card.component';
+import { PackQuizComponent } from '../components/pack-quiz.component';
 
 const LOADING_MESSAGES = [
   'request.loading.1',
@@ -36,7 +35,7 @@ const LOADING_MESSAGES = [
 
 @Component({
   selector: 'pack-request-page',
-  imports: [TranslocoPipe, PackQuizComponent],
+  imports: [TranslocoPipe, PackQuizComponent, OwnerSupportCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pack-request.page.html',
 })
@@ -44,13 +43,6 @@ export class PackRequestPage implements OnDestroy {
   private readonly session = inject(NostrSessionService);
   private readonly requestService = inject(StarterPackRequestService);
   private readonly packMembership = inject(FrancophonePackMembershipService);
-  private readonly followService = inject(FollowService);
-  private readonly zap = inject(ZapService);
-
-  readonly ownerAvatarUrl =
-    'https://r2.primal.net/cache/d/92/a3/d92a3ef8147c76b829c712ede63a03899ff844bc7027e8dc9d1cdf8cbd6aab1c.jpg';
-  readonly followLoading = signal(false);
-  readonly followSuccess = signal(false);
 
   readonly isAuthenticated = this.session.isAuthenticated;
   readonly requestStatus = signal<UserRequestStatus>('idle');
@@ -81,22 +73,6 @@ export class PackRequestPage implements OnDestroy {
         this.isPackMember.set(false);
       }
     });
-  }
-
-  async followOwner(): Promise<void> {
-    if (!this.isAuthenticated() || this.followLoading()) return;
-
-    this.followLoading.set(true);
-    try {
-      await this.followService.followOwner();
-      this.followSuccess.set(true);
-    } finally {
-      this.followLoading.set(false);
-    }
-  }
-
-  openZap(): void {
-    this.zap.openModal();
   }
 
   ngOnDestroy(): void {
