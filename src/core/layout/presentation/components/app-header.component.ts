@@ -57,7 +57,6 @@ import { ZapService } from '../../../zap/zap.service';
               }
 
               <span class="max-w-36 truncate text-sm font-semibold">{{ user.displayName }}</span>
-
             </div>
 
             <button type="button" class="btn btn-primary gap-2" (click)="disconnect()">
@@ -172,7 +171,9 @@ import { ZapService } from '../../../zap/zap.service';
       </div>
 
       @if (mobileMenuOpen()) {
-        <nav class="absolute inset-x-0 top-16 mx-auto max-w-7xl border-t border-white/10 bg-orange-500 shadow-2xl md:hidden">
+        <nav
+          class="absolute inset-x-0 top-16 mx-auto max-w-7xl border-t border-white/10 bg-orange-500 shadow-2xl md:hidden"
+        >
           <!-- Close header -->
           <div class="flex items-center justify-between p-4 border-b border-white/20">
             <button
@@ -188,7 +189,14 @@ import { ZapService } from '../../../zap/zap.service';
               (click)="closeMobileMenu()"
               aria-label="Close menu"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="size-6"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
@@ -214,7 +222,7 @@ import { ZapService } from '../../../zap/zap.service';
             }
           </div>
 
-          <hr class="border-white/20">
+          <hr class="border-white/20" />
 
           <!-- Actions -->
           <div class="p-4 space-y-3">
@@ -228,7 +236,11 @@ import { ZapService } from '../../../zap/zap.service';
             </button>
 
             <div class="flex gap-2 justify-center">
-              <div class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1" role="group" aria-label="Language switcher">
+              <div
+                class="inline-flex items-center gap-1 rounded-full bg-white/10 p-1"
+                role="group"
+                aria-label="Language switcher"
+              >
                 @for (lang of language.supportedLanguages; track lang) {
                   @if (language.currentLanguage() === lang) {
                     <button
@@ -265,18 +277,32 @@ import { ZapService } from '../../../zap/zap.service';
                     class="h-12 w-12 flex-shrink-0 rounded-full object-cover"
                   />
                 } @else {
-                  <span class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white flex-shrink-0">
+                  <span
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white flex-shrink-0"
+                  >
                     {{ initials(user.displayName) }}
                   </span>
                 }
-                <span class="truncate text-base font-semibold text-white">{{ user.displayName }}</span>
+                <span class="truncate text-base font-semibold text-white">{{
+                  user.displayName
+                }}</span>
               </div>
               <button
                 type="button"
                 class="mx-auto block max-w-xs w-full h-12 rounded-xl bg-white/10 px-4 text-base font-semibold text-white transition hover:bg-white/20"
                 (click)="disconnect(); closeMobileMenu()"
               >
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline size-5 mr-2">
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  class="inline size-5 mr-2"
+                >
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <path d="M16 17l5-5-5-5" />
                   <path d="M21 12H9" />
@@ -290,7 +316,17 @@ import { ZapService } from '../../../zap/zap.service';
                 [disabled]="session.connecting()"
                 (click)="openAuthModal(); closeMobileMenu()"
               >
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline size-5 mr-2">
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  class="inline size-5 mr-2"
+                >
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                   <path d="M10 17l5-5-5-5" />
                   <path d="M15 12H3" />

@@ -13,7 +13,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   host: {
     class: '',
   },
-  templateUrl: 'home.page.html'
+  templateUrl: 'home.page.html',
 })
 export class HomePage {
   // private readonly client = inject(NostrClientService);

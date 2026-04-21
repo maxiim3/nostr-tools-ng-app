@@ -9,7 +9,9 @@ import { type RequestQuizChoice, type RequestQuizQuestion } from '../../domain/r
   template: `
     <div class="space-y-6">
       <div class="space-y-2">
-        <h3 class="text-lg font-semibold text-base-content">{{ 'request.quiz.title' | transloco }}</h3>
+        <h3 class="text-lg font-semibold text-base-content">
+          {{ 'request.quiz.title' | transloco }}
+        </h3>
         <p class="text-sm text-base-content/60">{{ 'request.quiz.subtitle' | transloco }}</p>
       </div>
 
@@ -47,7 +49,7 @@ import { type RequestQuizChoice, type RequestQuizQuestion } from '../../domain/r
         {{ 'request.quiz.submit' | transloco }}
       </button>
     </div>
-  `
+  `,
 })
 export class PackQuizComponent {
   readonly question = input.required<RequestQuizQuestion>();

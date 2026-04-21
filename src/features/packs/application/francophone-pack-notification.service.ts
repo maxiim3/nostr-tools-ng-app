@@ -8,7 +8,10 @@ export class FrancophonePackNotificationService {
   private readonly nostrClient = inject(NostrClientService);
 
   async sendApprovalDirectMessage(requesterPubkey: string): Promise<void> {
-    await this.nostrClient.sendDirectMessage(requesterPubkey, buildApprovalDirectMessage(PROJECT_INFO.packFRUrl));
+    await this.nostrClient.sendDirectMessage(
+      requesterPubkey,
+      buildApprovalDirectMessage(PROJECT_INFO.packFRUrl)
+    );
   }
 }
 

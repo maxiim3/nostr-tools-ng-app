@@ -7,7 +7,9 @@
   @if (isPackMember()) {
     <div class="alert alert-success mb-6">
       <span>{{ 'adminRequests.youAreInPack' | transloco }}</span>
-      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">{{ 'adminRequests.openPack' | transloco }}</a>
+      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">{{
+        'adminRequests.openPack' | transloco
+      }}</a>
     </div>
   } @else if (userRequestStatus() === 'pending') {
     <div class="alert alert-info mb-6">
@@ -26,7 +28,9 @@
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
   } @else if (entries().length === 0) {
-    <div class="rounded-box border border-base-300 bg-base-100 p-8 text-center text-base-content/70">
+    <div
+      class="rounded-box border border-base-300 bg-base-100 p-8 text-center text-base-content/70"
+    >
       {{ 'adminRequests.empty' | transloco }}
     </div>
   } @else {
@@ -36,11 +40,17 @@
           <section class="card-body gap-4 md:flex-row md:items-center md:justify-between">
             <div class="flex items-center gap-4">
               @if (entry.imageUrl) {
-                <img [src]="entry.imageUrl" [alt]="entry.displayName" class="h-14 w-14 rounded-full object-cover" />
+                <img
+                  [src]="entry.imageUrl"
+                  [alt]="entry.displayName"
+                  class="h-14 w-14 rounded-full object-cover"
+                />
               } @else {
                 <div class="avatar placeholder">
                   <div class="w-14 rounded-full bg-secondary text-secondary-content">
-                    <span class="text-sm font-semibold">{{ entry.displayName.slice(0, 2).toUpperCase() }}</span>
+                    <span class="text-sm font-semibold">{{
+                      entry.displayName.slice(0, 2).toUpperCase()
+                    }}</span>
                   </div>
                 </div>
               }
@@ -48,7 +58,9 @@
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <h2 class="text-xl font-bold text-base-content">{{ entry.displayName }}</h2>
-                  <span class="badge badge-outline">{{ ('adminRequests.statuses.' + entry.status) | transloco }}</span>
+                  <span class="badge badge-outline">{{
+                    'adminRequests.statuses.' + entry.status | transloco
+                  }}</span>
                 </div>
                 <p class="text-sm text-base-content/60">{{ entry.requesterNpub }}</p>
                 <p class="text-sm text-base-content/50">{{ entry.submittedAtLabel }}</p>
@@ -56,11 +68,16 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <a [href]="entry.primalUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
+              <a
+                [href]="entry.primalUrl"
+                target="_blank"
+                rel="noreferrer"
+                class="btn btn-ghost btn-sm"
+              >
                 {{ 'adminRequests.primal' | transloco }}
               </a>
               <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
-{{ 'request.followup.starterPack' | transloco }}
+                {{ 'request.followup.starterPack' | transloco }}
               </a>
               <button
                 type="button"

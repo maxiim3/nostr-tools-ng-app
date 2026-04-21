@@ -34,7 +34,7 @@ export const REQUEST_QUIZ_QUESTIONS: readonly RequestQuizQuestion[] = [
     choices: [
       { id: 'sacre', label: 'Sacre' },
       { id: 'droit', label: 'Un droit fondamental' },
-      { id: 'meeting', label: 'Le seul meeting qui commence a l\'heure' },
+      { id: 'meeting', label: "Le seul meeting qui commence a l'heure" },
     ],
   },
   {

@@ -40,13 +40,17 @@ export interface ProfileCardUser {
                 loading="lazy"
               />
             } @else {
-              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-content">
+              <span
+                class="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-content"
+              >
                 {{ initials() }}
               </span>
             }
 
             <div class="min-w-0">
-              <h2 class="card-title truncate">{{ user()?.displayName ?? ('profile.unknownUser' | transloco) }}</h2>
+              <h2 class="card-title truncate">
+                {{ user()?.displayName ?? ('profile.unknownUser' | transloco) }}
+              </h2>
             </div>
           </header>
 
@@ -60,7 +64,7 @@ export interface ProfileCardUser {
         <div [class]="overlayClass" aria-hidden="true"></div>
       }
     </article>
-  `
+  `,
 })
 export class ProfileCardComponent {
   readonly user = input<ProfileCardUser | null>(null);
@@ -87,12 +91,14 @@ export class ProfileCardComponent {
   protected readonly initials = computed(() => {
     const displayName = this.user()?.displayName ?? '';
 
-    return displayName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((chunk) => chunk[0]?.toUpperCase() ?? '')
-      .join('') || '?';
+    return (
+      displayName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((chunk) => chunk[0]?.toUpperCase() ?? '')
+        .join('') || '?'
+    );
   });
 
   protected readonly truncatedDescription = computed(() => {

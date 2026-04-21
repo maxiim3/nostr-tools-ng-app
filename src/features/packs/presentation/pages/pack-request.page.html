@@ -15,61 +15,61 @@
     <p class="text-lg leading-relaxed text-base-content/60">{{ 'request.subtitle' | transloco }}</p>
 
     @if (loading() && !quizQuestion()) {
-    <div class="flex flex-col items-center gap-4">
-      <span class="loading loading-spinner loading-lg"></span>
-      <p class="text-sm text-base-content/60">{{ loadingMessage() | transloco }}</p>
-    </div>
+      <div class="flex flex-col items-center gap-4">
+        <span class="loading loading-spinner loading-lg"></span>
+        <p class="text-sm text-base-content/60">{{ loadingMessage() | transloco }}</p>
+      </div>
     } @else if (quizQuestion()) {
-    <div class="flex justify-center">
-      <pack-quiz
-        [question]="quizQuestion()!"
-        [submitting]="loading()"
-        [submitError]="submitError()"
-        (answerSelected)="submitRequest($event)"
-      />
-    </div>
-    <button
-      type="button"
-      class="btn btn-ghost btn-sm"
-      [disabled]="loading()"
-      (click)="cancelQuiz()"
-    >
-      {{ 'common.close' | transloco }}
-    </button>
+      <div class="flex justify-center">
+        <pack-quiz
+          [question]="quizQuestion()!"
+          [submitting]="loading()"
+          [submitError]="submitError()"
+          (answerSelected)="submitRequest($event)"
+        />
+      </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm"
+        [disabled]="loading()"
+        (click)="cancelQuiz()"
+      >
+        {{ 'common.close' | transloco }}
+      </button>
     } @else if (!isAuthenticated()) {
-    <div class="space-y-4">
-      <button
-        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-        (click)="connect()"
-      >
-        {{ 'request.connect' | transloco }}
-      </button>
-    </div>
+      <div class="space-y-4">
+        <button
+          class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+          (click)="connect()"
+        >
+          {{ 'request.connect' | transloco }}
+        </button>
+      </div>
     } @else if (isPackMember()) {
-    <div class="alert alert-info">
-      <span>{{ 'request.status.alreadyMember' | transloco }}</span>
-    </div>
-    <a
-      [href]="packFRUrl"
-      target="_blank"
-      rel="noreferrer"
-      class="btn btn-primary btn-sm mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-    >
-      {{ 'request.followup.starterPack' | transloco }}
-    </a>
-    } @else if (requestStatus() === 'idle') {
-    <div class="space-y-4">
-      <button
-        class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-        (click)="startQuiz()"
+      <div class="alert alert-info">
+        <span>{{ 'request.status.alreadyMember' | transloco }}</span>
+      </div>
+      <a
+        [href]="packFRUrl"
+        target="_blank"
+        rel="noreferrer"
+        class="btn btn-primary btn-sm mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
       >
-        {{ 'request.requestJoin' | transloco }}
-      </button>
-    </div>
+        {{ 'request.followup.starterPack' | transloco }}
+      </a>
+    } @else if (requestStatus() === 'idle') {
+      <div class="space-y-4">
+        <button
+          class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
+          (click)="startQuiz()"
+        >
+          {{ 'request.requestJoin' | transloco }}
+        </button>
+      </div>
     } @else {
-    <div class="badge {{ statusPillClass() }} badge-lg mx-auto">
-      {{ 'request.status.' + requestStatus() | transloco }}
-    </div>
+      <div class="badge {{ statusPillClass() }} badge-lg mx-auto">
+        {{ 'request.status.' + requestStatus() | transloco }}
+      </div>
     }
     <!--ICI-->
     <div class="flex flex-col items-stretch justify-center gap-3 pt-2 sm:flex-row sm:items-center">
@@ -87,9 +87,9 @@
           alt=""
         />
         @if (followSuccess()) {
-{{ 'request.follow.success' | transloco }}
+          {{ 'request.follow.success' | transloco }}
         } @else {
-{{ 'request.follow.me' | transloco }}
+          {{ 'request.follow.me' | transloco }}
         }
       </button>
       <button
@@ -97,7 +97,7 @@
         class="btn btn-outline h-auto w-full gap-2 px-4 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
         (click)="openZap()"
       >
- {{ 'zap.support' | transloco }}
+        {{ 'zap.support' | transloco }}
       </button>
     </div>
   </div>

@@ -5,14 +5,17 @@ import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
 import { FrancophonePackNotificationService } from '../../../packs/application/francophone-pack-notification.service';
-import { StarterPackRequestService, type AdminRequestEntry } from '../../../packs/application/starter-pack-request.service';
+import {
+  StarterPackRequestService,
+  type AdminRequestEntry,
+} from '../../../packs/application/starter-pack-request.service';
 import { type UserRequestStatus } from '../../../packs/domain/request-status';
 
 @Component({
   selector: 'pack-admin-requests-page',
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './pack-admin-requests.page.html'
+  templateUrl: './pack-admin-requests.page.html',
 })
 export class PackAdminRequestsPage {
   private readonly packMembership = inject(FrancophonePackMembershipService);

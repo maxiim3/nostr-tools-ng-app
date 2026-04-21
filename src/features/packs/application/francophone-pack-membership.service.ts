@@ -52,7 +52,11 @@ export class FrancophonePackMembershipService {
       return;
     }
 
-    const updatedTags = addMemberTag(currentPackEvent.tags, normalizedRequesterPubkey, packReference.dTag);
+    const updatedTags = addMemberTag(
+      currentPackEvent.tags,
+      normalizedRequesterPubkey,
+      packReference.dTag
+    );
     await this.nostrClient.publishEvent(PACK_EVENT_KIND, updatedTags, currentPackEvent.content);
   }
 
@@ -61,7 +65,7 @@ export class FrancophonePackMembershipService {
       kinds: [PACK_EVENT_KIND],
       authors: [packReference.authorPubkey],
       '#d': [packReference.dTag],
-      limit: 1
+      limit: 1,
     });
 
     if (!currentPackEvent) {
@@ -107,7 +111,7 @@ function parsePackReference(packUrl: string): PackReference {
 
   return {
     authorPubkey,
-    dTag
+    dTag,
   };
 }
 
@@ -118,7 +122,11 @@ function hasMemberTag(tags: string[][], memberPubkey: string): boolean {
 function addMemberTag(tags: string[][], memberPubkey: string, dTag: string): string[][] {
   const nextTags = tags.map((tag) => [...tag]);
 
-  if (!nextTags.some((tag) => tag[0] === 'd' && typeof tag[1] === 'string' && tag[1].trim().length > 0)) {
+  if (
+    !nextTags.some(
+      (tag) => tag[0] === 'd' && typeof tag[1] === 'string' && tag[1].trim().length > 0
+    )
+  ) {
     nextTags.unshift(['d', dTag]);
   }
 

@@ -18,9 +18,7 @@ describe('francophoneAdminGuard', () => {
       providers: [{ provide: NostrSessionService, useValue: sessionMock }],
     });
 
-    const result = TestBed.runInInjectionContext(() =>
-      francophoneAdminGuard({} as any, []),
-    );
+    const result = TestBed.runInInjectionContext(() => francophoneAdminGuard({} as any, []));
 
     expect(result).toBe(true);
   });
@@ -30,15 +28,11 @@ describe('francophoneAdminGuard', () => {
       providers: [{ provide: NostrSessionService, useValue: sessionMock }],
     });
 
-    const result = TestBed.runInInjectionContext(() =>
-      francophoneAdminGuard({} as any, []),
-    );
+    const result = TestBed.runInInjectionContext(() => francophoneAdminGuard({} as any, []));
 
     expect(result).not.toBe(true);
     expect(result instanceof UrlTree).toBe(true);
-    const segments = (result as UrlTree).root.children['primary'].segments.map(
-      (s) => s.path,
-    );
+    const segments = (result as UrlTree).root.children['primary'].segments.map((s) => s.path);
     expect(segments).toEqual(['packs', 'francophone', 'request']);
   });
 
@@ -49,15 +43,11 @@ describe('francophoneAdminGuard', () => {
       providers: [{ provide: NostrSessionService, useValue: sessionMock }],
     });
 
-    const result = TestBed.runInInjectionContext(() =>
-      francophoneAdminGuard({} as any, []),
-    );
+    const result = TestBed.runInInjectionContext(() => francophoneAdminGuard({} as any, []));
 
     expect(result).not.toBe(true);
     expect(result instanceof UrlTree).toBe(true);
-    const segments = (result as UrlTree).root.children['primary'].segments.map(
-      (s) => s.path,
-    );
+    const segments = (result as UrlTree).root.children['primary'].segments.map((s) => s.path);
     expect(segments).toEqual(['packs', 'francophone', 'request']);
   });
 });

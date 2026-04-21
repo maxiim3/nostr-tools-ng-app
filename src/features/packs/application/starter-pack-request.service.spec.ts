@@ -39,7 +39,9 @@ describe('StarterPackRequestService', () => {
     it('throws when no user is authenticated', async () => {
       userMock.mockReturnValue(null);
 
-      await expect(service.submitRequest('q1', 'c1')).rejects.toThrow('Authentication is required.');
+      await expect(service.submitRequest('q1', 'c1')).rejects.toThrow(
+        'Authentication is required.'
+      );
     });
 
     it('posts request data when user is authenticated', async () => {
@@ -73,7 +75,7 @@ describe('StarterPackRequestService', () => {
             created: '2025-01-15T10:30:00Z',
             status: 'pending',
           },
-        ]),
+        ])
       );
 
       const result = await service.listAdminRequests();

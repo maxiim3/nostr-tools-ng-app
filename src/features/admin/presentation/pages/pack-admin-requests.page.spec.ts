@@ -6,7 +6,10 @@ import { vi } from 'vitest';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
 import { FrancophonePackNotificationService } from '../../../packs/application/francophone-pack-notification.service';
-import { StarterPackRequestService, type AdminRequestEntry } from '../../../packs/application/starter-pack-request.service';
+import {
+  StarterPackRequestService,
+  type AdminRequestEntry,
+} from '../../../packs/application/starter-pack-request.service';
 import { PackAdminRequestsPage } from './pack-admin-requests.page';
 
 const FAKE_ENTRIES: AdminRequestEntry[] = [
@@ -22,7 +25,7 @@ const FAKE_ENTRIES: AdminRequestEntry[] = [
   },
 ];
 
-type PageAccess = {
+interface PageAccess {
   entries: () => AdminRequestEntry[];
   loading: () => boolean;
   actingOn: () => string | null;
@@ -31,7 +34,7 @@ type PageAccess = {
   isPackMember: () => boolean;
   approve: (entry: AdminRequestEntry) => Promise<void>;
   reject: (entry: AdminRequestEntry) => Promise<void>;
-};
+}
 
 function asAccessible(page: PackAdminRequestsPage): PageAccess {
   return page as unknown as PageAccess;

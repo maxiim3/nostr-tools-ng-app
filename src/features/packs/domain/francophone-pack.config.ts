@@ -6,7 +6,7 @@ export const FRANCOPHONE_PACK = {
   starterPackUrl: '/',
   followUrl: `https://primal.net/p/${PROJECT_INFO.ownerNpub}`,
   externalLoginUrl: 'https://primal.net',
-  zapHref: `lightning:${PROJECT_INFO.zapAddress}?amount=42000`
+  zapHref: `lightning:${PROJECT_INFO.zapAddress}?amount=42000`,
 } as const;
 
 export function primalProfileUrl(npub: string): string {

@@ -56,7 +56,7 @@ export class StarterPackRequestService {
       questionId,
       choiceId,
       displayName: currentUser.displayName,
-      imageUrl: currentUser.imageUrl
+      imageUrl: currentUser.imageUrl,
     });
   }
 
@@ -75,7 +75,7 @@ export class StarterPackRequestService {
       primalUrl: `https://primal.net/p/${record.requesterNpub}`,
       submittedAt: new Date(record.created).getTime() / 1000,
       submittedAtLabel: formatDate(new Date(record.created)),
-      status: record.status
+      status: record.status,
     }));
   }
 
@@ -94,7 +94,10 @@ export class StarterPackRequestService {
     return firstValueFrom(this.http.get<T>(url, { headers }));
   }
 
-  private async post<TBody extends Record<string, unknown>>(path: string, body: TBody): Promise<void> {
+  private async post<TBody extends Record<string, unknown>>(
+    path: string,
+    body: TBody
+  ): Promise<void> {
     const url = buildApiUrl(path);
     const headers = await this.createSignedHeaders(url, 'POST', body);
 
@@ -109,7 +112,7 @@ export class StarterPackRequestService {
     const authorization = await this.nostrClient.createHttpAuthHeader(url, method, body);
 
     return new HttpHeaders({
-      Authorization: authorization
+      Authorization: authorization,
     });
   }
 }
@@ -119,7 +122,8 @@ function buildApiUrl(path: string): string {
     return path;
   }
 
-  const isLocal = globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
+  const isLocal =
+    globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
   const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
 
   return `${origin}${path}`;
@@ -128,6 +132,6 @@ function buildApiUrl(path: string): string {
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('fr-FR', {
     dateStyle: 'medium',
-    timeStyle: 'short'
+    timeStyle: 'short',
   }).format(date);
 }

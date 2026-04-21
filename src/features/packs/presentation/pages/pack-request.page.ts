@@ -6,7 +6,7 @@ import {
   effect,
   inject,
   OnDestroy,
-  signal
+  signal,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../../core/config/project-info';
@@ -16,10 +16,14 @@ import { ZapService } from '../../../../core/zap/zap.service';
 import { FrancophonePackMembershipService } from '../../application/francophone-pack-membership.service';
 import {
   StarterPackRequestService,
-  type UserRequestState
+  type UserRequestState,
 } from '../../application/starter-pack-request.service';
 import { type UserRequestStatus } from '../../domain/request-status';
-import { pickRandomQuestion, type RequestQuizChoice, type RequestQuizQuestion } from '../../domain/request-quiz';
+import {
+  pickRandomQuestion,
+  type RequestQuizChoice,
+  type RequestQuizQuestion,
+} from '../../domain/request-quiz';
 import { PackQuizComponent } from '../../presentation/components/pack-quiz.component';
 
 const LOADING_MESSAGES = [
@@ -27,14 +31,14 @@ const LOADING_MESSAGES = [
   'request.loading.2',
   'request.loading.3',
   'request.loading.4',
-  'request.loading.5'
+  'request.loading.5',
 ] as const;
 
 @Component({
   selector: 'pack-request-page',
   imports: [TranslocoPipe, PackQuizComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './pack-request.page.html'
+  templateUrl: './pack-request.page.html',
 })
 export class PackRequestPage implements OnDestroy {
   private readonly session = inject(NostrSessionService);
@@ -181,7 +185,10 @@ export class PackRequestPage implements OnDestroy {
   }
 }
 
-export function resolveRequestStatus(state: UserRequestState, isPackMember: boolean): UserRequestStatus {
+export function resolveRequestStatus(
+  state: UserRequestState,
+  isPackMember: boolean
+): UserRequestStatus {
   if (isPackMember) {
     return 'idle';
   }

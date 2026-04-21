@@ -14,7 +14,10 @@ export function resolveUserRequestStatus(
   latestRequest: RequestStamp | null,
   latestDecision: DecisionStamp | null
 ): UserRequestStatus {
-  if (latestDecision?.status === 'approved' && (!latestRequest || latestDecision.createdAt >= latestRequest.createdAt)) {
+  if (
+    latestDecision?.status === 'approved' &&
+    (!latestRequest || latestDecision.createdAt >= latestRequest.createdAt)
+  ) {
     return 'approved';
   }
 
