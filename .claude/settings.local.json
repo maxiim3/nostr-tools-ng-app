@@ -1,12 +1,7 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(opencode --version)",
-      "Bash(opencode run *)"
-    ]
+    "allow": ["Bash(opencode --version)", "Bash(opencode run *)"]
   },
-  "enabledMcpjsonServers": [
-    "angular-cli"
-  ],
+  "enabledMcpjsonServers": ["angular-cli"],
   "enableAllProjectMcpServers": true
 }
