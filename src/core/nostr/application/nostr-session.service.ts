@@ -174,7 +174,13 @@ export class NostrSessionService {
       return;
     }
 
+    this.currentExternalAttemptId++;
+    this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
+    if (this.externalAuthTimeout) {
+      clearTimeout(this.externalAuthTimeout);
+      this.externalAuthTimeout = undefined;
+    }
     this.error.set('External app login timed out. Please try again.');
     this.client.cancelExternalAppLogin();
   }

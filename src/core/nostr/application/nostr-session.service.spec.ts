@@ -218,29 +218,49 @@ describe('NostrSessionService', () => {
     expect(session.waitingForExternalAuth()).toBe(false);
   });
 
-  // FIXME(timeout): Deferred to Claude Opus / GPT-5.4 — requires deeper async
-  // token-cancellation architecture in finishExternalAppLogin to prevent stale
-  // completions from mutating state when attemptId has changed.
-  // it('clears state and reports error when external auth times out', async () => {
-  //   vi.useFakeTimers();
-  //
-  //   const deferred = createDeferred<SessionUser>();
-  //   client.beginExternalAppLogin.mockResolvedValue('nostrconnect://example');
-  //   client.completeExternalAppLogin.mockReturnValue(deferred.promise);
-  //
-  //   const session = createService(client);
-  //
-  //   await session.beginExternalAppLogin();
-  //   expect(session.waitingForExternalAuth()).toBe(true);
-  //
-  //   vi.advanceTimersByTime(120001);
-  //
-  //   expect(session.error()).toContain('timed out');
-  //   expect(session.waitingForExternalAuth()).toBe(false);
-  //   expect(client.cancelExternalAppLogin).toHaveBeenCalled();
-  //
-  //   vi.useRealTimers();
-  // });
+  it('times out external auth and invalidates the timed out attempt', async () => {
+    const deferred1 = createDeferred<SessionUser>();
+    const deferred2 = createDeferred<SessionUser>();
+    client.beginExternalAppLogin
+      .mockResolvedValueOnce('nostrconnect://example1')
+      .mockResolvedValueOnce('nostrconnect://example2');
+    client.completeExternalAppLogin
+      .mockReturnValueOnce(deferred1.promise)
+      .mockReturnValueOnce(deferred2.promise);
+
+    const session = createService(client);
+
+    await session.beginExternalAppLogin();
+    expect(session.externalAuthUri()).toBe('nostrconnect://example1');
+    expect(session.waitingForExternalAuth()).toBe(true);
+
+    vi.advanceTimersByTime(120001);
+    await flushAsync();
+
+    expect(session.error()).toContain('timed out');
+    expect(session.waitingForExternalAuth()).toBe(false);
+    expect(client.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
+
+    deferred1.resolve(sessionUser);
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+    expect(session.error()).toContain('timed out');
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+
+    await session.beginExternalAppLogin();
+    expect(session.error()).toBeNull();
+    expect(session.externalAuthUri()).toBe('nostrconnect://example2');
+    expect(session.waitingForExternalAuth()).toBe(true);
+
+    deferred2.resolve(sessionUser);
+    await flushAsync();
+
+    expect(session.user()).toEqual(sessionUser);
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+  });
 
   it('allows retry after external app login cancellation', async () => {
     const deferred1 = createDeferred<SessionUser>();
