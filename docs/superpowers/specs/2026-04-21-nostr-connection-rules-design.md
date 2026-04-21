@@ -1,7 +1,9 @@
 # Nostr Connection Rules Design
 
 Date: 2026-04-21
-Statut: proposed
+Statut: in_progress
+
+Execution plan: `docs/superpowers/specs/2026-04-21-nostr-connection-project-plan.md`
 
 ## Objectif
 
