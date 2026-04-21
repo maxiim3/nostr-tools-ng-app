@@ -88,7 +88,7 @@
   "home": {
     "title": "Nostr Tools",
     "description": "Une boîte à outils pour la communauté francophone de Nostr. Demande l'accès au starter pack, suis les profils clés et découvre l'écosystème.",
-    "cta": "Rejoindre le starter pack"
+    "cta": "Rejoindre\nle Starter Pack"
   },
   "zap": {
     "button": "Zap",
@@ -115,8 +115,8 @@
   },
   "footer": {
     "contact": "Contact",
-    "dm": "DM Nostr",
-    "zapMe": "Zap",
+    "dm": "Mon profil",
+    "zapMe": "Zap me 🫶",
     "credits": "Crédits",
     "legal": "Legal",
     "cgu": "CGU"

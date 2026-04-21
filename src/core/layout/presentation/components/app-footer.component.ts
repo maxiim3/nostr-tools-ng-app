@@ -14,7 +14,7 @@ import { ZapService } from '../../../zap/zap.service';
       <nav>
         <h6 class="footer-title">{{ 'footer.contact' | transloco }}</h6>
         <a
-          [href]="'https://njump.me/' + project.ownerNpub"
+          [href]="project.primalProfileUrl"
           target="_blank"
           rel="noopener noreferrer"
           class="link link-hover"
