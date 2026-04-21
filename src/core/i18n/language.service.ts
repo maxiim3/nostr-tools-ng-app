@@ -36,7 +36,8 @@ export class LanguageService {
       return storedLanguage;
     }
 
-    const browserLanguage = typeof navigator !== 'undefined' ? navigator.language.split('-')[0] : 'fr';
+    const browserLanguage =
+      typeof navigator !== 'undefined' ? navigator.language.split('-')[0] : 'fr';
     return isSupportedLanguage(browserLanguage) ? browserLanguage : 'fr';
   }
 }

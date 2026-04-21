@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
@@ -32,11 +26,7 @@ const PRESETS = [
               {{ 'zap.authRequired.title' | transloco }}
             </h2>
 
-            <button
-              type="button"
-              class="btn btn-primary gap-2"
-              (click)="openAuthModal()"
-            >
+            <button type="button" class="btn btn-primary gap-2" (click)="openAuthModal()">
               <svg
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
@@ -87,11 +77,7 @@ const PRESETS = [
               <p class="text-base-content">
                 {{ 'zap.modal.error' | transloco }}
               </p>
-              <button
-                type="button"
-                class="btn btn-outline"
-                (click)="submitZap()"
-              >
+              <button type="button" class="btn btn-outline" (click)="submitZap()">
                 {{ 'common.retry' | transloco }}
               </button>
             </div>
@@ -100,11 +86,7 @@ const PRESETS = [
               <p class="text-base-content/70">
                 {{ 'zap.modal.invoiceError' | transloco }}
               </p>
-              <button
-                type="button"
-                class="btn btn-outline"
-                (click)="retry()"
-              >
+              <button type="button" class="btn btn-outline" (click)="retry()">
                 {{ 'common.retry' | transloco }}
               </button>
             </div>

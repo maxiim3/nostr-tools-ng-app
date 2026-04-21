@@ -9,10 +9,16 @@ import { ZapModalComponent } from '../core/zap/presentation/zap-modal.component'
 
 @Component({
   selector: 'app-root',
-  imports: [AppAuthModalComponent, AppFooterComponent, AppHeaderComponent, ZapModalComponent, RouterOutlet],
+  imports: [
+    AppAuthModalComponent,
+    AppFooterComponent,
+    AppHeaderComponent,
+    ZapModalComponent,
+    RouterOutlet,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'block min-h-screen'
+    class: 'block min-h-screen',
   },
   template: `
     <app-header />
@@ -20,7 +26,7 @@ import { ZapModalComponent } from '../core/zap/presentation/zap-modal.component'
     <app-footer />
     <app-auth-modal />
     <app-zap-modal />
-  `
+  `,
 })
 export class App {
   protected readonly language = inject(LanguageService);

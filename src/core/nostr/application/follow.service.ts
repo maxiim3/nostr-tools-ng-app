@@ -20,20 +20,21 @@ export class FollowService {
     const events = await this.client.fetchEvents({
       kinds: [3],
       authors: [user.pubkey],
-      limit: 1
+      limit: 1,
     });
 
     const existing = events[0];
     const existingTags = existing ? (existing.tags as string[][]) : [];
-    const alreadyFollowing = existingTags.some(
-      (tag) => tag[0] === 'p' && tag[1] === OWNER_PUBKEY
-    );
+    const alreadyFollowing = existingTags.some((tag) => tag[0] === 'p' && tag[1] === OWNER_PUBKEY);
 
     if (alreadyFollowing) {
       return;
     }
 
-    const updatedTags = [...existingTags, ['p', OWNER_PUBKEY, 'wss://relay.damus.io', PROJECT_INFO.name]];
+    const updatedTags = [
+      ...existingTags,
+      ['p', OWNER_PUBKEY, 'wss://relay.damus.io', PROJECT_INFO.name],
+    ];
     const content = existing?.content ?? '';
 
     await this.client.publishEvent(3, updatedTags, content);

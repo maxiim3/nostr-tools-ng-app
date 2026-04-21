@@ -122,7 +122,7 @@ export class ZapService {
         publishRelays,
         '',
         undefined,
-        signer,
+        signer
       );
 
       if (!zapRequest) {
@@ -140,7 +140,7 @@ export class ZapService {
 
   private async fetchLightningInvoice(amountMsat: number): Promise<string> {
     const url = buildApiUrl(
-      `/api/lnurl?address=${encodeURIComponent(PROJECT_INFO.zapAddress)}&amount=${amountMsat}`,
+      `/api/lnurl?address=${encodeURIComponent(PROJECT_INFO.zapAddress)}&amount=${amountMsat}`
     );
 
     const response = await fetch(url);
@@ -161,7 +161,7 @@ export class ZapService {
     }
 
     const response = await fetch(
-      `https://${domain}/.well-known/lnurlp/${encodeURIComponent(name)}`,
+      `https://${domain}/.well-known/lnurlp/${encodeURIComponent(name)}`
     );
 
     if (!response.ok) {

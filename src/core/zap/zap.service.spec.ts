@@ -1,4 +1,4 @@
-import { signal, WritableSignal } from '@angular/core';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import QRCode from 'qrcode';
 
@@ -63,7 +63,9 @@ describe('ZapService', () => {
       ok: true,
       json: () => Promise.resolve({ pr: 'lnbc123invoice' }),
     } as Response);
-    vi.spyOn(QRCode, 'toDataURL').mockImplementation(() => Promise.resolve('data:image/png;base64,qr'));
+    vi.spyOn(QRCode, 'toDataURL').mockImplementation(() =>
+      Promise.resolve('data:image/png;base64,qr')
+    );
 
     service.openModal();
 

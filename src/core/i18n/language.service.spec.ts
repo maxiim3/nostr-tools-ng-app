@@ -8,7 +8,10 @@ import { SUPPORTED_LANGUAGES } from './language.model';
 
 describe('LanguageService', () => {
   let service: LanguageService;
-  let mockTransloco: { setAvailableLangs: ReturnType<typeof vi.fn>; setActiveLang: ReturnType<typeof vi.fn> };
+  let mockTransloco: {
+    setAvailableLangs: ReturnType<typeof vi.fn>;
+    setActiveLang: ReturnType<typeof vi.fn>;
+  };
   let store: Record<string, string>;
 
   beforeEach(() => {
@@ -21,7 +24,9 @@ describe('LanguageService', () => {
 
     vi.stubGlobal('localStorage', {
       getItem: vi.fn((key: string) => store[key] ?? null),
-      setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
+      setItem: vi.fn((key: string, value: string) => {
+        store[key] = value;
+      }),
       removeItem: vi.fn(),
     });
 

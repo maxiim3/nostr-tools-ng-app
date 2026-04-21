@@ -164,7 +164,9 @@ describe('ZapModalComponent', () => {
     zap.modalOpen.set(true);
     fixture.detectChanges();
 
-    const submitButton = fixture.nativeElement.querySelector('button.btn-block') as HTMLButtonElement;
+    const submitButton = fixture.nativeElement.querySelector(
+      'button.btn-block'
+    ) as HTMLButtonElement;
     expect(submitButton.disabled).toBe(false);
 
     component['amountControl'].setValue(20, { emitEvent: false });

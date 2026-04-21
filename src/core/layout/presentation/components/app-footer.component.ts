@@ -21,11 +21,7 @@ import { ZapService } from '../../../zap/zap.service';
         >
           {{ 'footer.dm' | transloco }}
         </a>
-        <button
-          type="button"
-          class="link link-hover"
-          (click)="zap.openModal()"
-        >
+        <button type="button" class="link link-hover" (click)="zap.openModal()">
           {{ 'footer.zapMe' | transloco }}
         </button>
       </nav>

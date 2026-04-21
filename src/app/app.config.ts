@@ -20,10 +20,10 @@ export const appConfig: ApplicationConfig = {
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),
         missingHandler: {
-          logMissingKey: false
-        }
+          logMissingKey: false,
+        },
       }),
-      loader: TranslocoHttpLoader
-    })
-  ]
+      loader: TranslocoHttpLoader,
+    }),
+  ],
 };

@@ -38,7 +38,11 @@ describe('FollowService', () => {
 
   it('publishes a follow event when not already following', async () => {
     client.fetchEvents.mockResolvedValue([
-      { tags: [['p', 'someotherpubkey', 'wss://relay.example.com', 'SomeRelay']], content: '', created_at: 1 } as any,
+      {
+        tags: [['p', 'someotherpubkey', 'wss://relay.example.com', 'SomeRelay']],
+        content: '',
+        created_at: 1,
+      } as any,
     ]);
     client.publishEvent.mockResolvedValue('event-id');
 
@@ -57,7 +61,7 @@ describe('FollowService', () => {
         ['p', 'someotherpubkey', 'wss://relay.example.com', 'SomeRelay'],
         ['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'ToolStr'],
       ],
-      '',
+      ''
     );
   });
 
@@ -88,7 +92,7 @@ describe('FollowService', () => {
     expect(client.publishEvent).toHaveBeenCalledWith(
       3,
       [['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'ToolStr']],
-      '',
+      ''
     );
   });
 });

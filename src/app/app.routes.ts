@@ -5,12 +5,15 @@ import { francophoneAdminGuard } from '../features/packs/presentation/guards/fra
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('../features/home/presentation/pages/home.page').then((module) => module.HomePage)
+    loadComponent: () =>
+      import('../features/home/presentation/pages/home.page').then((module) => module.HomePage),
   },
   {
     path: 'packs/francophone/request',
     loadComponent: () =>
-      import('../features/packs/presentation/pages/pack-request.page').then((module) => module.PackRequestPage)
+      import('../features/packs/presentation/pages/pack-request.page').then(
+        (module) => module.PackRequestPage
+      ),
   },
   {
     path: 'packs/francophone/admin/requests',
@@ -18,7 +21,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('../features/admin/presentation/pages/pack-admin-requests.page').then(
         (module) => module.PackAdminRequestsPage
-      )
+      ),
   },
   // {
   //   path: 'tools/merge-followers',
@@ -68,10 +71,12 @@ export const routes: Routes = [
   {
     path: 'legal/cgu',
     loadComponent: () =>
-      import('../features/legal/presentation/pages/legal-cgu.page').then((module) => module.LegalCguPage)
+      import('../features/legal/presentation/pages/legal-cgu.page').then(
+        (module) => module.LegalCguPage
+      ),
   },
   {
     path: '**',
-    redirectTo: ''
-  }
+    redirectTo: '',
+  },
 ];
