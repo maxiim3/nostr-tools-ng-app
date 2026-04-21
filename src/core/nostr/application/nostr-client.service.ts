@@ -6,7 +6,12 @@ import type { Event, EventTemplate } from 'nostr-tools';
 import { PROJECT_INFO } from '../../config/project-info';
 import { DEFAULT_RELAY_URLS } from '../infrastructure/relay.config';
 
-const EXTERNAL_AUTH_RELAY_URL = 'wss://relay.nsec.app';
+const EXTERNAL_AUTH_RELAY_URLS = [
+  'wss://relay.nsec.app',
+  'wss://relay.damus.io',
+  'wss://relay.primal.net',
+];
+const EXTERNAL_AUTH_TIMEOUT_MS = 120000;
 
 export interface SessionUser {
   pubkey: string;
@@ -44,20 +49,23 @@ export class NostrClientService {
   async beginExternalAppLogin(): Promise<string> {
     const ndk = await this.ensureNdk();
     const { NDKNip46Signer } = await this.ndkModulePromise;
-    const appUrl = typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
+    const appUrl =
+      typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
 
     this.pendingExternalSigner?.stop();
 
-    const signer = NDKNip46Signer.nostrconnect(ndk, EXTERNAL_AUTH_RELAY_URL, undefined, {
+    const signer = NDKNip46Signer.nostrconnect(ndk, EXTERNAL_AUTH_RELAY_URLS[0], undefined, {
       name: PROJECT_INFO.name,
       url: appUrl,
       image: appUrl ? `${appUrl}/favicon.ico` : undefined,
     });
-    this.pendingExternalSigner = signer;
 
     if (!signer.nostrConnectUri) {
+      signer.stop();
       throw new Error('Unable to create external app login link.');
     }
+
+    this.pendingExternalSigner = signer;
 
     return signer.nostrConnectUri;
   }
@@ -68,7 +76,16 @@ export class NostrClientService {
     }
 
     const signer = this.pendingExternalSigner;
-    const user = await signer.blockUntilReady();
+    const user = await Promise.race([
+      signer.blockUntilReady(),
+      new Promise<NDKUser>((_, reject) =>
+        setTimeout(() => {
+          this.pendingExternalSigner?.stop();
+          this.pendingExternalSigner = null;
+          reject(new Error('External app login timed out. Please try again.'));
+        }, EXTERNAL_AUTH_TIMEOUT_MS)
+      ),
+    ]);
     this.pendingExternalSigner = null;
 
     return this.applySigner(signer, user);
@@ -93,7 +110,9 @@ export class NostrClientService {
   async fetchProfile(identifier: string): Promise<SessionUser> {
     const ndk = await this.ensureNdk();
     const { NDKUser } = await this.ndkModulePromise;
-    const user = identifier.startsWith('npub1') ? new NDKUser({ npub: identifier }) : new NDKUser({ pubkey: identifier });
+    const user = identifier.startsWith('npub1')
+      ? new NDKUser({ npub: identifier })
+      : new NDKUser({ pubkey: identifier });
     user.ndk = ndk;
 
     const profile = await user.fetchProfile().catch(() => null);
@@ -104,7 +123,7 @@ export class NostrClientService {
     const ndk = await this.ensureNdk();
     const events = await Promise.race([
       ndk.fetchEvents(filters),
-      new Promise<Set<NDKEvent>>((resolve) => setTimeout(() => resolve(new Set()), 10_000))
+      new Promise<Set<NDKEvent>>((resolve) => setTimeout(() => resolve(new Set()), 10_000)),
     ]);
 
     return [...events].sort((left, right) => (right.created_at ?? 0) - (left.created_at ?? 0));
@@ -203,7 +222,7 @@ export class NostrClientService {
   private async createNdk(): Promise<NDK> {
     const { default: NDK } = await this.ndkModulePromise;
     const ndk = new NDK({
-      explicitRelayUrls: [...DEFAULT_RELAY_URLS]
+      explicitRelayUrls: [...DEFAULT_RELAY_URLS],
     });
 
     await ndk.connect(2000);
@@ -220,7 +239,8 @@ export class NostrClientService {
   }
 
   private toSessionUser(pubkey: string, npub: string, profile: NDKUserProfile | null): SessionUser {
-    const displayName = profile?.displayName?.trim() || profile?.name?.trim() || `${npub.slice(0, 12)}...`;
+    const displayName =
+      profile?.displayName?.trim() || profile?.name?.trim() || `${npub.slice(0, 12)}...`;
 
     return {
       pubkey,
@@ -228,7 +248,7 @@ export class NostrClientService {
       displayName,
       imageUrl: profile?.picture ?? profile?.image ?? null,
       description: profile?.about?.trim() || null,
-      nip05: profile?.nip05 ?? null
+      nip05: profile?.nip05 ?? null,
     };
   }
 }
