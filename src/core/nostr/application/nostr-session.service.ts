@@ -95,21 +95,28 @@ export class NostrSessionService {
 
     try {
       const uri = await this.client.beginExternalAppLogin();
+      if (attemptId !== this.currentExternalAttemptId) {
+        return null;
+      }
       this.externalAuthUri.set(uri);
       this.waitingForExternalAuth.set(true);
       void this.finishExternalAppLogin(attemptId);
       this.externalAuthTimeout = setTimeout(
-        () => this.handleExternalAuthTimeout(),
+        () => this.handleExternalAuthTimeout(attemptId),
         this.EXTERNAL_AUTH_TIMEOUT_MS
       );
       return uri;
     } catch (error) {
-      this.error.set(
-        error instanceof Error ? error.message : 'Unable to start external app login.'
-      );
+      if (attemptId === this.currentExternalAttemptId) {
+        this.error.set(
+          error instanceof Error ? error.message : 'Unable to start external app login.'
+        );
+      }
       return null;
     } finally {
-      this.connecting.set(false);
+      if (attemptId === this.currentExternalAttemptId) {
+        this.connecting.set(false);
+      }
     }
   }
 
@@ -140,21 +147,33 @@ export class NostrSessionService {
 
     try {
       const sessionUser = await this.client.completeExternalAppLogin();
+      if (attemptId !== this.currentExternalAttemptId) {
+        return;
+      }
       this.user.set(sessionUser);
       this.authModalOpen.set(false);
     } catch (error) {
+      if (attemptId !== this.currentExternalAttemptId) {
+        return;
+      }
       this.error.set(error instanceof Error ? error.message : 'External app login failed.');
     } finally {
-      this.externalAuthUri.set(null);
-      this.waitingForExternalAuth.set(false);
-      if (this.externalAuthTimeout) {
-        clearTimeout(this.externalAuthTimeout);
-        this.externalAuthTimeout = undefined;
+      if (attemptId === this.currentExternalAttemptId) {
+        this.externalAuthUri.set(null);
+        this.waitingForExternalAuth.set(false);
+        if (this.externalAuthTimeout) {
+          clearTimeout(this.externalAuthTimeout);
+          this.externalAuthTimeout = undefined;
+        }
       }
     }
   }
 
-  private handleExternalAuthTimeout(): void {
+  private handleExternalAuthTimeout(attemptId: number): void {
+    if (attemptId !== this.currentExternalAttemptId) {
+      return;
+    }
+
     this.waitingForExternalAuth.set(false);
     this.error.set('External app login timed out. Please try again.');
     this.client.cancelExternalAppLogin();

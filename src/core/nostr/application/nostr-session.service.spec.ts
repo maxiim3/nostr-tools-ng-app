@@ -185,37 +185,38 @@ describe('NostrSessionService', () => {
     expect(session.waitingForExternalAuth()).toBe(false);
   });
 
-  // FIXME(token-stale): Deferred to Claude Opus / GPT-5.4 — requires deeper async
-  // token-cancellation architecture in finishExternalAppLogin to prevent stale
-  // completions from mutating state when attemptId has changed.
-  // it('ignores stale external app login completion after retry', async () => {
-  //   const deferred1 = createDeferred<SessionUser>();
-  //   const deferred2 = createDeferred<SessionUser>();
-  //   client.beginExternalAppLogin.mockResolvedValueOnce('nostrconnect://example1').mockResolvedValueOnce('nostrconnect://example2');
-  //   client.completeExternalAppLogin.mockReturnValueOnce(deferred1.promise).mockReturnValueOnce(deferred2.promise);
-  //
-  //   const session = createService(client);
-  //
-  //   await session.beginExternalAppLogin();
-  //   expect(session.externalAuthUri()).toBe('nostrconnect://example1');
-  //
-  //   session.cancelExternalAppLogin();
-  //   await session.beginExternalAppLogin();
-  //   expect(session.externalAuthUri()).toBe('nostrconnect://example2');
-  //
-  //   deferred1.resolve(sessionUser);
-  //   await flushAsync();
-  //
-  //   expect(session.user()).toBeNull();
-  //
-  //   deferred2.resolve(sessionUser);
-  //   await flushAsync();
-  //
-  //   expect(session.user()).toEqual(sessionUser);
-  //   expect(session.authModalOpen()).toBe(false);
-  //   expect(session.externalAuthUri()).toBeNull();
-  //   expect(session.waitingForExternalAuth()).toBe(false);
-  // });
+  it('ignores stale external app login completion after retry', async () => {
+    const deferred1 = createDeferred<SessionUser>();
+    const deferred2 = createDeferred<SessionUser>();
+    client.beginExternalAppLogin
+      .mockResolvedValueOnce('nostrconnect://example1')
+      .mockResolvedValueOnce('nostrconnect://example2');
+    client.completeExternalAppLogin
+      .mockReturnValueOnce(deferred1.promise)
+      .mockReturnValueOnce(deferred2.promise);
+
+    const session = createService(client);
+
+    await session.beginExternalAppLogin();
+    expect(session.externalAuthUri()).toBe('nostrconnect://example1');
+
+    session.cancelExternalAppLogin();
+    await session.beginExternalAppLogin();
+    expect(session.externalAuthUri()).toBe('nostrconnect://example2');
+
+    deferred1.resolve(sessionUser);
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+
+    deferred2.resolve(sessionUser);
+    await flushAsync();
+
+    expect(session.user()).toEqual(sessionUser);
+    expect(session.authModalOpen()).toBe(false);
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+  });
 
   // FIXME(timeout): Deferred to Claude Opus / GPT-5.4 — requires deeper async
   // token-cancellation architecture in finishExternalAppLogin to prevent stale
