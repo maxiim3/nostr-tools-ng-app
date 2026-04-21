@@ -63,19 +63,25 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                       [href]="session.externalAuthUri()!"
                       class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                       rel="noreferrer"
-                    >{{
-                      'authModal.external.open' | transloco
-                    }}</a>
+                      >{{ 'authModal.external.open' | transloco }}</a
+                    >
                     <button
                       type="button"
                       class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
                       (click)="copyUri()"
                     >
-                      {{ (copied() ? 'authModal.external.copied' : 'authModal.external.copy') | transloco }}
+                      {{
+                        (copied() ? 'authModal.external.copied' : 'authModal.external.copy')
+                          | transloco
+                      }}
                     </button>
                     @if (externalAuthQr()) {
                       <div class="flex justify-center">
-                        <img [src]="externalAuthQr()!" alt="Nostr Connect QR code" class="rounded-xl size-40" />
+                        <img
+                          [src]="externalAuthQr()!"
+                          alt="Nostr Connect QR code"
+                          class="rounded-xl size-40"
+                        />
                       </div>
                     }
                     <p
@@ -87,6 +93,15 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                       <p class="text-xs font-medium text-base-content/60">
                         {{ 'authModal.external.waiting' | transloco }}
                       </p>
+                    }
+                    @if (session.error()?.includes('timed out')) {
+                      <button
+                        type="button"
+                        class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                        (click)="cancelExternalApp(); startExternalApp()"
+                      >
+                        {{ 'authModal.external.retry' | transloco }}
+                      </button>
                     }
                     <button
                       type="button"

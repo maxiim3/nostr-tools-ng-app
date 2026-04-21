@@ -25,7 +25,10 @@
       "copy": "Copiar enlace",
       "copied": "Enlace copiado",
       "waiting": "Esperando aprobación en tu app...",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "timeout": "La conexión expiró. Inténtalo de nuevo.",
+      "authRequired": "Se requiere autenticación para continuar.",
+      "retry": "Intentar de nuevo"
     },
     "privateKey": {
       "title": "Clave privada",

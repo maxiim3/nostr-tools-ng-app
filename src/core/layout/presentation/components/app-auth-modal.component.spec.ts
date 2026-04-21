@@ -108,7 +108,9 @@ describe('AppAuthModalComponent', () => {
     expect(toDataUrlMock).toHaveBeenCalledWith('nostrconnect://example', { width: 192, margin: 2 });
     expect(component['externalAuthQr']()).toBe('data:image/png;base64,qr-code');
 
-    const link = fixture.nativeElement.querySelector('a[href="nostrconnect://example"]') as HTMLAnchorElement | null;
+    const link = fixture.nativeElement.querySelector(
+      'a[href="nostrconnect://example"]'
+    ) as HTMLAnchorElement | null;
 
     expect(link).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
@@ -194,6 +196,29 @@ describe('AppAuthModalComponent', () => {
     expect(session.cancelExternalAppLogin).not.toHaveBeenCalled();
     expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
   });
+
+  it('displays retry button when external auth times out', async () => {
+    session.externalAuthUri.set('nostrconnect://example');
+    session.waitingForExternalAuth.set(true);
+    session.error.set('External app login timed out. Please try again.');
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.external.retry');
+
+    expect(session.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
+    expect(session.beginExternalAppLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('modal cancels pending external auth on close', () => {
+    session.externalAuthUri.set('nostrconnect://example');
+    session.waitingForExternalAuth.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'common.close');
+
+    expect(session.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
+    expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createSessionServiceMock(): SessionServiceMock {
@@ -225,7 +250,7 @@ function createSessionServiceMock(): SessionServiceMock {
 
 function clickButton(fixture: ComponentFixture<AppAuthModalComponent>, text: string): void {
   const button = [...fixture.nativeElement.querySelectorAll('button')].find((element) =>
-    element.textContent?.includes(text),
+    element.textContent?.includes(text)
   ) as HTMLButtonElement | undefined;
 
   if (!button) {

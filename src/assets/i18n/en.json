@@ -25,7 +25,10 @@
       "copy": "Copy link",
       "copied": "Link copied",
       "waiting": "Waiting for approval in your app...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "timeout": "The connection timed out. Please try again.",
+      "authRequired": "Authentication is required to continue.",
+      "retry": "Try again"
     },
     "privateKey": {
       "title": "Private key",
