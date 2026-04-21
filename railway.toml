@@ -1,9 +1,4 @@
-[build]
-builder = "NIXPACKS"
-buildCommand = "npm install && npm run build"
-
 [deploy]
-startCommand = "node server.mjs"
-healthcheckPath = "/"
+healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"

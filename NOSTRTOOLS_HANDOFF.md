@@ -113,18 +113,16 @@ Le setup est complet. Voici ce qui est en place.
 
 ### Backend
 
-Le backend est un serveur **Express.js + better-sqlite3** (`server.mjs`), pas du Nostr-only.
+Le backend est un serveur **Bun + bun:sqlite** (`server.mjs`), pas du Nostr-only.
 
 | Package | Usage |
 |---|---|
-| `express` | Serveur HTTP |
-| `better-sqlite3` | Base SQLite pour les demandes |
+| `Bun` | Runtime HTTP et SQLite |
 | `nostr-tools` | Vérification NIP-98 côté serveur |
-| `cors` | CORS middleware |
 
 ### Déploiement
 
-Config Railway (`railway.toml`) en place. Le backend sert l'API et le frontend buildé.
+Déploiement via `Dockerfile`. `railway.toml` ne garde que les paramètres de healthcheck/restart.
 
 ### MCP Angular
 
@@ -742,16 +740,14 @@ Le merge doit republier le pack cible mis à jour.
 
 ### Serveur
 
-Le backend est un serveur Express.js (`server.mjs`) qui gère les demandes d'accès au pack.
+Le backend est un serveur Bun (`server.mjs`) qui gère les demandes d'accès au pack.
 
 ### Stack backend
 
 | Composant | Usage |
 |---|---|
-| Express.js | Serveur HTTP |
-| better-sqlite3 | Base SQLite pour les demandes |
+| Bun | Runtime HTTP et SQLite via `bun:sqlite` |
 | nostr-tools | Vérification NIP-98 côté serveur |
-| cors | CORS middleware |
 
 ### Base de données
 
@@ -776,7 +772,7 @@ Scripts de gestion :
 
 ### Déploiement
 
-Configuration Railway (`railway.toml`). Le backend sert l'API et le frontend Angular buildé.
+Déploiement via `Dockerfile`. `railway.toml` ne garde que les paramètres de healthcheck/restart.
 
 ### Auth backend
 

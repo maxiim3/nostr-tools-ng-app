@@ -5,10 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { nip19, verifyEvent } from 'nostr-tools';
 import { unpackEventFromToken, validateEvent as validateNip98Event } from 'nostr-tools/nip98';
 
-const sqliteModule = typeof Bun !== 'undefined'
-  ? await import('bun:sqlite')
-  : await import('better-sqlite3');
-const Database = 'Database' in sqliteModule ? sqliteModule.Database : sqliteModule.default;
+if (typeof Bun === 'undefined') {
+  throw new Error('server.mjs must run with Bun.');
+}
+
+const { Database } = await import('bun:sqlite');
 
 const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
 const MAX_JSON_BODY_BYTES = 50 * 1024;
