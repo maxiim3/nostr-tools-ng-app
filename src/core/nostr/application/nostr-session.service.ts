@@ -7,6 +7,9 @@ import { NostrClientService, type SessionUser } from './nostr-client.service';
 @Injectable({ providedIn: 'root' })
 export class NostrSessionService {
   private readonly client = inject(NostrClientService);
+  private currentExternalAttemptId = 0;
+  private readonly EXTERNAL_AUTH_TIMEOUT_MS = 120000;
+  private externalAuthTimeout?: ReturnType<typeof setTimeout>;
 
   readonly user = signal<SessionUser | null>(null);
   readonly connecting = signal(false);
@@ -18,7 +21,9 @@ export class NostrSessionService {
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly isAdmin = computed(() => {
     const currentUser = this.user();
-    return currentUser ? FRANCOPHONE_PACK.adminNpubs.some((npub) => npub === currentUser.npub) : false;
+    return currentUser
+      ? FRANCOPHONE_PACK.adminNpubs.some((npub) => npub === currentUser.npub)
+      : false;
   });
 
   constructor() {
@@ -73,7 +78,9 @@ export class NostrSessionService {
       this.authModalOpen.set(false);
       return true;
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Unable to connect with the provided private key.');
+      this.error.set(
+        error instanceof Error ? error.message : 'Unable to connect with the provided private key.'
+      );
       return false;
     } finally {
       this.connecting.set(false);
@@ -83,15 +90,23 @@ export class NostrSessionService {
   async beginExternalAppLogin(): Promise<string | null> {
     this.connecting.set(true);
     this.error.set(null);
+    this.currentExternalAttemptId++;
+    const attemptId = this.currentExternalAttemptId;
 
     try {
       const uri = await this.client.beginExternalAppLogin();
       this.externalAuthUri.set(uri);
       this.waitingForExternalAuth.set(true);
-      void this.finishExternalAppLogin();
+      void this.finishExternalAppLogin(attemptId);
+      this.externalAuthTimeout = setTimeout(
+        () => this.handleExternalAuthTimeout(),
+        this.EXTERNAL_AUTH_TIMEOUT_MS
+      );
       return uri;
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Unable to start external app login.');
+      this.error.set(
+        error instanceof Error ? error.message : 'Unable to start external app login.'
+      );
       return null;
     } finally {
       this.connecting.set(false);
@@ -102,6 +117,11 @@ export class NostrSessionService {
     this.client.cancelExternalAppLogin();
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
+    this.currentExternalAttemptId++;
+    if (this.externalAuthTimeout) {
+      clearTimeout(this.externalAuthTimeout);
+      this.externalAuthTimeout = undefined;
+    }
   }
 
   async disconnect(): Promise<void> {
@@ -113,7 +133,11 @@ export class NostrSessionService {
     this.refreshAvailability();
   }
 
-  private async finishExternalAppLogin(): Promise<void> {
+  private async finishExternalAppLogin(attemptId: number): Promise<void> {
+    if (attemptId !== this.currentExternalAttemptId) {
+      return;
+    }
+
     try {
       const sessionUser = await this.client.completeExternalAppLogin();
       this.user.set(sessionUser);
@@ -123,6 +147,16 @@ export class NostrSessionService {
     } finally {
       this.externalAuthUri.set(null);
       this.waitingForExternalAuth.set(false);
+      if (this.externalAuthTimeout) {
+        clearTimeout(this.externalAuthTimeout);
+        this.externalAuthTimeout = undefined;
+      }
     }
+  }
+
+  private handleExternalAuthTimeout(): void {
+    this.waitingForExternalAuth.set(false);
+    this.error.set('External app login timed out. Please try again.');
+    this.client.cancelExternalAppLogin();
   }
 }

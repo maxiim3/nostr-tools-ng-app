@@ -4,5 +4,5 @@ export const DEFAULT_RELAY_URLS = [
   'wss://nostr.oxtr.dev',
   'wss://nostr-pub.wellorder.net',
   'wss://nos.lol',
-  'wss://relay.primal.net'
+  'wss://relay.primal.net',
 ] as const;
