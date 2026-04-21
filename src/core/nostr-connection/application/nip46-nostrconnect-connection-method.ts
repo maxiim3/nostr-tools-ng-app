@@ -3,6 +3,7 @@ import type {
   ConnectionAttempt,
   ConnectionAttemptInstructions,
 } from '../domain/connection-attempt';
+import { ConnectionDomainError } from '../domain/connection-errors';
 import type { ConnectionMethod, ConnectionRequest } from '../domain/connection-method';
 import {
   createConnectionSession,
@@ -28,7 +29,10 @@ export class Nip46NostrconnectConnectionMethod implements ConnectionMethod {
 
   async start(_request?: ConnectionRequest): Promise<ConnectionAttempt> {
     if (!(await this.starter.isAvailable())) {
-      throw new Error('NIP-46 nostrconnect is not available.');
+      throw new ConnectionDomainError(
+        'method_unavailable',
+        'NIP-46 nostrconnect is not available.'
+      );
     }
 
     const handle = await this.starter.start();
