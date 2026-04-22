@@ -1,110 +1,100 @@
 # Nostr Connection Project Plan
 
 Date: 2026-04-21
+Updated: 2026-04-22
 Status: in_progress
 
 ## Documentation
 
 - Mission et milestones : `docs/superpowers/documentation/mission.md`
 - Architecture : `docs/superpowers/documentation/architecture.md`
-- Règles agents : `AGENTS.md`
-- Règles design connexion : `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md`
+- Regles agents : `AGENTS.md`
+- Regles design connexion : `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md`
 
 ## Scope
 
-This plan tracks the ongoing migration from the legacy auth flow to the new
-`nostr-connection` domain so we can resume work later without losing context.
+Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'auth
+(NIP-07, NIP-46 Nostr Connect, NIP-46 Bunker, nsec) fonctionnent et sont testees.
 
 ## Completed Work
 
 ### Domain foundation
 
-- Added explicit domain contracts for connection methods, attempts, sessions,
-  signer capabilities, and HTTP auth.
-- Added domain-level error model and revalidation semantics.
+- Domain contracts for connection methods, attempts, sessions, signer capabilities, HTTP auth.
+- Domain-level error model and revalidation semantics.
 
 ### Connection methods and contracts
 
-- Implemented and tested `nip07` connection method.
-- Implemented and tested `nip46-nostrconnect` connection method.
-- Implemented and tested `nip46-bunker` connection method.
-- Added reusable contract tests for methods and signers.
+- `nip07` connection method (extension).
+- `nip46-nostrconnect` connection method (app externe).
+- `nip46-bunker` connection method (bunker token).
+- Reusable contract tests for methods and signers.
 
 ### NIP-46 infrastructure
 
-- Added shared NIP-46 NDK helpers in
-  `src/core/nostr-connection/infrastructure/ndk-nip46-shared.ts`.
-- Added `NdkNip46NostrconnectStarter` integration.
-- Added `NdkNip46BunkerStarter` integration.
-- Added bunker starter abstraction and fakes for TDD.
+- Shared NIP-46 NDK helpers (`ndk-nip46-shared.ts`).
+- `NdkNip46NostrconnectStarter` + `NdkNip46BunkerStarter`.
+- Bunker starter abstraction and fakes for TDD.
 
 ### Application orchestration
 
-- Added `ConnectionFacade` and root service
-  `NostrConnectionFacadeService`.
-- Added default orchestrator wiring via
-  `createDefaultConnectionOrchestrator()`.
-- Added coverage for facade behavior (attempt lifecycle, errors,
-  revalidation, disconnect).
+- `ConnectionFacade` + `NostrConnectionFacadeService` (root singleton).
+- `createDefaultConnectionOrchestrator()` wiring all 3 methods.
+- Coverage for facade behavior (attempt lifecycle, errors, revalidation, disconnect).
 
-### Validation and commit
+### Phase 1: session integration (done)
 
-- Targeted test suite passed:
-  `bun run test -- --include "src/core/nostr-connection/**/*.spec.ts"`
-  (75 tests passed).
-- Typecheck passed: `bun run typecheck`.
-- Commit created: `cf395ac`
-  (`feat: add nip46 bunker starter and connection facade`).
+- `NostrSessionService` delegates to `NostrConnectionFacadeService`.
+- NIP-07: facade handles connection, client sets up NDK signer.
+- NIP-46 nostrconnect: facade handles full handshake, NDK signer shared via `ndkSigner` signal.
+- NIP-46 bunker: facade handles connection with `connectionToken`, NDK signer shared.
+- nsec: temporary direct path (no facade registration).
+- `disconnect()` clears both external + bunker timeouts and increments attempt IDs.
+- Commit: `29ee192` (`feat: integrate session with connection facade and add bunker auth`).
+
+### Phase 2: auth modal migration (done)
+
+- Auth modal reads state from `NostrSessionService` (facade-backed).
+- Bunker token section added with input, waiting state, cancel, retry, timeout.
+- `aria-label` on bunker input for WCAG AA.
+- i18n keys added for bunker section (fr/en/es).
+- 225 tests passing (29 files), `bun run check` green.
+- Bunker auth tested and confirmed working end-to-end against a real bunker.
+- Commit: `29ee192` (same as Phase 1).
 
 ## Current State
 
-- New `nostr-connection` domain is functional and tested.
-- Existing UI/session flow still relies mainly on
-  `NostrSessionService` + `NostrClientService`.
-- New facade is not yet the single source of truth for auth state.
-- Global lint check is currently blocked by missing builder package:
-  `@angular-eslint/builder:lint`.
+- All 4 auth methods work: NIP-07 extension, NIP-46 Nostr Connect, NIP-46 Bunker, nsec.
+- `NostrSessionService` is the sole adapter for all consumers.
+- `NostrClientService` still contains `connectWithExtension()` and `connectWithPrivateKey()` — legacy methods used for NIP-07 and nsec flows. These are functional but architecturally misplaced.
+- NIP-98 has two duplicate implementations: `Nip98HttpAuthService` (nostr-connection domain) and `NostrClientService.createHttpAuthHeader()`.
+- `bun run check` passes (lint + css lint + format + typecheck + 225 tests).
 
-## Next Steps (Execution Order)
-
-1. Integrate `NostrSessionService` with `NostrConnectionFacadeService`.
-2. Map current auth entry points:
-   - extension -> `nip07`
-   - external app -> `nip46-nostrconnect`
-   - bunker token -> `nip46-bunker`
-3. Keep `nsec` as temporary controlled fallback during migration.
-4. Update auth modal to consume facade state and attempt instructions.
-5. Wire HTTP auth calls to `Nip98HttpAuthService` using active signer.
-6. Remove legacy duplicated auth orchestration once parity is reached.
-
-## Acceptance Criteria Per Phase
-
-### Phase 1: session integration
-
-- `NostrSessionService` does not directly orchestrate NIP-46 connection setup.
-- Session state comes from facade current session/attempt lifecycle.
-- Existing session tests are migrated and passing.
-
-### Phase 2: auth modal migration
-
-- Auth modal reads pending/error/attempt/session from facade state.
-- Bunker token input has validation and clear UX errors.
-- Timeout/cancel/retry states remain stable and tested.
+## Remaining Work
 
 ### Phase 3: cleanup and hardening
 
-- `NostrClientService` focuses on Nostr client operations, not auth orchestration.
-- Legacy connection paths are removed or clearly deprecated.
-- Full verification target passes once lint config is fixed:
-  `bun run check`.
+- Remove legacy auth orchestration from `NostrClientService`:
+  - `connectWithExtension()` → delegate to facade + client-only NDK setup.
+  - `connectWithPrivateKey()` → isolate or move out.
+- Unify NIP-98: single implementation via `Nip98HttpAuthService`.
+- Remove dead code paths.
+- Ensure `bun run check` stays green throughout.
 
-## Resume Checklist For Next Session
+### Phase 4: milestone 1 remaining pages
 
-1. Run `git status` and confirm clean workspace.
-2. Run `bun run test -- --include "src/core/nostr-connection/**/*.spec.ts"`.
-3. Start with session integration in:
-   `src/core/nostr/application/nostr-session.service.ts`.
-4. Update tests first in:
-   `src/core/nostr/application/nostr-session.service.spec.ts`.
-5. Then migrate auth modal usage in:
-   `src/core/layout/presentation/components/app-auth-modal.component.ts`.
+- Pack landing page (`/packs/francophone`).
+- Admin dashboard members (`/packs/francophone/admin`).
+
+## Known Risks
+
+1. Cross-contamination: if user triggers external app login then bunker login (or vice versa) without cancelling, the facade auto-cancels the first attempt. Pre-existing risk.
+2. NIP-07 double NDK instance: both facade and `NostrClientService` call `window.nostr` independently. Harmless duplication, addressed in Phase 3.
+3. No client-side bunker URL format validation. Facade validates server-side.
+
+## Resume Checklist
+
+1. Run `git status` and confirm workspace state.
+2. Run `bun run check` — should pass (225 tests).
+3. Phase 3 starts in `src/core/nostr/application/nostr-client.service.ts`.
+4. Phase 4 starts with route config in `src/app/app.routes.ts`.
