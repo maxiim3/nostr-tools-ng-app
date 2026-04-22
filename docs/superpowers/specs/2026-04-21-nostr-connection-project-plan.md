@@ -3,6 +3,13 @@
 Date: 2026-04-21
 Status: in_progress
 
+## Documentation
+
+- Mission et milestones : `docs/superpowers/documentation/mission.md`
+- Architecture : `docs/superpowers/documentation/architecture.md`
+- Règles agents : `AGENTS.md`
+- Règles design connexion : `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md`
+
 ## Scope
 
 This plan tracks the ongoing migration from the legacy auth flow to the new
