@@ -8,10 +8,15 @@ import type { SignedNostrEvent, UnsignedNostrEvent } from '../domain/nostr-event
 import type { Nip46RemoteSigner } from '../infrastructure/nip46-nostrconnect-starter';
 
 export class Nip46ConnectionSigner implements ConnectionSigner {
+  readonly ndkSigner?: unknown;
+
   constructor(
     private readonly signer: Nip46RemoteSigner,
-    private readonly capabilities: readonly ConnectionCapability[]
-  ) {}
+    private readonly capabilities: readonly ConnectionCapability[],
+    ndkSigner?: unknown
+  ) {
+    this.ndkSigner = ndkSigner;
+  }
 
   async getPublicKey(): Promise<string> {
     try {

@@ -30,6 +30,15 @@
       "authRequired": "Une authentification est nécessaire pour continuer.",
       "retry": "Réessayer"
     },
+    "bunker": {
+      "title": "Bunker (NIP-46)",
+      "body": "Connecte-toi avec un bunker Nostr en collant le jeton de connexion fourni.",
+      "cta": "Se connecter",
+      "waiting": "En attente d'approbation du bunker...",
+      "cancel": "Annuler",
+      "timeout": "La connexion bunker a expiré. Réessaie.",
+      "retry": "Réessayer"
+    },
     "privateKey": {
       "title": "Clé privée",
       "warning": "Déconseillé. À utiliser seulement si tu sais exactement ce que tu fais."

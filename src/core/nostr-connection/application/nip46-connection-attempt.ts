@@ -46,7 +46,11 @@ class Nip46ConnectionAttempt implements ConnectionAttempt {
     const remoteSigner = await this.handle.waitForConnection();
     this.unsubscribeAuthUrl();
 
-    const signer = new Nip46ConnectionSigner(remoteSigner, this.handle.capabilities);
+    const signer = new Nip46ConnectionSigner(
+      remoteSigner,
+      this.handle.capabilities,
+      remoteSigner.ndkSigner
+    );
     const session = await buildNip46Session(signer, this.handle.capabilities, this.methodId);
 
     return new Nip46ActiveConnection(signer, session, remoteSigner);

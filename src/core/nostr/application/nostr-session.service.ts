@@ -1,23 +1,28 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import type { NDKSigner } from '@nostr-dev-kit/ndk';
 
 import { FRANCOPHONE_PACK } from '../../../features/packs/domain/francophone-pack.config';
-import { getNip07Provider } from '../domain/nip07.types';
+import { NostrConnectionFacadeService } from '../../nostr-connection/application/connection-facade';
 import { NostrClientService, type SessionUser } from './nostr-client.service';
 
 @Injectable({ providedIn: 'root' })
 export class NostrSessionService {
+  private readonly facade = inject(NostrConnectionFacadeService);
   private readonly client = inject(NostrClientService);
   private currentExternalAttemptId = 0;
-  private readonly EXTERNAL_AUTH_TIMEOUT_MS = 120000;
+  private currentBunkerAttemptId = 0;
+  private readonly AUTH_TIMEOUT_MS = 120000;
   private externalAuthTimeout?: ReturnType<typeof setTimeout>;
+  private bunkerAuthTimeout?: ReturnType<typeof setTimeout>;
 
   readonly user = signal<SessionUser | null>(null);
-  readonly connecting = signal(false);
-  readonly error = signal<string | null>(null);
   readonly authModalOpen = signal(false);
+  readonly connecting = computed(() => this.facade.pending());
+  readonly error = signal<string | null>(null);
   readonly extensionAvailable = signal(false);
   readonly externalAuthUri = signal<string | null>(null);
   readonly waitingForExternalAuth = signal(false);
+  readonly waitingForBunkerAuth = signal(false);
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly isAdmin = computed(() => {
     const currentUser = this.user();
@@ -31,12 +36,16 @@ export class NostrSessionService {
   }
 
   refreshAvailability(): void {
-    this.extensionAvailable.set(getNip07Provider() !== null);
+    void this.facade.refreshAvailableMethods().then(
+      (methods) => this.extensionAvailable.set(methods.includes('nip07')),
+      () => this.extensionAvailable.set(false)
+    );
   }
 
   openAuthModal(): void {
     this.refreshAvailability();
     this.error.set(null);
+    this.facade.clearError();
     this.authModalOpen.set(true);
   }
 
@@ -45,83 +54,79 @@ export class NostrSessionService {
   }
 
   async connectWithExtension(): Promise<boolean> {
-    this.refreshAvailability();
+    const methods = await this.facade.refreshAvailableMethods();
+    this.extensionAvailable.set(methods.includes('nip07'));
 
     if (!this.extensionAvailable()) {
       this.error.set('NIP-07 extension not found.');
       return false;
     }
 
-    this.connecting.set(true);
-    this.error.set(null);
-
     try {
+      await this.facade.startConnection('nip07', { reason: 'interactive-login' });
+      await this.facade.completeCurrentAttempt();
+
       const sessionUser = await this.client.connectWithExtension();
       this.user.set(sessionUser);
       this.authModalOpen.set(false);
       return true;
-    } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Unable to connect with Nostr.');
+    } catch (err) {
+      if (this.facade.isAuthenticated()) {
+        await this.facade.disconnect().catch(() => undefined);
+      }
+      this.error.set(err instanceof Error ? err.message : 'Unable to connect with Nostr.');
       return false;
-    } finally {
-      this.connecting.set(false);
     }
   }
 
   async connectWithPrivateKey(privateKeyOrNsec: string): Promise<boolean> {
-    this.connecting.set(true);
-    this.error.set(null);
-
     try {
       const sessionUser = await this.client.connectWithPrivateKey(privateKeyOrNsec);
       this.user.set(sessionUser);
       this.authModalOpen.set(false);
       return true;
-    } catch (error) {
+    } catch (err) {
       this.error.set(
-        error instanceof Error ? error.message : 'Unable to connect with the provided private key.'
+        err instanceof Error ? err.message : 'Unable to connect with the provided private key.'
       );
       return false;
-    } finally {
-      this.connecting.set(false);
     }
   }
 
   async beginExternalAppLogin(): Promise<string | null> {
-    this.connecting.set(true);
     this.error.set(null);
+    this.facade.clearError();
     this.currentExternalAttemptId++;
     const attemptId = this.currentExternalAttemptId;
 
     try {
-      const uri = await this.client.beginExternalAppLogin();
+      const attempt = await this.facade.startConnection('nip46-nostrconnect', {
+        reason: 'interactive-login',
+      });
+
       if (attemptId !== this.currentExternalAttemptId) {
         return null;
       }
+
+      const uri = attempt.instructions?.launchUrl ?? attempt.instructions?.copyValue ?? null;
       this.externalAuthUri.set(uri);
       this.waitingForExternalAuth.set(true);
       void this.finishExternalAppLogin(attemptId);
       this.externalAuthTimeout = setTimeout(
         () => this.handleExternalAuthTimeout(attemptId),
-        this.EXTERNAL_AUTH_TIMEOUT_MS
+        this.AUTH_TIMEOUT_MS
       );
       return uri;
-    } catch (error) {
+    } catch (err) {
       if (attemptId === this.currentExternalAttemptId) {
-        this.error.set(
-          error instanceof Error ? error.message : 'Unable to start external app login.'
-        );
+        this.error.set(err instanceof Error ? err.message : 'Unable to start external app login.');
       }
       return null;
-    } finally {
-      if (attemptId === this.currentExternalAttemptId) {
-        this.connecting.set(false);
-      }
     }
   }
 
   cancelExternalAppLogin(): void {
-    this.client.cancelExternalAppLogin();
+    void this.facade.cancelCurrentAttempt().catch(() => undefined);
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
     this.currentExternalAttemptId++;
@@ -131,12 +136,66 @@ export class NostrSessionService {
     }
   }
 
+  async beginBunkerLogin(connectionToken: string): Promise<boolean> {
+    this.error.set(null);
+    this.facade.clearError();
+    this.currentBunkerAttemptId++;
+    const attemptId = this.currentBunkerAttemptId;
+
+    try {
+      await this.facade.startConnection('nip46-bunker', {
+        reason: 'interactive-login',
+        connectionToken,
+      });
+
+      if (attemptId !== this.currentBunkerAttemptId) {
+        return false;
+      }
+
+      this.waitingForBunkerAuth.set(true);
+      void this.finishBunkerLogin(attemptId);
+      this.bunkerAuthTimeout = setTimeout(
+        () => this.handleBunkerAuthTimeout(attemptId),
+        this.AUTH_TIMEOUT_MS
+      );
+      return true;
+    } catch (err) {
+      if (attemptId === this.currentBunkerAttemptId) {
+        this.error.set(err instanceof Error ? err.message : 'Unable to start bunker login.');
+      }
+      return false;
+    }
+  }
+
+  cancelBunkerLogin(): void {
+    void this.facade.cancelCurrentAttempt().catch(() => undefined);
+    this.waitingForBunkerAuth.set(false);
+    this.currentBunkerAttemptId++;
+    if (this.bunkerAuthTimeout) {
+      clearTimeout(this.bunkerAuthTimeout);
+      this.bunkerAuthTimeout = undefined;
+    }
+  }
+
   async disconnect(): Promise<void> {
+    this.currentExternalAttemptId++;
+    this.currentBunkerAttemptId++;
+    if (this.externalAuthTimeout) {
+      clearTimeout(this.externalAuthTimeout);
+      this.externalAuthTimeout = undefined;
+    }
+    if (this.bunkerAuthTimeout) {
+      clearTimeout(this.bunkerAuthTimeout);
+      this.bunkerAuthTimeout = undefined;
+    }
+
+    await this.facade.disconnect();
     await this.client.clearSigner();
     this.user.set(null);
     this.error.set(null);
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
+    this.waitingForBunkerAuth.set(false);
     this.refreshAvailability();
   }
 
@@ -146,17 +205,27 @@ export class NostrSessionService {
     }
 
     try {
-      const sessionUser = await this.client.completeExternalAppLogin();
+      const session = await this.facade.completeCurrentAttempt();
       if (attemptId !== this.currentExternalAttemptId) {
         return;
       }
-      this.user.set(sessionUser);
+
+      const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
+      if (ndkSigner) {
+        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
+      }
+
+      const profile = await this.client.fetchProfile(session.npub);
+      if (attemptId !== this.currentExternalAttemptId) {
+        return;
+      }
+      this.user.set(profile);
       this.authModalOpen.set(false);
-    } catch (error) {
+    } catch (err) {
       if (attemptId !== this.currentExternalAttemptId) {
         return;
       }
-      this.error.set(error instanceof Error ? error.message : 'External app login failed.');
+      this.error.set(err instanceof Error ? err.message : 'External app login failed.');
     } finally {
       if (attemptId === this.currentExternalAttemptId) {
         this.externalAuthUri.set(null);
@@ -182,6 +251,59 @@ export class NostrSessionService {
       this.externalAuthTimeout = undefined;
     }
     this.error.set('External app login timed out. Please try again.');
-    this.client.cancelExternalAppLogin();
+    void this.facade.cancelCurrentAttempt().catch(() => undefined);
+  }
+
+  private async finishBunkerLogin(attemptId: number): Promise<void> {
+    if (attemptId !== this.currentBunkerAttemptId) {
+      return;
+    }
+
+    try {
+      const session = await this.facade.completeCurrentAttempt();
+      if (attemptId !== this.currentBunkerAttemptId) {
+        return;
+      }
+
+      const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
+      if (ndkSigner) {
+        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
+      }
+
+      const profile = await this.client.fetchProfile(session.npub);
+      if (attemptId !== this.currentBunkerAttemptId) {
+        return;
+      }
+      this.user.set(profile);
+      this.authModalOpen.set(false);
+    } catch (err) {
+      if (attemptId !== this.currentBunkerAttemptId) {
+        return;
+      }
+      this.error.set(err instanceof Error ? err.message : 'Bunker login failed.');
+    } finally {
+      if (attemptId === this.currentBunkerAttemptId) {
+        this.waitingForBunkerAuth.set(false);
+        if (this.bunkerAuthTimeout) {
+          clearTimeout(this.bunkerAuthTimeout);
+          this.bunkerAuthTimeout = undefined;
+        }
+      }
+    }
+  }
+
+  private handleBunkerAuthTimeout(attemptId: number): void {
+    if (attemptId !== this.currentBunkerAttemptId) {
+      return;
+    }
+
+    this.currentBunkerAttemptId++;
+    this.waitingForBunkerAuth.set(false);
+    if (this.bunkerAuthTimeout) {
+      clearTimeout(this.bunkerAuthTimeout);
+      this.bunkerAuthTimeout = undefined;
+    }
+    this.error.set('Bunker login timed out. Please try again.');
+    void this.facade.cancelCurrentAttempt().catch(() => undefined);
   }
 }

@@ -42,6 +42,10 @@ export function subscribeToNdkNip46AuthUrl(
 export class NdkNip46RemoteSigner implements Nip46RemoteSigner {
   constructor(private readonly signer: NDKNip46Signer) {}
 
+  get ndkSigner(): NDKNip46Signer {
+    return this.signer;
+  }
+
   async getPublicKey(): Promise<string> {
     return this.signer.getPublicKey();
   }

@@ -1,4 +1,4 @@
-import type { ConnectionRevalidationResult } from '../domain/active-connection';
+import type { ActiveConnection, ConnectionRevalidationResult } from '../domain/active-connection';
 import type { ConnectionAttempt } from '../domain/connection-attempt';
 import type { ConnectionMethod, ConnectionRequest } from '../domain/connection-method';
 import { ConnectionDomainError } from '../domain/connection-errors';
@@ -33,6 +33,10 @@ export class ConnectionOrchestrator {
 
   getCurrentSession(): ConnectionSession | null {
     return this.store.getCurrent()?.getSession() ?? null;
+  }
+
+  getActiveConnection(): ActiveConnection | null {
+    return this.store.getCurrent();
   }
 
   async start(

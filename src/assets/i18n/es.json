@@ -30,6 +30,15 @@
       "authRequired": "Se requiere autenticación para continuar.",
       "retry": "Intentar de nuevo"
     },
+    "bunker": {
+      "title": "Bunker (NIP-46)",
+      "body": "Conéctate con un bunker de Nostr pegando el token de conexión proporcionado.",
+      "cta": "Conectarse",
+      "waiting": "Esperando aprobación del bunker...",
+      "cancel": "Cancelar",
+      "timeout": "La conexión del bunker expiró. Inténtalo de nuevo.",
+      "retry": "Intentar de nuevo"
+    },
     "privateKey": {
       "title": "Clave privada",
       "warning": "Desaconsejado. Úsalo solo si sabes exactamente lo que haces."

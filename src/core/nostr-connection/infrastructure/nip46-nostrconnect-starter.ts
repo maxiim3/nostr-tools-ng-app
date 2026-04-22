@@ -3,6 +3,7 @@ import type { ConnectionCapability } from '../domain/connection-capability';
 import type { UnsignedNostrEvent } from '../domain/nostr-event';
 
 export interface Nip46RemoteSigner {
+  readonly ndkSigner?: unknown;
   getPublicKey(): Promise<string>;
   sign(event: UnsignedNostrEvent & { pubkey: string }): Promise<string>;
   stop(): void;

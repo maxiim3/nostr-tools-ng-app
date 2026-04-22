@@ -31,10 +31,13 @@ interface SessionServiceMock {
   error: WritableSignal<string | null>;
   externalAuthUri: WritableSignal<string | null>;
   waitingForExternalAuth: WritableSignal<boolean>;
+  waitingForBunkerAuth: WritableSignal<boolean>;
   connectWithExtension: ReturnType<typeof vi.fn>;
   connectWithPrivateKey: ReturnType<typeof vi.fn>;
   beginExternalAppLogin: ReturnType<typeof vi.fn>;
   cancelExternalAppLogin: ReturnType<typeof vi.fn>;
+  beginBunkerLogin: ReturnType<typeof vi.fn>;
+  cancelBunkerLogin: ReturnType<typeof vi.fn>;
   closeAuthModal: ReturnType<typeof vi.fn>;
 }
 
@@ -185,15 +188,18 @@ describe('AppAuthModalComponent', () => {
 
   it('resets local state when closing the modal without active external auth', () => {
     component['privateKeyControl'].setValue('nsec1abc');
+    component['bunkerTokenControl'].setValue('bunker://abc');
     component['copied'].set(true);
     component['externalAuthQr'].set('data:image/png;base64,qr');
 
     component['close']();
 
     expect(component['privateKeyControl'].value).toBe('');
+    expect(component['bunkerTokenControl'].value).toBe('');
     expect(component['copied']()).toBe(false);
     expect(component['externalAuthQr']()).toBeNull();
     expect(session.cancelExternalAppLogin).not.toHaveBeenCalled();
+    expect(session.cancelBunkerLogin).not.toHaveBeenCalled();
     expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
   });
 
@@ -219,6 +225,60 @@ describe('AppAuthModalComponent', () => {
     expect(session.cancelExternalAppLogin).toHaveBeenCalledTimes(1);
     expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
   });
+
+  it('submits bunker token and clears the field', async () => {
+    fixture.detectChanges();
+
+    component['bunkerTokenControl'].setValue('bunker://abc?relay=wss://relay.example.com');
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.bunker.cta');
+    await fixture.whenStable();
+
+    expect(session.beginBunkerLogin).toHaveBeenCalledWith(
+      'bunker://abc?relay=wss://relay.example.com'
+    );
+    expect(component['bunkerTokenControl'].value).toBe('');
+  });
+
+  it('shows waiting state when bunker auth is in progress', async () => {
+    session.waitingForBunkerAuth.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.waiting');
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.cancel');
+  });
+
+  it('cancels pending bunker auth when cancel is clicked', () => {
+    session.waitingForBunkerAuth.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.bunker.cancel');
+
+    expect(session.cancelBunkerLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels pending bunker auth when modal is closed', () => {
+    session.waitingForBunkerAuth.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'common.close');
+
+    expect(session.cancelBunkerLogin).toHaveBeenCalledTimes(1);
+    expect(session.closeAuthModal).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries bunker auth on timeout retry click', async () => {
+    session.waitingForBunkerAuth.set(true);
+    session.error.set('Bunker login timed out. Please try again.');
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.bunker.retry');
+    await fixture.whenStable();
+
+    expect(session.cancelBunkerLogin).toHaveBeenCalledTimes(1);
+    expect(session.beginBunkerLogin).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createSessionServiceMock(): SessionServiceMock {
@@ -229,6 +289,7 @@ function createSessionServiceMock(): SessionServiceMock {
     error: signal<string | null>(null),
     externalAuthUri: signal<string | null>(null),
     waitingForExternalAuth: signal(false),
+    waitingForBunkerAuth: signal(false),
     connectWithExtension: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
     connectWithPrivateKey: vi.fn<(value: string) => Promise<boolean>>().mockResolvedValue(true),
     beginExternalAppLogin: vi.fn<() => Promise<string | null>>().mockImplementation(async () => {
@@ -239,6 +300,13 @@ function createSessionServiceMock(): SessionServiceMock {
     cancelExternalAppLogin: vi.fn<() => void>().mockImplementation(() => {
       session.externalAuthUri.set(null);
       session.waitingForExternalAuth.set(false);
+    }),
+    beginBunkerLogin: vi.fn<(token: string) => Promise<boolean>>().mockImplementation(async () => {
+      session.waitingForBunkerAuth.set(true);
+      return true;
+    }),
+    cancelBunkerLogin: vi.fn<() => void>().mockImplementation(() => {
+      session.waitingForBunkerAuth.set(false);
     }),
     closeAuthModal: vi.fn<() => void>().mockImplementation(() => {
       session.authModalOpen.set(false);

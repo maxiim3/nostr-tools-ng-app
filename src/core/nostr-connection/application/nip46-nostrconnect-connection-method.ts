@@ -2,10 +2,7 @@ import type { ConnectionAttempt } from '../domain/connection-attempt';
 import { ConnectionDomainError } from '../domain/connection-errors';
 import type { ConnectionMethod, ConnectionRequest } from '../domain/connection-method';
 import type { ConnectionMethodId } from '../domain/connection-method-id';
-import type {
-  Nip46AttemptHandle,
-  Nip46NostrconnectStarter,
-} from '../infrastructure/nip46-nostrconnect-starter';
+import type { Nip46NostrconnectStarter } from '../infrastructure/nip46-nostrconnect-starter';
 import { createNip46ConnectionAttempt } from './nip46-connection-attempt';
 
 export class Nip46NostrconnectConnectionMethod implements ConnectionMethod {

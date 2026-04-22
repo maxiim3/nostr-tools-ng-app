@@ -96,6 +96,15 @@ export class NostrClientService {
     this.pendingExternalSigner = null;
   }
 
+  async applyNdkSigner(signer: NDKSigner, pubkeyHex: string): Promise<void> {
+    const ndk = await this.ensureNdk();
+    const { NDKUser } = await this.ndkModulePromise;
+    const user = new NDKUser({ pubkey: pubkeyHex });
+    user.ndk = ndk;
+    ndk.signer = signer;
+    ndk.activeUser = user;
+  }
+
   async clearSigner(): Promise<void> {
     const ndk = await this.ensureNdk();
     ndk.signer = undefined;
