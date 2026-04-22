@@ -16,9 +16,7 @@ import { ZapService } from '../../../zap/zap.service';
       <div class="mx-auto max-w-7xl px-6 py-10">
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <nav>
-            <h6
-              class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]"
-            >
+            <h6 class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]">
               {{ 'footer.contact' | transloco }}
             </h6>
             <div class="space-y-2">
@@ -52,9 +50,7 @@ import { ZapService } from '../../../zap/zap.service';
           </nav>
 
           <nav>
-            <h6
-              class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]"
-            >
+            <h6 class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]">
               {{ 'footer.credits' | transloco }}
             </h6>
             <div class="space-y-2">
@@ -86,9 +82,7 @@ import { ZapService } from '../../../zap/zap.service';
           </nav>
 
           <nav>
-            <h6
-              class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]"
-            >
+            <h6 class="mb-4 text-xs font-bold uppercase tracking-widest text-[#FFE600]">
               {{ 'footer.legal' | transloco }}
             </h6>
             <div class="space-y-2">
@@ -103,7 +97,9 @@ import { ZapService } from '../../../zap/zap.service';
         </div>
 
         <div class="mt-10 border-t border-white/10 pt-6 text-center">
-          <span class="text-2xl font-extrabold text-white/30 uppercase tracking-tight">ToolStr</span>
+          <span class="text-2xl font-extrabold text-white/30 uppercase tracking-tight"
+            >ToolStr</span
+          >
         </div>
       </div>
     </footer>

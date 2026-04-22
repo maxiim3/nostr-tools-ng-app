@@ -10,9 +10,7 @@ import { ZapService } from '../../../../core/zap/zap.service';
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="mx-auto max-w-md rounded-2xl bg-neutral p-6 text-center text-neutral-content"
-    >
+    <div class="mx-auto max-w-md rounded-2xl bg-neutral p-6 text-center text-neutral-content">
       <div class="mb-4 flex items-center justify-center gap-4">
         <img
           [src]="ownerAvatarUrl"
@@ -39,11 +37,7 @@ import { ZapService } from '../../../../core/zap/zap.service';
             {{ 'supportCard.follow' | transloco }}
           }
         </button>
-        <button
-          type="button"
-          class="btn btn-primary btn-sm"
-          (click)="zap.openModal()"
-        >
+        <button type="button" class="btn btn-primary btn-sm" (click)="zap.openModal()">
           {{ 'supportCard.zap' | transloco }}
         </button>
       </div>

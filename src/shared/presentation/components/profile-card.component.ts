@@ -14,7 +14,9 @@ export interface ProfileCardUser {
   imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="border-[3px] border-[#0a0a0a] brutal-shadow relative h-52 w-96 overflow-hidden bg-white">
+    <article
+      class="border-[3px] border-[#0a0a0a] brutal-shadow relative h-52 w-96 overflow-hidden bg-white"
+    >
       <section class="p-5">
         @if (status() === 'skeleton') {
           <header class="flex items-center gap-4">
