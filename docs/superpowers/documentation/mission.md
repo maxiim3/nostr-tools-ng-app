@@ -26,10 +26,10 @@ Page publique de demande d'accès au starter pack francophone + interface admin 
 - [x] Header global, footer global, zap modal
 - [x] i18n fr/en/es
 - [x] Page CGU (`/legal/cgu`)
-- [ ] Pack landing page (`/packs/francophone`)
-- [ ] Admin dashboard membres (`/packs/francophone/admin`)
-- [x] Refactor auth Phase 1+2 (session + facade integrés, bunker ajouté, 225 tests passent)
-- [ ] Refactor auth Phase 3 (cleanup legacy `NostrClientService`, unify NIP-98)
+- [x] Pack landing page (`/packs/francophone`)
+- [ ] Admin dashboard membres (`/packs/francophone/admin`) — postponed
+- [x] Refactor auth Phase 1+2 (session + facade integrés, bunker ajouté, 215 tests passent)
+- [x] Refactor auth Phase 3 (cleanup legacy `NostrClientService`, unify NIP-98)
 
 ### Milestone 2 — Merge followers tool (pas commencé)
 

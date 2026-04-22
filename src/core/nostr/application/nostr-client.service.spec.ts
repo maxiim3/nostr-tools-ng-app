@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { normalizeHexPubkey, NostrClientService } from './nostr-client.service';
 
@@ -10,8 +10,11 @@ const mockNdkInstance = {
   fetchEvents: vi.fn(),
 };
 
-const { mockNostrconnect } = vi.hoisted(() => ({
-  mockNostrconnect: vi.fn(),
+const { mockNip07SignerCtor, mockNdkUserCtor } = vi.hoisted(() => ({
+  mockNip07SignerCtor: vi.fn().mockImplementation(function MockNip07Signer() {
+    return { tag: 'nip07-signer' };
+  }),
+  mockNdkUserCtor: vi.fn(),
 }));
 
 vi.mock('@nostr-dev-kit/ndk', () => {
@@ -33,10 +36,10 @@ vi.mock('@nostr-dev-kit/ndk', () => {
   return {
     default: MockNDK,
     NDKEvent: vi.fn(),
-    NDKNip07Signer: vi.fn(),
+    NDKNip07Signer: mockNip07SignerCtor,
     NDKPrivateKeySigner: vi.fn(),
-    NDKNip46Signer: Object.assign(vi.fn(), { nostrconnect: mockNostrconnect }),
-    NDKUser: vi.fn(),
+    NDKNip46Signer: Object.assign(vi.fn(), { nostrconnect: vi.fn() }),
+    NDKUser: mockNdkUserCtor,
   };
 });
 
@@ -73,23 +76,36 @@ describe('NostrClientService', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    vi.stubGlobal('location', { origin: 'https://app.example' });
     mockNdkInstance.connect.mockResolvedValue();
     mockNdkInstance.signer = undefined;
     mockNdkInstance.activeUser = undefined;
+
+    mockNip07SignerCtor.mockReset();
+    mockNip07SignerCtor.mockImplementation(function MockNip07Signer() {
+      return { tag: 'nip07-signer' };
+    });
+
+    mockNdkUserCtor.mockReset();
+    mockNdkUserCtor.mockImplementation(function MockNdkUser({
+      pubkey,
+      npub,
+    }: {
+      pubkey?: string;
+      npub?: string;
+    }) {
+      return {
+        pubkey: pubkey ?? 'f'.repeat(64),
+        npub: npub ?? 'npub1test',
+        ndk: undefined,
+        fetchProfile: vi.fn().mockResolvedValue(null),
+      };
+    });
+
     service = new NostrClientService();
   });
 
   afterEach(() => {
-    service.cancelExternalAppLogin();
     vi.unstubAllGlobals();
-  });
-
-  it('throws from completeExternalAppLogin when no pending signer exists', async () => {
-    service = new NostrClientService();
-    await expect(service.completeExternalAppLogin()).rejects.toThrow(
-      'No external app login is pending.'
-    );
   });
 
   it('throws from publishEvent when no signer is set', async () => {
@@ -129,6 +145,15 @@ describe('NostrClientService', () => {
     await expect(signer.getPublicKey()).resolves.toBe('a'.repeat(64));
   });
 
+  it('applies a NIP-07 signer with the connected user pubkey', async () => {
+    await service.applyNip07Signer('f'.repeat(64));
+
+    expect(mockNip07SignerCtor).toHaveBeenCalledWith(1500, mockNdkInstance);
+    expect(mockNdkUserCtor).toHaveBeenCalledWith({ pubkey: 'f'.repeat(64) });
+    expect(mockNdkInstance.signer).toEqual({ tag: 'nip07-signer' });
+    expect(mockNdkInstance.activeUser).toMatchObject({ pubkey: 'f'.repeat(64) });
+  });
+
   it('throws from sendDirectMessage with an invalid recipient pubkey when signed in', async () => {
     mockNdkInstance.signer = {} as never;
     mockNdkInstance.activeUser = {} as never;
@@ -144,107 +169,6 @@ describe('NostrClientService', () => {
 
     await expect(service.sendDirectMessage('a'.repeat(64), '   ')).rejects.toThrow(
       'DM content cannot be empty.'
-    );
-  });
-
-  it('cancelExternalAppLogin does not throw when no pending signer exists', () => {
-    expect(() => service.cancelExternalAppLogin()).not.toThrow();
-  });
-
-  it('beginExternalAppLogin returns nostrconnect URI', async () => {
-    const signer = {
-      nostrConnectUri: 'nostrconnect://test',
-      stop: vi.fn(),
-      blockUntilReady: vi.fn(),
-    };
-    mockNostrconnect.mockReturnValue(signer);
-
-    const result = await service.beginExternalAppLogin();
-
-    expect(result).toBe('nostrconnect://test');
-    expect(mockNostrconnect).toHaveBeenCalledWith(
-      mockNdkInstance,
-      'wss://relay.nsec.app',
-      undefined,
-      { name: 'ToolStr', url: 'https://app.example', image: 'https://app.example/favicon.ico' }
-    );
-  });
-
-  it('beginExternalAppLogin stops previous pending signer', async () => {
-    const firstSigner = {
-      nostrConnectUri: 'nostrconnect://first',
-      stop: vi.fn(),
-      blockUntilReady: vi.fn(),
-    };
-    const secondSigner = {
-      nostrConnectUri: 'nostrconnect://second',
-      stop: vi.fn(),
-      blockUntilReady: vi.fn(),
-    };
-    mockNostrconnect.mockReturnValueOnce(firstSigner).mockReturnValueOnce(secondSigner);
-
-    await service.beginExternalAppLogin();
-    await service.beginExternalAppLogin();
-
-    expect(firstSigner.stop).toHaveBeenCalledTimes(1);
-  });
-
-  it('beginExternalAppLogin rejects when nostrConnectUri is missing', async () => {
-    const signer = { nostrConnectUri: undefined, stop: vi.fn(), blockUntilReady: vi.fn() };
-    mockNostrconnect.mockReturnValue(signer);
-
-    await expect(service.beginExternalAppLogin()).rejects.toThrow(
-      'Unable to create external app login link.'
-    );
-  });
-
-  it('completeExternalAppLogin success applies signer and returns SessionUser', async () => {
-    const fakeUser = {
-      pubkey: 'f'.repeat(64),
-      npub: 'npub1test',
-      fetchProfile: vi.fn().mockResolvedValue({
-        displayName: 'Test',
-        picture: 'pic',
-        about: 'bio',
-        nip05: 't@e.com',
-      }),
-    };
-    const signer = {
-      nostrConnectUri: 'nostrconnect://test',
-      stop: vi.fn(),
-      blockUntilReady: vi.fn().mockResolvedValue(fakeUser),
-    };
-    mockNostrconnect.mockReturnValue(signer);
-
-    await service.beginExternalAppLogin();
-    const sessionUser = await service.completeExternalAppLogin();
-
-    expect(sessionUser).toEqual({
-      pubkey: 'f'.repeat(64),
-      npub: 'npub1test',
-      displayName: 'Test',
-      imageUrl: 'pic',
-      description: 'bio',
-      nip05: 't@e.com',
-    });
-    expect(mockNdkInstance.signer).toBe(signer);
-    expect(mockNdkInstance.activeUser).toBe(fakeUser);
-  });
-
-  it('cancelExternalAppLogin clears pending so complete rejects', async () => {
-    const signer = {
-      nostrConnectUri: 'nostrconnect://test',
-      stop: vi.fn(),
-      blockUntilReady: vi.fn(),
-    };
-    mockNostrconnect.mockReturnValue(signer);
-
-    await service.beginExternalAppLogin();
-    service.cancelExternalAppLogin();
-
-    expect(signer.stop).toHaveBeenCalled();
-    await expect(service.completeExternalAppLogin()).rejects.toThrow(
-      'No external app login is pending.'
     );
   });
 });

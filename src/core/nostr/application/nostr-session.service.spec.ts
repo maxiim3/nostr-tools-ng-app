@@ -57,7 +57,6 @@ describe('NostrSessionService', () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
     facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
-    client.connectWithExtension.mockResolvedValue(sessionUser);
 
     const session = createService();
     session.openAuthModal();
@@ -69,7 +68,8 @@ describe('NostrSessionService', () => {
     expect(result).toBe(true);
     expect(facadeState.startConnectionCalls).toEqual([['nip07', { reason: 'interactive-login' }]]);
     expect(facadeState.completeCalls).toBe(1);
-    expect(client.connectWithExtension).toHaveBeenCalledTimes(1);
+    expect(client.applyNip07Signer).toHaveBeenCalledWith(sessionUser.pubkey);
+    expect(client.fetchProfile).toHaveBeenCalledWith(sessionUser.npub);
     expect(session.user()).toEqual(sessionUser);
     expect(session.authModalOpen()).toBe(false);
     expect(session.error()).toBeNull();
@@ -86,7 +86,7 @@ describe('NostrSessionService', () => {
     await flushAsync();
 
     expect(result).toBe(false);
-    expect(client.connectWithExtension).not.toHaveBeenCalled();
+    expect(client.applyNip07Signer).not.toHaveBeenCalled();
     expect(session.user()).toBeNull();
     expect(session.authModalOpen()).toBe(true);
     expect(session.error()).toBe('NIP-07 extension not found.');
@@ -113,7 +113,7 @@ describe('NostrSessionService', () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
     facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
-    client.connectWithExtension.mockRejectedValue(new Error('NDK failure.'));
+    client.applyNip07Signer.mockRejectedValue(new Error('NDK failure.'));
 
     const session = createService();
     session.openAuthModal();
@@ -409,7 +409,6 @@ describe('NostrSessionService', () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
     facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
-    client.connectWithExtension.mockResolvedValue(sessionUser);
     client.clearSigner.mockResolvedValue(undefined);
 
     const session = createService();
@@ -431,7 +430,6 @@ describe('NostrSessionService', () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
     facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
-    client.connectWithExtension.mockResolvedValue(sessionUser);
     client.clearSigner.mockResolvedValue(undefined);
 
     const session = createService();
@@ -449,7 +447,6 @@ describe('NostrSessionService', () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
     facadeState.completeResult = createFakeSession(adminPubkey, adminNpub, 'nip07');
-    client.connectWithExtension.mockResolvedValue(adminUser);
     client.clearSigner.mockResolvedValue(undefined);
 
     const session = createService();
@@ -670,7 +667,7 @@ function createService(): NostrSessionService {
 
 function createClientMock() {
   return {
-    connectWithExtension: vi.fn<() => Promise<SessionUser>>(),
+    applyNip07Signer: vi.fn<(hex: string) => Promise<void>>().mockResolvedValue(undefined),
     connectWithPrivateKey: vi.fn<(key: string) => Promise<SessionUser>>(),
     applyNdkSigner: vi
       .fn<(signer: unknown, hex: string) => Promise<void>>()

@@ -1,7 +1,7 @@
 # Nostr Connection Project Plan
 
 Date: 2026-04-21
-Updated: 2026-04-22
+Updated: 2026-04-23
 Status: in_progress
 
 ## Documentation
@@ -66,30 +66,32 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 
 - All 4 auth methods work: NIP-07 extension, NIP-46 Nostr Connect, NIP-46 Bunker, nsec.
 - `NostrSessionService` is the sole adapter for all consumers.
-- `NostrClientService` still contains `connectWithExtension()` and `connectWithPrivateKey()` — legacy methods used for NIP-07 and nsec flows. These are functional but architecturally misplaced.
-- NIP-98 has two duplicate implementations: `Nip98HttpAuthService` (nostr-connection domain) and `NostrClientService.createHttpAuthHeader()`.
-- `bun run check` passes (lint + css lint + format + typecheck + 225 tests).
+- `NostrClientService` is now clean: `connectWithPrivateKey()` kept (nsec temporary path), `getHttpAuthSigner()` + `NdkConnectionSignerAdapter` replace legacy `createHttpAuthHeader()`.
+- NIP-98 unified: `NostrHttpAuthService` uses `Nip98HttpAuthService` (nostr-connection domain) as single source, with facade signer priority and client fallback.
+- Extension flow: facade source of truth, client only does NDK setup via `applyNip07Signer()`.
+- Commits: `e52c27d` (route francophone + unify nip98), `??????` (phase 3 auth cleanup).
+- `bun run check` passes (215 tests).
 
 ## Remaining Work
 
-### Phase 3: cleanup and hardening
+### Phase 3: cleanup and hardening (done)
 
-- Remove legacy auth orchestration from `NostrClientService`:
-  - `connectWithExtension()` → delegate to facade + client-only NDK setup.
-  - `connectWithPrivateKey()` → isolate or move out.
-- Unify NIP-98: single implementation via `Nip98HttpAuthService`.
-- Remove dead code paths.
-- Ensure `bun run check` stays green throughout.
+- `NostrClientService` legacy auth orchestration removed (`connectWithExtension()`, `beginExternalAppLogin()`, `completeExternalAppLogin()`, `cancelExternalAppLogin()`).
+- Extension flow now uses facade as sole auth source; client only runs `applyNip07Signer()` for NDK setup.
+- `nsec` path (`connectWithPrivateKey()`) kept as-is — temporary direct path, not registered in facade.
+- NIP-98 unified via `NostrHttpAuthService` (facade signer priority, client fallback).
+- Dead code removed; `bun run check` stays green (215 tests).
+- Commit: `??????`
 
 ### Phase 4: milestone 1 remaining pages
 
-- Pack landing page (`/packs/francophone`).
-- Admin dashboard members (`/packs/francophone/admin`).
+- Pack landing page (`/packs/francophone`) — done. Root `/` redirects to `/packs/francophone`, same content.
+- Admin dashboard members (`/packs/francophone/admin`) — postponed.
 
 ## Known Risks
 
 1. Cross-contamination: if user triggers external app login then bunker login (or vice versa) without cancelling, the facade auto-cancels the first attempt. Pre-existing risk.
-2. NIP-07 double NDK instance: both facade and `NostrClientService` call `window.nostr` independently. Harmless duplication, addressed in Phase 3.
+2. ~~NIP-07 double NDK instance~~: resolved — extension flow now uses facade as sole auth source; client only calls `applyNip07Signer()` (no duplicate `window.nostr` call).
 3. No client-side bunker URL format validation. Facade validates server-side.
 
 ## Resume Checklist

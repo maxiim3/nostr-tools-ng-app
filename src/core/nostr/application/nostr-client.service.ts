@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import type NDK from '@nostr-dev-kit/ndk';
 import type { NDKEvent, NDKFilter, NDKSigner, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
 
-import { PROJECT_INFO } from '../../config/project-info';
 import type { ConnectionCapability } from '../../nostr-connection/domain/connection-capability';
 import { ConnectionDomainError } from '../../nostr-connection/domain/connection-errors';
 import type { ConnectionSigner } from '../../nostr-connection/domain/connection-signer';
@@ -11,13 +10,6 @@ import type {
   UnsignedNostrEvent,
 } from '../../nostr-connection/domain/nostr-event';
 import { DEFAULT_RELAY_URLS } from '../infrastructure/relay.config';
-
-const EXTERNAL_AUTH_RELAY_URLS = [
-  'wss://relay.nsec.app',
-  'wss://relay.damus.io',
-  'wss://relay.primal.net',
-];
-const EXTERNAL_AUTH_TIMEOUT_MS = 120000;
 
 export interface SessionUser {
   pubkey: string;
@@ -32,16 +24,6 @@ export interface SessionUser {
 export class NostrClientService {
   private readonly ndkModulePromise = import('@nostr-dev-kit/ndk');
   private ndkPromise: Promise<NDK> | null = null;
-  private pendingExternalSigner: import('@nostr-dev-kit/ndk').NDKNip46Signer | null = null;
-
-  async connectWithExtension(): Promise<SessionUser> {
-    const ndk = await this.ensureNdk();
-    const { NDKNip07Signer } = await this.ndkModulePromise;
-    const signer = new NDKNip07Signer(1500, ndk);
-    const user = await signer.user();
-
-    return this.applySigner(signer, user);
-  }
 
   async connectWithPrivateKey(privateKeyOrNsec: string): Promise<SessionUser> {
     const ndk = await this.ensureNdk();
@@ -52,54 +34,14 @@ export class NostrClientService {
     return this.applySigner(signer, user);
   }
 
-  async beginExternalAppLogin(): Promise<string> {
+  async applyNip07Signer(pubkeyHex: string): Promise<void> {
     const ndk = await this.ensureNdk();
-    const { NDKNip46Signer } = await this.ndkModulePromise;
-    const appUrl =
-      typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
-
-    this.pendingExternalSigner?.stop();
-
-    const signer = NDKNip46Signer.nostrconnect(ndk, EXTERNAL_AUTH_RELAY_URLS[0], undefined, {
-      name: PROJECT_INFO.name,
-      url: appUrl,
-      image: appUrl ? `${appUrl}/favicon.ico` : undefined,
-    });
-
-    if (!signer.nostrConnectUri) {
-      signer.stop();
-      throw new Error('Unable to create external app login link.');
-    }
-
-    this.pendingExternalSigner = signer;
-
-    return signer.nostrConnectUri;
-  }
-
-  async completeExternalAppLogin(): Promise<SessionUser> {
-    if (!this.pendingExternalSigner) {
-      throw new Error('No external app login is pending.');
-    }
-
-    const signer = this.pendingExternalSigner;
-    const user = await Promise.race([
-      signer.blockUntilReady(),
-      new Promise<NDKUser>((_, reject) =>
-        setTimeout(() => {
-          this.pendingExternalSigner?.stop();
-          this.pendingExternalSigner = null;
-          reject(new Error('External app login timed out. Please try again.'));
-        }, EXTERNAL_AUTH_TIMEOUT_MS)
-      ),
-    ]);
-    this.pendingExternalSigner = null;
-
-    return this.applySigner(signer, user);
-  }
-
-  cancelExternalAppLogin(): void {
-    this.pendingExternalSigner?.stop();
-    this.pendingExternalSigner = null;
+    const { NDKNip07Signer, NDKUser } = await this.ndkModulePromise;
+    const signer = new NDKNip07Signer(1500, ndk);
+    const user = new NDKUser({ pubkey: pubkeyHex });
+    user.ndk = ndk;
+    ndk.signer = signer;
+    ndk.activeUser = user;
   }
 
   async applyNdkSigner(signer: NDKSigner, pubkeyHex: string): Promise<void> {
@@ -115,7 +57,6 @@ export class NostrClientService {
     const ndk = await this.ensureNdk();
     ndk.signer = undefined;
     ndk.activeUser = undefined;
-    this.cancelExternalAppLogin();
   }
 
   async getNdk(): Promise<NDK> {

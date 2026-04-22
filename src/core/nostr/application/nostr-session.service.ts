@@ -64,16 +64,26 @@ export class NostrSessionService {
 
     try {
       await this.facade.startConnection('nip07', { reason: 'interactive-login' });
-      await this.facade.completeCurrentAttempt();
+      const session = await this.facade.completeCurrentAttempt();
 
-      const sessionUser = await this.client.connectWithExtension();
-      this.user.set(sessionUser);
+      if (session.methodId === 'nip07') {
+        await this.client.applyNip07Signer(session.pubkeyHex);
+      } else {
+        const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
+        if (ndkSigner) {
+          await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
+        }
+      }
+
+      const profile = await this.client.fetchProfile(session.npub);
+      this.user.set(profile);
       this.authModalOpen.set(false);
       return true;
     } catch (err) {
       if (this.facade.isAuthenticated()) {
         await this.facade.disconnect().catch(() => undefined);
       }
+      await this.client.clearSigner().catch(() => undefined);
       this.error.set(err instanceof Error ? err.message : 'Unable to connect with Nostr.');
       return false;
     }
