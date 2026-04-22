@@ -110,13 +110,23 @@ describe('NostrClientService', () => {
     );
   });
 
-  it('throws from createHttpAuthHeader when no signer is set', async () => {
+  it('throws from getHttpAuthSigner when no signer is set', async () => {
     mockNdkInstance.signer = undefined;
     mockNdkInstance.activeUser = undefined;
 
-    await expect(service.createHttpAuthHeader('https://example.com', 'GET')).rejects.toThrow(
+    await expect(service.getHttpAuthSigner()).rejects.toThrow(
       'Nostr authentication is required before signing API requests.'
     );
+  });
+
+  it('returns an HTTP auth signer when user is authenticated', async () => {
+    mockNdkInstance.signer = {} as never;
+    mockNdkInstance.activeUser = { pubkey: 'A'.repeat(64) } as never;
+
+    const signer = await service.getHttpAuthSigner();
+
+    expect(signer.supports('nip98-auth')).toBe(true);
+    await expect(signer.getPublicKey()).resolves.toBe('a'.repeat(64));
   });
 
   it('throws from sendDirectMessage with an invalid recipient pubkey when signed in', async () => {

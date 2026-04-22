@@ -3,11 +3,17 @@ import { francophoneAdminGuard } from '../features/packs/presentation/guards/fra
 
 describe('app.routes', () => {
   it('should define the correct number of active routes', () => {
-    expect(routes.length).toBe(5);
+    expect(routes.length).toBe(6);
   });
 
-  it('should have a home route at root path', () => {
+  it('should redirect root path to /packs/francophone', () => {
     const route = routes.find((r) => r.path === '');
+    expect(route).toBeDefined();
+    expect(route!.redirectTo).toBe('packs/francophone');
+  });
+
+  it('should have a francophone landing route', () => {
+    const route = routes.find((r) => r.path === 'packs/francophone');
     expect(route).toBeDefined();
     expect(route!.loadComponent).toBeDefined();
   });
@@ -30,9 +36,9 @@ describe('app.routes', () => {
     expect(route!.loadComponent).toBeDefined();
   });
 
-  it('should redirect unknown paths to root', () => {
+  it('should redirect unknown paths to /packs/francophone', () => {
     const route = routes.find((r) => r.path === '**');
     expect(route).toBeDefined();
-    expect(route!.redirectTo).toBe('');
+    expect(route!.redirectTo).toBe('packs/francophone');
   });
 });

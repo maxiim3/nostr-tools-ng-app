@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { NostrClientService } from '../../../core/nostr/application/nostr-client.service';
+import { NostrHttpAuthService } from '../../../core/nostr/application/nostr-http-auth.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
 import { type UserRequestStatus } from '../domain/request-status';
 
@@ -39,7 +39,7 @@ export interface AdminRequestEntry {
 @Injectable({ providedIn: 'root' })
 export class StarterPackRequestService {
   private readonly http = inject(HttpClient);
-  private readonly nostrClient = inject(NostrClientService);
+  private readonly httpAuth = inject(NostrHttpAuthService);
   private readonly session = inject(NostrSessionService);
 
   async getUserState(): Promise<UserRequestState> {
@@ -107,7 +107,11 @@ export class StarterPackRequestService {
     method: string,
     body?: Record<string, unknown>
   ): Promise<HttpHeaders> {
-    const authorization = await this.nostrClient.createHttpAuthHeader(url, method, body);
+    const authorization = await this.httpAuth.createAuthorizationHeader({
+      url,
+      method,
+      body,
+    });
 
     return new HttpHeaders({
       Authorization: authorization,

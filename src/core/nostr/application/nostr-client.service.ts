@@ -1,9 +1,15 @@
 import { Injectable } from '@angular/core';
 import type NDK from '@nostr-dev-kit/ndk';
 import type { NDKEvent, NDKFilter, NDKSigner, NDKUser, NDKUserProfile } from '@nostr-dev-kit/ndk';
-import type { Event, EventTemplate } from 'nostr-tools';
 
 import { PROJECT_INFO } from '../../config/project-info';
+import type { ConnectionCapability } from '../../nostr-connection/domain/connection-capability';
+import { ConnectionDomainError } from '../../nostr-connection/domain/connection-errors';
+import type { ConnectionSigner } from '../../nostr-connection/domain/connection-signer';
+import type {
+  SignedNostrEvent,
+  UnsignedNostrEvent,
+} from '../../nostr-connection/domain/nostr-event';
 import { DEFAULT_RELAY_URLS } from '../infrastructure/relay.config';
 
 const EXTERNAL_AUTH_RELAY_URLS = [
@@ -187,37 +193,14 @@ export class NostrClientService {
     return event.id;
   }
 
-  async createHttpAuthHeader(
-    url: string,
-    method: string,
-    payload?: Record<string, unknown>
-  ): Promise<string> {
+  async getHttpAuthSigner(): Promise<ConnectionSigner> {
     const ndk = await this.ensureNdk();
 
     if (!ndk.signer || !ndk.activeUser) {
       throw new Error('Nostr authentication is required before signing API requests.');
     }
 
-    const { NDKEvent } = await this.ndkModulePromise;
-    const { getToken } = await import('nostr-tools/nip98');
-
-    return getToken(
-      url,
-      method,
-      async (template: EventTemplate) => {
-        const event = new NDKEvent(ndk);
-        event.kind = template.kind;
-        event.tags = template.tags as never;
-        event.content = template.content;
-        event.created_at = template.created_at;
-
-        await event.sign(ndk.signer);
-
-        return event.rawEvent() as Event;
-      },
-      true,
-      payload
-    );
+    return new NdkConnectionSignerAdapter(ndk, this.ndkModulePromise);
   }
 
   private async ensureNdk(): Promise<NDK> {
@@ -259,6 +242,54 @@ export class NostrClientService {
       description: profile?.about?.trim() || null,
       nip05: profile?.nip05 ?? null,
     };
+  }
+}
+
+const HTTP_AUTH_CAPABILITIES: readonly ConnectionCapability[] = ['sign-event', 'nip98-auth'];
+
+class NdkConnectionSignerAdapter implements ConnectionSigner {
+  constructor(
+    private readonly ndk: NDK,
+    private readonly ndkModulePromise: Promise<typeof import('@nostr-dev-kit/ndk')>
+  ) {}
+
+  async getPublicKey(): Promise<string> {
+    const pubkey = this.ndk.activeUser?.pubkey;
+    const normalizedPubkey = pubkey ? normalizeHexPubkey(pubkey) : null;
+
+    if (!normalizedPubkey) {
+      throw new ConnectionDomainError(
+        'validation_failed',
+        'Active signer returned an invalid hex pubkey.'
+      );
+    }
+
+    return normalizedPubkey;
+  }
+
+  async signEvent(event: UnsignedNostrEvent): Promise<SignedNostrEvent> {
+    const ndkSigner = this.ndk.signer;
+    if (!ndkSigner) {
+      throw new ConnectionDomainError(
+        'no_active_connection',
+        'A signer is required before signing HTTP auth events.'
+      );
+    }
+
+    const { NDKEvent } = await this.ndkModulePromise;
+    const ndkEvent = new NDKEvent(this.ndk);
+    ndkEvent.kind = event.kind;
+    ndkEvent.tags = event.tags as never;
+    ndkEvent.content = event.content;
+    ndkEvent.created_at = event.created_at;
+
+    await ndkEvent.sign(ndkSigner as NDKSigner);
+
+    return ndkEvent.rawEvent() as SignedNostrEvent;
+  }
+
+  supports(capability: ConnectionCapability): boolean {
+    return HTTP_AUTH_CAPABILITIES.includes(capability);
   }
 }
 

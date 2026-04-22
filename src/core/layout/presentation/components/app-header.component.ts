@@ -15,7 +15,7 @@ import { ZapService } from '../../../zap/zap.service';
     <header class="sticky top-0 z-20 w-full border-b-[3px] border-[#0a0a0a] bg-[#FF5C00]">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <a
-          routerLink="/"
+          routerLink="/packs/francophone"
           class="shrink-0 text-3xl font-extrabold uppercase text-white tracking-tight"
         >
           {{ project.name }}

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { NostrClientService } from '../../../core/nostr/application/nostr-client.service';
+import { NostrHttpAuthService } from '../../../core/nostr/application/nostr-http-auth.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
 import { StarterPackRequestService } from './starter-pack-request.service';
 
@@ -12,14 +12,14 @@ describe('StarterPackRequestService', () => {
 
   let httpGetMock: ReturnType<typeof vi.fn>;
   let httpPostMock: ReturnType<typeof vi.fn>;
-  let createAuthHeaderMock: ReturnType<typeof vi.fn>;
+  let createAuthorizationHeaderMock: ReturnType<typeof vi.fn>;
   let userMock: ReturnType<typeof vi.fn>;
   let isAdminMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     httpGetMock = vi.fn().mockReturnValue(of(undefined));
     httpPostMock = vi.fn().mockReturnValue(of(undefined));
-    createAuthHeaderMock = vi.fn().mockResolvedValue('Nostr abc123');
+    createAuthorizationHeaderMock = vi.fn().mockResolvedValue('Nostr abc123');
     userMock = vi.fn().mockReturnValue(null);
     isAdminMock = vi.fn().mockReturnValue(false);
 
@@ -27,7 +27,10 @@ describe('StarterPackRequestService', () => {
       providers: [
         StarterPackRequestService,
         { provide: HttpClient, useValue: { get: httpGetMock, post: httpPostMock } },
-        { provide: NostrClientService, useValue: { createHttpAuthHeader: createAuthHeaderMock } },
+        {
+          provide: NostrHttpAuthService,
+          useValue: { createAuthorizationHeader: createAuthorizationHeaderMock },
+        },
         { provide: NostrSessionService, useValue: { user: userMock, isAdmin: isAdminMock } },
       ],
     });
