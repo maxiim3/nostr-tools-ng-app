@@ -36,29 +36,29 @@ describe('PackRequestPage pure helpers', () => {
     it('returns authError for 401 HttpErrorResponse', () => {
       const error = new HttpErrorResponse({ status: 401 });
 
-      expect(resolveSubmitErrorKey(error)).toBe('request.quiz.authError');
+      expect(resolveSubmitErrorKey(error)).toBe('request.submitError.authError');
     });
 
     it('returns forbidden for 403 HttpErrorResponse', () => {
       const error = new HttpErrorResponse({ status: 403 });
 
-      expect(resolveSubmitErrorKey(error)).toBe('request.quiz.forbidden');
+      expect(resolveSubmitErrorKey(error)).toBe('request.submitError.forbidden');
     });
 
     it('returns invalidRequest for 400 HttpErrorResponse', () => {
       const error = new HttpErrorResponse({ status: 400 });
 
-      expect(resolveSubmitErrorKey(error)).toBe('request.quiz.invalidRequest');
+      expect(resolveSubmitErrorKey(error)).toBe('request.submitError.invalidRequest');
     });
 
     it('returns generic submitError for other HttpErrorResponse', () => {
       const error = new HttpErrorResponse({ status: 500 });
 
-      expect(resolveSubmitErrorKey(error)).toBe('request.quiz.submitError');
+      expect(resolveSubmitErrorKey(error)).toBe('request.submitError.generic');
     });
 
     it('returns generic submitError for non-HttpErrorResponse', () => {
-      expect(resolveSubmitErrorKey(new Error('network'))).toBe('request.quiz.submitError');
+      expect(resolveSubmitErrorKey(new Error('network'))).toBe('request.submitError.generic');
     });
   });
 });

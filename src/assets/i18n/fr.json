@@ -73,20 +73,16 @@
       "approved": "Ta demande est approuvée.",
       "alreadyMember": "Vous faites deja parti du pack !"
     },
-    "quiz": {
-      "title": "Mini captcha francophone",
-      "subtitle": "Une question rapide avant l'envoi de la demande.",
-      "submit": "Envoyer la réponse",
-      "error": "Choisis une réponse avant d'envoyer.",
+    "submitError": {
       "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
       "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
       "invalidRequest": "La demande envoyée est invalide.",
-      "submitError": "Impossible d'envoyer la demande pour le moment. Réessaie dans un instant."
+      "generic": "Impossible d'envoyer la demande pour le moment. Réessaie dans un instant."
     },
     "followup": {
       "title": "En attendant",
       "subtitle": "Tu peux déjà ouvrir le starter pack, me suivre ou envoyer un zap de 42 sats.",
-      "starterPack": "Ouvrir le pack",
+      "starterPack": "Ouvrir",
       "follow": "Ouvrir mon profil",
       "zap": "Zap 42 sats"
     },
@@ -162,7 +158,7 @@
         "title": "3. Description du service",
         "body": "Le Service propose les fonctionnalités suivantes :",
         "features": {
-          "request": "Demande d'accès au starter pack francophone via un questionnaire anti-bot (quiz captcha).",
+          "request": "Demande d'accès au starter pack francophone.",
           "status": "Suivi du statut de votre demande (en attente, approuvée, rejetée).",
           "follow": "Suivi de profils Nostr recommandés directement depuis la plateforme.",
           "zap": "Envoi de zaps Lightning en sats aux créateurs du Service.",
@@ -177,7 +173,7 @@
           "external": "Application externe compatible Nostr Connect.",
           "privateKey": "Clé privée Nostr (déconseillée, à utiliser uniquement si vous comprenez les risques)."
         },
-        "quiz": "Pour envoyer une demande d'accès au starter pack, vous devez répondre correctement à un quiz captcha francophone. Ce mécanisme a pour but de vérifier que vous appartenez à la communauté francophone et de limiter les demandes automatisées.",
+        "request": "Pour envoyer une demande d'accès au starter pack, vous devez vous authentifier via Nostr. Ce mécanisme a pour but de vérifier que vous appartenez à la communauté Nostr et de limiter les demandes automatisées.",
         "free": "Le Service est gratuit. Aucune redevance n'est exigée pour l'utilisation des fonctionnalités de base."
       },
       "privacy": {
@@ -234,7 +230,7 @@
     "reject": "Refuser",
     "yourRequestPending": "Ta demande est déjà en cours de traitement. Merci de patienter.",
     "youAreInPack": "Vous faites deja parti du pack !",
-    "openPack": "Ouvrir le pack",
+    "openPack": "Ouvrir",
     "errors": {
       "approveFailed": "Impossible de finaliser l'approbation (pack + DM) pour le moment.",
       "rejectFailed": "Impossible de refuser la demande pour le moment."

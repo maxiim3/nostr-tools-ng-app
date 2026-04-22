@@ -73,20 +73,16 @@
       "approved": "Your request is approved.",
       "alreadyMember": "You are already part of the pack!"
     },
-    "quiz": {
-      "title": "Tiny francophone captcha",
-      "subtitle": "One quick question before sending the request.",
-      "submit": "Submit answer",
-      "error": "Pick an answer before submitting.",
+    "submitError": {
       "authError": "The request signature was rejected. Reconnect and try again.",
       "forbidden": "You are not allowed to perform this action.",
       "invalidRequest": "The submitted request is invalid.",
-      "submitError": "Unable to submit the request right now. Please try again shortly."
+      "generic": "Unable to submit the request right now. Please try again shortly."
     },
     "followup": {
       "title": "While you wait",
       "subtitle": "You can already open the starter pack, follow me, or send a 42 sats zap.",
-      "starterPack": "Open pack",
+      "starterPack": "Open",
       "follow": "Open my profile",
       "zap": "Zap 42 sats"
     },
@@ -162,7 +158,7 @@
         "title": "3. Description of the service",
         "body": "The Service provides the following features:",
         "features": {
-          "request": "Access request to the francophone starter pack via an anti-bot quiz captcha.",
+          "request": "Access request to the francophone starter pack.",
           "status": "Tracking of your request status (pending, approved, rejected).",
           "follow": "Following recommended Nostr profiles directly from the platform.",
           "zap": "Sending Lightning zaps in sats to the Service creators.",
@@ -177,7 +173,7 @@
           "external": "External application compatible with Nostr Connect.",
           "privateKey": "Nostr private key (not recommended; use only if you fully understand the risks)."
         },
-        "quiz": "To submit an access request for the starter pack, you must correctly answer a francophone quiz captcha. This mechanism is designed to verify that you belong to the francophone community and to limit automated requests.",
+        "request": "To submit an access request for the starter pack, you must be authenticated via Nostr. This mechanism is designed to verify that you belong to the Nostr community and to limit automated requests.",
         "free": "The Service is free of charge. No fee is required for using the basic features."
       },
       "privacy": {
@@ -234,7 +230,7 @@
     "reject": "Reject",
     "yourRequestPending": "Your request is already being processed. Please wait.",
     "youAreInPack": "You are already part of the pack!",
-    "openPack": "Open the pack",
+    "openPack": "Open",
     "errors": {
       "approveFailed": "Unable to complete approval right now (pack update + DM).",
       "rejectFailed": "Unable to reject the request right now."

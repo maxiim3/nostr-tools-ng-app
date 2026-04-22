@@ -128,7 +128,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
           </li>
         </ul>
         <p class="mt-3 text-[#0a0a0a]/70 leading-relaxed">
-          {{ 'cgu.sections.access.quiz' | transloco }}
+          {{ 'cgu.sections.access.request' | transloco }}
         </p>
         <p class="mt-2 text-[#0a0a0a]/70 leading-relaxed">
           {{ 'cgu.sections.access.free' | transloco }}

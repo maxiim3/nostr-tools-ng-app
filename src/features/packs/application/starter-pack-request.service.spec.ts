@@ -39,18 +39,23 @@ describe('StarterPackRequestService', () => {
     it('throws when no user is authenticated', async () => {
       userMock.mockReturnValue(null);
 
-      await expect(service.submitRequest('q1', 'c1')).rejects.toThrow(
-        'Authentication is required.'
-      );
+      await expect(service.submitRequest()).rejects.toThrow('Authentication is required.');
     });
 
     it('posts request data when user is authenticated', async () => {
       userMock.mockReturnValue({ displayName: 'Alice', imageUrl: 'img.png' });
       httpPostMock.mockReturnValue(of(undefined));
 
-      await service.submitRequest('q1', 'c1');
+      await service.submitRequest();
 
       expect(httpPostMock).toHaveBeenCalledTimes(1);
+      const [, body] = httpPostMock.mock.calls[0] as [string, Record<string, unknown>];
+      expect(body).toEqual({
+        displayName: 'Alice',
+        imageUrl: 'img.png',
+      });
+      expect(body).not.toHaveProperty('questionId');
+      expect(body).not.toHaveProperty('choiceId');
     });
   });
 

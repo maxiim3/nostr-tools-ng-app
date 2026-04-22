@@ -46,15 +46,13 @@ export class StarterPackRequestService {
     return this.get<UserStateResponse>('/api/pack-requests/me');
   }
 
-  async submitRequest(questionId: string, choiceId: string): Promise<void> {
+  async submitRequest(): Promise<void> {
     const currentUser = this.session.user();
     if (!currentUser) {
       throw new Error('Authentication is required.');
     }
 
     await this.post('/api/pack-requests', {
-      questionId,
-      choiceId,
       displayName: currentUser.displayName,
       imageUrl: currentUser.imageUrl,
     });

@@ -2,19 +2,63 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { Database } from 'bun:sqlite';
+import { finalizeEvent, generateSecretKey, getPublicKey, nip19 } from 'nostr-tools';
+import { getToken } from 'nostr-tools/nip98';
 
 const TEST_PORT = 1 + Math.floor(Math.random() * 65534);
 const TEST_DIR = path.join(os.tmpdir(), `nostr-test-${Date.now()}`);
 const TEST_DB = path.join(TEST_DIR, 'test.sqlite');
+const USER_SECRET_KEY = generateSecretKey();
+const ADMIN_SECRET_KEY = generateSecretKey();
+const USER_PUBKEY = getPublicKey(USER_SECRET_KEY);
+const USER_NPUB = nip19.npubEncode(USER_PUBKEY);
+const ADMIN_NPUB = nip19.npubEncode(getPublicKey(ADMIN_SECRET_KEY));
 
 process.env.PORT = String(TEST_PORT);
 process.env.DATABASE_PATH = TEST_DB;
-process.env.ADMIN_NPUBS = 'npub1testadmin00000000000000000000000000000000000000000000000000';
+process.env.ADMIN_NPUBS = ADMIN_NPUB;
 process.env.DATA_DIR = TEST_DIR;
 
 const BASE = `http://127.0.0.1:${TEST_PORT}`;
 
 let serverImport;
+
+async function createAuthHeader({ secretKey, url, method, body }) {
+  return getToken(
+    url,
+    method,
+    async (template) =>
+      finalizeEvent(
+        {
+          kind: template.kind,
+          tags: template.tags,
+          content: template.content,
+          created_at: template.created_at,
+        },
+        secretKey
+      ),
+    true,
+    body
+  );
+}
+
+function findRequestRecord(pubkey) {
+  const database = new Database(TEST_DB, { readonly: true });
+
+  try {
+    return database
+      .query(
+        `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
+                display_name AS displayName, image_url AS imageUrl, status
+           FROM pack_requests
+          WHERE requester_pubkey = ?`
+      )
+      .get(pubkey);
+  } finally {
+    database.close();
+  }
+}
 
 describe('server.mjs integration', () => {
   beforeAll(async () => {
@@ -103,6 +147,76 @@ describe('server.mjs integration', () => {
     it('POST /api/admin/pack-requests/:pubkey/reject returns 401 without auth', async () => {
       const res = await fetch(`${BASE}/api/admin/pack-requests/somekey/reject`, { method: 'POST' });
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('Pack request lifecycle', () => {
+    it('creates a pack request and persists requester npub', async () => {
+      const url = `${BASE}/api/pack-requests`;
+      const body = {
+        displayName: 'Alice',
+        imageUrl: 'https://example.com/alice.png',
+      };
+      const authorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url,
+        method: 'POST',
+        body,
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      expect(response.status).toBe(204);
+
+      const record = findRequestRecord(USER_PUBKEY);
+      expect(record).toBeTruthy();
+      expect(record.requesterPubkey).toBe(USER_PUBKEY);
+      expect(record.requesterNpub).toBe(USER_NPUB);
+      expect(record.displayName).toBe('Alice');
+      expect(record.status).toBe('pending');
+    });
+
+    it('returns pending status for authenticated requester', async () => {
+      const url = `${BASE}/api/pack-requests/me`;
+      const authorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url,
+        method: 'GET',
+      });
+
+      const response = await fetch(url, {
+        headers: { Authorization: authorization },
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toEqual({ status: 'pending' });
+    });
+
+    it('lists pending requests for authenticated admin', async () => {
+      const url = `${BASE}/api/admin/pack-requests`;
+      const authorization = await createAuthHeader({
+        secretKey: ADMIN_SECRET_KEY,
+        url,
+        method: 'GET',
+      });
+
+      const response = await fetch(url, {
+        headers: { Authorization: authorization },
+      });
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBeGreaterThanOrEqual(1);
+      expect(body.some((entry) => entry.requesterPubkey === USER_PUBKEY)).toBe(true);
     });
   });
 

@@ -40,8 +40,6 @@ const CREATE_TABLE_SQL = `
     requester_npub TEXT NOT NULL,
     display_name TEXT NOT NULL,
     image_url TEXT,
-    question_id TEXT NOT NULL,
-    choice_id TEXT NOT NULL,
     created TEXT NOT NULL,
     updated TEXT NOT NULL,
     status TEXT NOT NULL
@@ -172,8 +170,6 @@ async function handleRequest(request) {
     try {
       const body = await readJsonBody(request);
       const auth = await requireNostrAuth(request, body, false, requestUrl);
-      const questionId = readRequiredString(body?.questionId, 'questionId');
-      const choiceId = readRequiredString(body?.choiceId, 'choiceId');
       const displayName = readRequiredString(body?.displayName, 'displayName');
       const imageUrl = readOptionalString(body?.imageUrl);
       const existingRecord = findRequestByPubkey(auth.pubkey);
@@ -184,8 +180,6 @@ async function handleRequest(request) {
         requesterNpub: auth.npub,
         displayName,
         imageUrl,
-        questionId,
-        choiceId,
         created: existingRecord?.created ?? now,
         updated: now,
         status: 'pending',
@@ -252,8 +246,7 @@ function findRequestByPubkey(pubkey) {
         db,
 
         `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
-                  display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
-                  choice_id AS choiceId, created, updated, status
+                  display_name AS displayName, image_url AS imageUrl, created, updated, status
             FROM pack_requests
             WHERE requester_pubkey = ?`
       ).get(pubkey)
@@ -266,8 +259,7 @@ function listPackRequests() {
     createStatement(
       db,
       `SELECT requester_pubkey AS requesterPubkey, requester_npub AS requesterNpub,
-                display_name AS displayName, image_url AS imageUrl, question_id AS questionId,
-                choice_id AS choiceId, created, updated, status
+                display_name AS displayName, image_url AS imageUrl, created, updated, status
           FROM pack_requests
           ORDER BY created ASC`
     ).all()
@@ -283,32 +275,34 @@ function upsertPackRequest(record) {
           requester_npub,
           display_name,
           image_url,
-          question_id,
-          choice_id,
           created,
           updated,
           status
         ) VALUES (
-          @requesterPubkey,
-          @requesterNpub,
-          @displayName,
-          @imageUrl,
-          @questionId,
-          @choiceId,
-          @created,
-          @updated,
-          @status
+          ?,
+          ?,
+          ?,
+          ?,
+          ?,
+          ?,
+          ?
         )
         ON CONFLICT(requester_pubkey) DO UPDATE SET
           requester_npub = excluded.requester_npub,
           display_name = excluded.display_name,
           image_url = excluded.image_url,
-          question_id = excluded.question_id,
-          choice_id = excluded.choice_id,
           created = excluded.created,
           updated = excluded.updated,
           status = excluded.status`
-    ).run(record)
+    ).run(
+      record.requesterPubkey,
+      record.requesterNpub,
+      record.displayName,
+      record.imageUrl,
+      record.created,
+      record.updated,
+      record.status
+    )
   );
 }
 

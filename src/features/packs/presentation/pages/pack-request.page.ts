@@ -2,7 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
   inject,
   OnDestroy,
@@ -17,13 +16,7 @@ import {
   type UserRequestState,
 } from '../../application/starter-pack-request.service';
 import { type UserRequestStatus } from '../../domain/request-status';
-import {
-  pickRandomQuestion,
-  type RequestQuizChoice,
-  type RequestQuizQuestion,
-} from '../../domain/request-quiz';
 import { OwnerSupportCardComponent } from '../components/owner-support-card.component';
-import { PackQuizComponent } from '../components/pack-quiz.component';
 
 const LOADING_MESSAGES = [
   'request.loading.1',
@@ -35,7 +28,7 @@ const LOADING_MESSAGES = [
 
 @Component({
   selector: 'pack-request-page',
-  imports: [TranslocoPipe, PackQuizComponent, OwnerSupportCardComponent],
+  imports: [TranslocoPipe, OwnerSupportCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pack-request.page.html',
 })
@@ -49,16 +42,7 @@ export class PackRequestPage implements OnDestroy {
   readonly isPackMember = signal(false);
   readonly packFRUrl = PROJECT_INFO.packFRUrl;
   readonly loading = signal(false);
-  readonly statusPillClass = computed(() => {
-    switch (this.requestStatus()) {
-      case 'pending':
-        return 'badge-warning';
-      default:
-        return 'badge-neutral';
-    }
-  });
 
-  readonly quizQuestion = signal<RequestQuizQuestion | null>(null);
   readonly loadingMessage = signal<string>(LOADING_MESSAGES[0]);
   readonly submitError = signal<string | null>(null);
 
@@ -110,29 +94,13 @@ export class PackRequestPage implements OnDestroy {
     }
   }
 
-  startQuiz(): void {
-    this.submitError.set(null);
-    this.quizQuestion.set(pickRandomQuestion());
-  }
-
-  cancelQuiz(): void {
-    this.submitError.set(null);
-    this.quizQuestion.set(null);
-  }
-
-  async submitRequest(choice: RequestQuizChoice): Promise<void> {
-    const question = this.quizQuestion();
-    if (!question) {
-      return;
-    }
-
+  async requestJoin(): Promise<void> {
     this.submitError.set(null);
     this.loading.set(true);
     this.startLoadingMessageRotation();
 
     try {
-      await this.requestService.submitRequest(question.id, choice.id);
-      this.quizQuestion.set(null);
+      await this.requestService.submitRequest();
       await this.loadStatus();
     } catch (error: unknown) {
       this.submitError.set(resolveSubmitErrorKey(error));
@@ -175,17 +143,17 @@ export function resolveRequestStatus(
 export function resolveSubmitErrorKey(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401) {
-      return 'request.quiz.authError';
+      return 'request.submitError.authError';
     }
 
     if (error.status === 403) {
-      return 'request.quiz.forbidden';
+      return 'request.submitError.forbidden';
     }
 
     if (error.status === 400) {
-      return 'request.quiz.invalidRequest';
+      return 'request.submitError.invalidRequest';
     }
   }
 
-  return 'request.quiz.submitError';
+  return 'request.submitError.generic';
 }

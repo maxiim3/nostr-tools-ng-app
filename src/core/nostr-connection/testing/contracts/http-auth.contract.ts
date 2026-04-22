@@ -17,7 +17,7 @@ export function runHttpAuthContract(harness: HttpAuthContractHarness): void {
       const request = {
         url: 'https://example.com/api/pack-requests',
         method: 'POST',
-        body: { questionId: 'hello', choiceId: 'nostr' },
+        body: { displayName: 'Alice', imageUrl: 'img.png' },
       };
 
       const header = await service.createAuthorizationHeader(signer, request);

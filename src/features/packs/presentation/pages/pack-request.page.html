@@ -9,28 +9,11 @@
       {{ 'request.subtitle' | transloco }}
     </p>
 
-    @if (loading() && !quizQuestion()) {
+    @if (loading()) {
       <div class="flex flex-col items-center gap-4 py-8">
         <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
         <p class="text-sm text-[#0a0a0a]/60">{{ loadingMessage() | transloco }}</p>
       </div>
-    } @else if (quizQuestion()) {
-      <div class="flex justify-center">
-        <pack-quiz
-          [question]="quizQuestion()!"
-          [submitting]="loading()"
-          [submitError]="submitError()"
-          (answerSelected)="submitRequest($event)"
-        />
-      </div>
-      <button
-        type="button"
-        class="btn btn-ghost btn-sm"
-        [disabled]="loading()"
-        (click)="cancelQuiz()"
-      >
-        {{ 'common.close' | transloco }}
-      </button>
     } @else if (!isAuthenticated()) {
       <button
         class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
@@ -53,10 +36,13 @@
     } @else if (requestStatus() === 'idle') {
       <button
         class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-        (click)="startQuiz()"
+        (click)="requestJoin()"
       >
         {{ 'request.requestJoin' | transloco }}
       </button>
+      @if (submitError()) {
+        <p class="text-sm font-bold text-error">{{ submitError()! | transloco }}</p>
+      }
     } @else {
       <div class="brutal-sticker bg-[#FFE600] text-[#0a0a0a] text-sm rotate-1">
         {{ 'request.status.' + requestStatus() | transloco }}

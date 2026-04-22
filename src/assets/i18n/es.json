@@ -73,20 +73,16 @@
       "approved": "Tu solicitud ha sido aprobada.",
       "alreadyMember": "¡Ya formas parte del pack!"
     },
-    "quiz": {
-      "title": "Mini captcha francófono",
-      "subtitle": "Una pregunta rápida antes de enviar la solicitud.",
-      "submit": "Enviar respuesta",
-      "error": "Elige una respuesta antes de enviarla.",
+    "submitError": {
       "authError": "La firma de la solicitud fue rechazada. Vuelve a conectarte e inténtalo de nuevo.",
       "forbidden": "No tienes permiso para realizar esta acción.",
       "invalidRequest": "La solicitud enviada no es válida.",
-      "submitError": "No se puede enviar la solicitud ahora mismo. Vuelve a intentarlo en breve."
+      "generic": "No se puede enviar la solicitud ahora mismo. Vuelve a intentarlo en breve."
     },
     "followup": {
       "title": "Mientras esperas",
       "subtitle": "Ya puedes abrir el starter pack, seguirme o enviar un zap de 42 sats.",
-      "starterPack": "Abrir pack",
+      "starterPack": "Abrir",
       "follow": "Abrir mi perfil",
       "zap": "Zap 42 sats"
     },
@@ -162,7 +158,7 @@
         "title": "3. Descripción del servicio",
         "body": "El Servicio ofrece las siguientes funcionalidades:",
         "features": {
-          "request": "Solicitud de acceso al starter pack francófono mediante un cuestionario anti-bot (quiz captcha).",
+          "request": "Solicitud de acceso al starter pack francófono.",
           "status": "Seguimiento del estado de su solicitud (pendiente, aprobada, rechazada).",
           "follow": "Seguimiento de perfiles de Nostr recomendados directamente desde la plataforma.",
           "zap": "Envío de zaps Lightning en sats a los creadores del Servicio.",
@@ -177,7 +173,7 @@
           "external": "Aplicación externa compatible con Nostr Connect.",
           "privateKey": "Clave privada de Nostr (no recomendada; utilízala solo si comprendes plenamente los riesgos)."
         },
-        "quiz": "Para enviar una solicitud de acceso al starter pack, debes responder correctamente a un quiz captcha francófono. Este mecanismo tiene como objetivo verificar que perteneces a la comunidad francófona y limitar las solicitudes automatizadas.",
+        "request": "Para enviar una solicitud de acceso al starter pack, debes autenticarte a través de Nostr. Este mecanismo tiene como objetivo verificar que perteneces a la comunidad Nostr y limitar las solicitudes automatizadas.",
         "free": "El Servicio es gratuito. No se exige ningún canon por el uso de las funcionalidades básicas."
       },
       "privacy": {
@@ -234,7 +230,7 @@
     "reject": "Rechazar",
     "yourRequestPending": "Tu solicitud ya se está procesando. Por favor, espera.",
     "youAreInPack": "¡Ya formas parte del pack!",
-    "openPack": "Abrir el pack",
+    "openPack": "Abrir",
     "errors": {
       "approveFailed": "No se puede completar la aprobación ahora mismo (pack + DM).",
       "rejectFailed": "No se puede rechazar la solicitud en este momento."
