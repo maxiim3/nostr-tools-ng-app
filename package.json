@@ -17,6 +17,7 @@
     "lint:css:fix": "stylelint \"src/**/*.css\" --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "fix": "bun run lint:fix && bun run lint:css:fix && bun run format",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "check": "bun run lint && bun run lint:css && bun run format:check && bun run typecheck && bun run test",
     "prepare": "husky"
