@@ -1,10 +1,10 @@
-# NostrTools — Mission
+# ToolStr — Mission
 
-NostrTools est une application Angular 21 SPA, shell multi-pages centré sur Nostr.
+ToolStr est une application Angular 21 SPA, shell multi-pages centre sur Nostr.
 
 ## Nature du produit
 
-NostrTools est une application umbrella contenant plusieurs domaines :
+ToolStr est une application umbrella contenant plusieurs domaines :
 
 1. `packs` — gestion de starter packs Nostr
 2. `admin` — interface d'administration
@@ -15,21 +15,20 @@ NostrTools est une application umbrella contenant plusieurs domaines :
 
 ### Milestone 1 — Pack francophone (en cours)
 
-Page publique de demande d'accès au starter pack francophone + interface admin de gestion.
+Objectif produit : une page publique de demande d'acces au starter pack francophone, avec un backoffice admin de gestion.
 
-- [x] Landing page simplifiée (`/`)
-- [x] Page de demande d'accès (`/packs/francophone/request`)
-- [x] Suppression du quiz anti-bot legacy
-- [x] Auth Nostr (NIP-07, NIP-46 Nostr Connect, NIP-46 Bunker, nsec temporaire)
-- [x] Admin requests — approbation/refus (`/packs/francophone/admin/requests`)
-- [x] Backend Express + SQLite (NIP-98 auth)
-- [x] Header global, footer global, zap modal
-- [x] i18n fr/en/es
-- [x] Page CGU (`/legal/cgu`)
-- [x] Pack landing page (`/packs/francophone`)
-- [ ] Admin dashboard membres (`/packs/francophone/admin`) — postponed
-- [x] Refactor auth Phase 1+2 (session + facade integrés, bunker ajouté, 215 tests passent)
-- [x] Refactor auth Phase 3 (cleanup legacy `NostrClientService`, unify NIP-98)
+Capacites ciblees de ce milestone :
+
+- pages publiques pack et request (`/packs/francophone`, `/packs/francophone/request`)
+- interface admin requests (`/packs/francophone/admin/requests`)
+- auth Nostr webapp (NIP-07, NIP-46 Nostr Connect, bunker en mode avance, `nsec` temporaire)
+- backend HTTP NIP-98 pour les routes protegees
+- shell global (header/footer), zap modal, i18n fr/en/es, page CGU
+
+Le suivi d'execution et les statuts courants sont dans :
+
+- [roadmap.md](roadmap.md)
+- [../planning/board.md](../planning/board.md)
 
 ### Milestone 2 — Merge followers tool (pas commencé)
 

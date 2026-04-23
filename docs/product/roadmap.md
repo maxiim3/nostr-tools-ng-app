@@ -1,0 +1,65 @@
+# Product Roadmap
+
+Date: 2026-04-23
+Updated: 2026-04-23
+Status: active
+
+## Role of this document
+
+Ce document decrit la direction produit et l'ordre logique des prochains sujets.
+
+Il ne remplace pas le board d'execution.
+Pour le travail actif, utiliser [../planning/board.md](../planning/board.md).
+
+Ce document ne suit pas le statut des tickets.
+Le statut detaille (`In Progress`, `Ready`, `Blocked`, `Done`) reste uniquement dans le board.
+
+## Contraintes produit actuelles
+
+- Le produit reste gratuit pour l'instant.
+- Le produit est une webapp, pas une app mobile native.
+- L'auth desktop navigateur fonctionne deja de facon acceptable.
+- La priorite immediate est l'auth mobile via application externe.
+- `bunker://` reste disponible, mais n'est pas la voie UX principale pour le grand public.
+
+## Roadmap
+
+```mermaid
+flowchart LR
+  subgraph Now[Now]
+    A1[Fiabiliser l auth mobile application externe]
+    A2[Persister la session Nostr Connect]
+  end
+
+  subgraph Next[Next]
+    B1[Reduire les permissions demandees au login]
+    B2[Revoir l UX auth mobile]
+    B3[Repositionner bunker comme mode avance]
+  end
+
+  subgraph Later[Later]
+    C1[Dashboard admin membres]
+    C2[Merge followers tool]
+    C3[Feed pack francophone]
+  end
+
+  A1 --> A2 --> B1 --> B2 --> B3 --> C1
+  C1 --> C2 --> C3
+```
+
+## Priority Themes
+
+| Priority | Theme | Outcome attendu |
+| --- | --- | --- |
+| P0 | Systeme documentaire lisible | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
+| P1 | Auth mobile application externe | Un flow Alby/mobile fiable sans relancer plusieurs tentatives |
+| P1 | Session Nostr Connect persistante | Eviter de repartir de zero apres reload ou retour sur le site |
+| P2 | Permissions plus fines | Moins de friction et moins de prompts |
+| P2 | UX auth mobile | Etats plus explicites : connexion, reprise, echec, read-only |
+| P3 | Bunker | Le garder utile sans le faire porter l'UX principale |
+
+## Related Documents
+
+- Vision produit : [mission.md](mission.md)
+- Spec auth mobile : [specs/auth-mobile-web.md](specs/auth-mobile-web.md)
+- Board d'execution : [../planning/board.md](../planning/board.md)

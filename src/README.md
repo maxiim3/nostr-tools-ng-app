@@ -12,5 +12,7 @@ Cette documentation est placee au plus proche du code pour expliquer les workflo
 
 ## Contexte produit et architecture
 
-- [Mission](../docs/superpowers/documentation/mission.md)
-- [Architecture globale](../docs/superpowers/documentation/architecture.md)
+- [Documentation index](../docs/README.md)
+- [Mission](../docs/product/mission.md)
+- [Roadmap produit](../docs/product/roadmap.md)
+- [Architecture globale](../docs/architecture/overview.md)

@@ -1,4 +1,4 @@
-# NostrTools — Architecture
+# ToolStr — Architecture
 
 Architecture feature-first pseudo DDD hexagonale simplifiée.
 
@@ -135,8 +135,8 @@ Etat actuel :
 
 Voir :
 
-- `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md` pour les contraintes
-- `docs/superpowers/specs/2026-04-23-product-roadmap-board.md` pour le travail actif
+- `../references/nostr-auth-rules.md` pour les contraintes
+- `../planning/board.md` pour le travail actif
 
 ## Backend
 

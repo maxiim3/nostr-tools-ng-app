@@ -1,4 +1,4 @@
-# Nostr Connection Project Plan
+# Auth Refactor Journal
 
 Date: 2026-04-21
 Updated: 2026-04-23
@@ -18,15 +18,16 @@ Il ne sert plus de board actif.
 
 Pour le travail en cours, utiliser :
 
-- `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`
-- `docs/superpowers/specs/2026-04-23-auth-mobile-web-ux-spec.md`
+- [../planning/board.md](../planning/board.md)
+- [../product/specs/auth-mobile-web.md](../product/specs/auth-mobile-web.md)
 
 ## Documentation
 
-- Mission et milestones : `docs/superpowers/documentation/mission.md`
-- Architecture : `docs/superpowers/documentation/architecture.md`
-- Regles agents : `AGENTS.md`
-- Regles design connexion : `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md`
+- Mission et milestones : [../product/mission.md](../product/mission.md)
+- Roadmap produit : [../product/roadmap.md](../product/roadmap.md)
+- Architecture : [../architecture/overview.md](../architecture/overview.md)
+- Regles agents : [../../AGENTS.md](../../AGENTS.md)
+- Regles design connexion : [../references/nostr-auth-rules.md](../references/nostr-auth-rules.md)
 
 ## Scope
 
@@ -104,7 +105,7 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 
 - Pack landing page (`/packs/francophone`) — done. Root `/` redirects to `/packs/francophone`, same content.
 - Admin dashboard members (`/packs/francophone/admin`) — postponed.
-- Active auth/mobile follow-up is no longer tracked here. Use the active roadmap board.
+- Active auth/mobile follow-up is no longer tracked here. Use the active board and roadmap.
 
 ## Known Risks
 
@@ -117,4 +118,4 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 Cette checklist etait utile pendant le refactor initial.
 
 Ne plus l'utiliser comme source de travail courante.
-Le pilotage actif est maintenant dans `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`.
+Le pilotage actif est maintenant dans [../planning/board.md](../planning/board.md).

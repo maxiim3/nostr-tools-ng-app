@@ -1,9 +1,9 @@
-# Nostr Connection Rules Design
+# Nostr Auth Rules
 
 Date: 2026-04-21
 Statut: reference
 
-Execution plan: `docs/superpowers/specs/2026-04-21-nostr-connection-project-plan.md`
+Historical execution journal: [../history/auth-refactor-journal.md](../history/auth-refactor-journal.md)
 
 ## Role of this document
 
@@ -14,14 +14,13 @@ Il sert a repondre a la question :
 - `Est-ce qu'une idee auth est acceptable ?`
 
 Il ne sert pas de board.
-Pour les taches en cours, utiliser `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`.
+Pour les taches en cours, utiliser [../planning/board.md](../planning/board.md).
 
 ## Objectif
 
-Definir les regles de conception du nouveau systeme de connexion Nostr avant implementation.
+Definir les regles de conception du domaine de connexion Nostr et de son evolution.
 
-Ce document sert de base de design et de TDD pour un nouveau domaine de connexion additif.
-Le systeme existant reste en place pendant cette phase. La nouvelle architecture est branchee via une nouvelle modale separee.
+Ce document sert de base de design, de validation et de TDD pour les choix auth du projet.
 
 ## Contexte
 
@@ -62,9 +61,9 @@ Ce document ne couvre pas:
 
 Le nouveau systeme de connexion suit les regles suivantes:
 
-- il est additif et ne remplace pas les services existants au depart;
-- il est consomme via une nouvelle modale separee;
-- il n'y a pas de switch runtime entre ancien et nouveau systeme;
+- il doit pouvoir evoluer sans big bang refactor;
+- il doit pouvoir etre consomme via une UI dediee sans coupler le domaine aux details de presentation;
+- il ne doit pas imposer de switch runtime ambigu entre plusieurs sources de verite auth;
 - il repose sur un strategy pattern par methode de connexion;
 - une methode de connexion ouvre une tentative de connexion explicite avant de produire une connexion active;
 - le domaine metier et l'UI ne dependent jamais directement de `window.nostr`, `nostrconnect://`, `bunker://` ou `nostrsigner:`;
@@ -135,14 +134,16 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 ### Mobile web
 
 - `NIP-46` est la methode principale.
-- Le nouveau domaine doit supporter au minimum `nostrconnect://` et `bunker://`.
+- Le chemin mobile par defaut est `nostrconnect://` via application externe.
+- `bunker://` reste supporte comme mode avance, pas comme voie UX principale grand public.
 - `NIP-46` est considere comme la meilleure option web cross-device et multi-appareil.
 
 ### Bunker
 
-- `bunker://` est une methode de premier rang du nouveau systeme.
+- `bunker://` est un mode avance du systeme.
 - Le flow bunker ne doit pas etre traite comme un detail interne de `nostrconnect://`.
-- Le bunker doit pouvoir exister comme strategie explicite avec son propre contrat et ses propres tests.
+- Le bunker reste une strategie explicite avec son propre contrat et ses propres tests.
+- L'UI standard mobile privilegie l'application externe `nostrconnect://`.
 
 ### Android
 
@@ -281,6 +282,8 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 6. Construire la session normalisee.
 7. Nettoyer la session locale au logout.
 
+Note produit : ce flow existe pour les usages avances. Le flow mobile par defaut reste `nostrconnect://`.
+
 ### Flow NIP-55
 
 1. Ouvrir le signer Android via `nostrsigner:`.
@@ -317,6 +320,7 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 - ne pas stocker durablement une cle privee brute;
 - ne pas accepter une reponse externe non correlee et non validee;
 - ne pas confondre auth app, auth relay et auth HTTP;
+- ne pas presenter `bunker://` comme chemin principal grand public en mobile web;
 - ne pas rendre le domaine dependant d'une implementation concrete de transport.
 
 ## Regles TDD
