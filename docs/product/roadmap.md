@@ -49,14 +49,14 @@ flowchart LR
 
 ## Priority Themes
 
-| Priority | Theme | Outcome attendu |
-| --- | --- | --- |
-| P0 | Systeme documentaire lisible | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
-| P1 | Auth mobile application externe | Un flow Alby/mobile fiable sans relancer plusieurs tentatives |
-| P1 | Session Nostr Connect persistante | Eviter de repartir de zero apres reload ou retour sur le site |
-| P2 | Permissions plus fines | Moins de friction et moins de prompts |
-| P2 | UX auth mobile | Etats plus explicites : connexion, reprise, echec, read-only |
-| P3 | Bunker | Le garder utile sans le faire porter l'UX principale |
+| Priority | Theme                             | Outcome attendu                                                |
+| -------- | --------------------------------- | -------------------------------------------------------------- |
+| P0       | Systeme documentaire lisible      | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
+| P1       | Auth mobile application externe   | Un flow Alby/mobile fiable sans relancer plusieurs tentatives  |
+| P1       | Session Nostr Connect persistante | Eviter de repartir de zero apres reload ou retour sur le site  |
+| P2       | Permissions plus fines            | Moins de friction et moins de prompts                          |
+| P2       | UX auth mobile                    | Etats plus explicites : connexion, reprise, echec, read-only   |
+| P3       | Bunker                            | Le garder utile sans le faire porter l'UX principale           |
 
 ## Related Documents
 

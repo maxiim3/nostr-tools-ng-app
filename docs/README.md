@@ -13,18 +13,18 @@ Le but :
 
 ## Lire quoi selon le besoin
 
-| Besoin | Document |
-| --- | --- |
-| Comprendre le produit | [product/mission.md](product/mission.md) |
-| Voir la direction produit | [product/roadmap.md](product/roadmap.md) |
-| Comprendre l'architecture du repo | [architecture/overview.md](architecture/overview.md) |
-| Lire les decisions structurantes | [architecture/decisions/README.md](architecture/decisions/README.md) |
-| Lire les contraintes auth stables | [references/nostr-auth-rules.md](references/nostr-auth-rules.md) |
-| Voir le travail actif | [planning/board.md](planning/board.md) |
-| Affiner une spec produit | [product/specs/auth-mobile-web.md](product/specs/auth-mobile-web.md) |
-| Comprendre un chantier passe | [history/auth-refactor-journal.md](history/auth-refactor-journal.md) |
+| Besoin                                  | Document                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| Comprendre le produit                   | [product/mission.md](product/mission.md)                               |
+| Voir la direction produit               | [product/roadmap.md](product/roadmap.md)                               |
+| Comprendre l'architecture du repo       | [architecture/overview.md](architecture/overview.md)                   |
+| Lire les decisions structurantes        | [architecture/decisions/README.md](architecture/decisions/README.md)   |
+| Lire les contraintes auth stables       | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
+| Voir le travail actif                   | [planning/board.md](planning/board.md)                                 |
+| Affiner une spec produit                | [product/specs/auth-mobile-web.md](product/specs/auth-mobile-web.md)   |
+| Comprendre un chantier passe            | [history/auth-refactor-journal.md](history/auth-refactor-journal.md)   |
 | Consulter de la recherche / inspiration | [research/nostr-auth-ux-pattern.md](research/nostr-auth-ux-pattern.md) |
-| Lire le guide Mermaid | [guides/mermaid.md](guides/mermaid.md) |
+| Lire le guide Mermaid                   | [guides/mermaid.md](guides/mermaid.md)                                 |
 
 ## Arborescence
 
