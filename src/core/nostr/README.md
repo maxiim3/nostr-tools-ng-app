@@ -20,14 +20,17 @@ flowchart TD
   Session[NostrSessionService]
   Facade[NostrConnectionFacadeService]
   Conn[NIP-07 or NIP-46 method]
+  Attempt[ConnectionAttempt<br/>instructions / authUrl updates]
   Client[NostrClientService]
   Profile[fetchProfile + SessionUser]
 
   UI --> Session
   Session --> Facade
   Facade --> Conn
-  Conn --> Facade
-  Facade --> Session
+  Conn -->|start() returns| Attempt
+  Attempt -->|onInstructionsChange| Session
+  Facade -->|complete() returns session| Session
+  Session -->|externalAuthUri + waiting flags| UI
   Session --> Client
   Client --> Profile
   Profile --> Session
@@ -38,6 +41,44 @@ Points importants :
 - `NostrSessionService` conserve l'etat UI (`authModalOpen`, `error`, `waitingForExternalAuth`, etc.)
 - la connexion est negociee via le domaine `core/nostr-connection`
 - une fois connecte, le signer est applique dans `NostrClientService` (pont legacy + nouveau domaine)
+
+Particularites auth externe :
+
+- pour `nip46-nostrconnect`, `NostrSessionService` ecoute maintenant les mises a jour d'instructions via `attempt.onInstructionsChange(...)`
+- `externalAuthUri` peut donc evoluer de l'URI initiale vers un `authUrl` plus precis emis pendant la tentative
+- `AppAuthModalComponent` ouvre l'URI initiale retournee par `beginExternalAppLogin()` puis regenere le QR a partir de l'`externalAuthUri` courant
+
+## Workflow auth externe reactif
+
+```mermaid
+sequenceDiagram
+  participant Modal as AppAuthModalComponent
+  participant Session as NostrSessionService
+  participant Facade as NostrConnectionFacadeService
+  participant Attempt as ConnectionAttempt
+  participant Client as NostrClientService
+
+  Modal->>Session: beginExternalAppLogin()
+  Session->>Facade: startConnection('nip46-nostrconnect', ...)
+  Facade-->>Session: attempt
+  Session->>Attempt: onInstructionsChange(listener)
+  Session-->>Modal: externalAuthUri = launchUrl
+  Modal->>Modal: openExternalUri(uri)
+  Modal->>Modal: syncExternalAuthQr(externalAuthUri)
+  Attempt-->>Session: instructions update (authUrl)
+  Session-->>Modal: externalAuthUri updated
+  Modal->>Modal: syncExternalAuthQr(externalAuthUri)
+  Session->>Facade: completeCurrentAttempt()
+  Facade-->>Session: ConnectionSession
+  Session->>Client: applyNdkSigner + fetchProfile
+```
+
+Lecture :
+
+- le service session garde la meme tentative active pendant tout le flow
+- l'URI initiale est ouverte automatiquement quand `beginExternalAppLogin()` reussit
+- si le signer emet un `authUrl` plus precis ensuite, l'UI met a jour son etat et le QR sans recreer de nouvelle tentative
+- la completion continue a se faire sur la meme `ConnectionAttempt`
 
 ## Workflow auth HTTP NIP-98 (frontend -> backend)
 

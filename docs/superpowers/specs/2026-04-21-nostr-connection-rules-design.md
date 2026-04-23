@@ -1,9 +1,20 @@
 # Nostr Connection Rules Design
 
 Date: 2026-04-21
-Statut: in_progress
+Statut: reference
 
 Execution plan: `docs/superpowers/specs/2026-04-21-nostr-connection-project-plan.md`
+
+## Role of this document
+
+Ce document pose les regles de conception et les contraintes produit / protocole du domaine auth.
+
+Il sert a repondre a la question :
+
+- `Est-ce qu'une idee auth est acceptable ?`
+
+Il ne sert pas de board.
+Pour les taches en cours, utiliser `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`.
 
 ## Objectif
 

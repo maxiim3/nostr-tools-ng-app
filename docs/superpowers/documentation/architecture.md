@@ -126,12 +126,17 @@ Champs actuels : `slug`, `adminNpubs`, `starterPackUrl`, `followUrl`, `externalL
 
 ## Auth — état de la migration
 
-Deux systèmes cohabitent :
+Etat actuel :
 
-1. **Legacy** : `NostrSessionService` + `NostrClientService` — source de vérité actuelle
-2. **Nouveau** : `core/nostr-connection/` — domaine de connexion refactoré, testé (75 tests), pas encore intégré
+1. `core/nostr-connection/` est integre pour `NIP-07`, `NIP-46 Nostr Connect` et `NIP-46 Bunker`
+2. `NostrSessionService` reste l'adapter principal consomme par l'UI
+3. `NostrClientService` garde le role NDK + signer + `nsec` temporaire
+4. Le follow-up actif porte maintenant sur l'UX mobile auth, la persistance de session NIP-46 et la reduction des permissions demandees
 
-Voir `docs/superpowers/specs/2026-04-21-nostr-connection-project-plan.md` pour le statut détaillé.
+Voir :
+
+- `docs/superpowers/specs/2026-04-21-nostr-connection-rules-design.md` pour les contraintes
+- `docs/superpowers/specs/2026-04-23-product-roadmap-board.md` pour le travail actif
 
 ## Backend
 

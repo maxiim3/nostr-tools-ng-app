@@ -23,6 +23,9 @@ export function createNip46ConnectionAttempt(
 class Nip46ConnectionAttempt implements ConnectionAttempt {
   private currentInstructions: ConnectionAttemptInstructions;
   private readonly unsubscribeAuthUrl: () => void;
+  private readonly instructionListeners = new Set<
+    (instructions: ConnectionAttemptInstructions | null) => void
+  >();
 
   constructor(
     private readonly handle: Nip46AttemptHandle,
@@ -31,15 +34,25 @@ class Nip46ConnectionAttempt implements ConnectionAttempt {
     this.currentInstructions = handle.instructions ?? {};
 
     this.unsubscribeAuthUrl = handle.onAuthUrl((authUrl) => {
-      this.currentInstructions = {
+      this.updateInstructions({
         ...this.currentInstructions,
         authUrl,
-      };
+      });
     });
   }
 
   get instructions(): ConnectionAttemptInstructions {
     return this.currentInstructions;
+  }
+
+  onInstructionsChange(
+    listener: (instructions: ConnectionAttemptInstructions | null) => void
+  ): () => void {
+    this.instructionListeners.add(listener);
+
+    return () => {
+      this.instructionListeners.delete(listener);
+    };
   }
 
   async complete(): Promise<ActiveConnection> {
@@ -59,6 +72,14 @@ class Nip46ConnectionAttempt implements ConnectionAttempt {
   async cancel(): Promise<void> {
     this.unsubscribeAuthUrl();
     await this.handle.cancel();
+  }
+
+  private updateInstructions(instructions: ConnectionAttemptInstructions): void {
+    this.currentInstructions = instructions;
+
+    for (const listener of this.instructionListeners) {
+      listener(this.currentInstructions);
+    }
   }
 }
 

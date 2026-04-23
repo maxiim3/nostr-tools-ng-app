@@ -12,6 +12,9 @@ export interface ConnectionAttempt {
   readonly methodId: ConnectionMethodId;
   readonly instructions: ConnectionAttemptInstructions | null;
 
+  onInstructionsChange(
+    listener: (instructions: ConnectionAttemptInstructions | null) => void
+  ): () => void;
   complete(): Promise<ActiveConnection>;
   cancel(): Promise<void>;
 }

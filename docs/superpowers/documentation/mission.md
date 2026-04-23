@@ -19,8 +19,8 @@ Page publique de demande d'accès au starter pack francophone + interface admin 
 
 - [x] Landing page simplifiée (`/`)
 - [x] Page de demande d'accès (`/packs/francophone/request`)
-- [x] Quiz francophone anti-bot
-- [x] Auth Nostr (NIP-07, NIP-46 Nostr Connect, nsec)
+- [x] Suppression du quiz anti-bot legacy
+- [x] Auth Nostr (NIP-07, NIP-46 Nostr Connect, NIP-46 Bunker, nsec temporaire)
 - [x] Admin requests — approbation/refus (`/packs/francophone/admin/requests`)
 - [x] Backend Express + SQLite (NIP-98 auth)
 - [x] Header global, footer global, zap modal

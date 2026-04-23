@@ -56,6 +56,10 @@ class ImmediateConnectionAttempt implements ConnectionAttempt {
     return new Nip07ActiveConnection(this.signer, session);
   }
 
+  onInstructionsChange(): () => void {
+    return () => undefined;
+  }
+
   async cancel(): Promise<void> {
     return Promise.resolve();
   }

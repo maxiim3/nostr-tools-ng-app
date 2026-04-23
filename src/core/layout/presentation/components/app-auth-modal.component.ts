@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import QRCode from 'qrcode';
@@ -231,6 +231,13 @@ export class AppAuthModalComponent {
   });
   protected readonly copied = signal(false);
   protected readonly externalAuthQr = signal<string | null>(null);
+  private externalAuthQrRequestId = 0;
+
+  constructor() {
+    effect(() => {
+      void this.syncExternalAuthQr(this.session.externalAuthUri());
+    });
+  }
 
   protected close(): void {
     this.privateKeyControl.setValue('');
@@ -264,12 +271,10 @@ export class AppAuthModalComponent {
     this.copied.set(false);
 
     if (!uri) {
-      this.externalAuthQr.set(null);
       return;
     }
 
-    const qr = await QRCode.toDataURL(uri, { width: 192, margin: 2 }).catch(() => null);
-    this.externalAuthQr.set(qr);
+    this.openExternalUri(uri);
   }
 
   protected cancelExternalApp(): void {
@@ -300,5 +305,29 @@ export class AppAuthModalComponent {
         })
         .catch((err) => console.error('Failed to copy URI', err));
     }
+  }
+
+  private openExternalUri(uri: string): void {
+    if (typeof globalThis.location === 'undefined') {
+      return;
+    }
+
+    globalThis.location.href = uri;
+  }
+
+  private async syncExternalAuthQr(uri: string | null): Promise<void> {
+    const requestId = ++this.externalAuthQrRequestId;
+
+    if (!uri) {
+      this.externalAuthQr.set(null);
+      return;
+    }
+
+    const qr = await QRCode.toDataURL(uri, { width: 192, margin: 2 }).catch(() => null);
+    if (requestId !== this.externalAuthQrRequestId) {
+      return;
+    }
+
+    this.externalAuthQr.set(qr);
   }
 }

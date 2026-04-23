@@ -3,6 +3,10 @@ import type { NDKSigner } from '@nostr-dev-kit/ndk';
 
 import { FRANCOPHONE_PACK } from '../../../features/packs/domain/francophone-pack.config';
 import { NostrConnectionFacadeService } from '../../nostr-connection/application/connection-facade';
+import type {
+  ConnectionAttempt,
+  ConnectionAttemptInstructions,
+} from '../../nostr-connection/domain/connection-attempt';
 import { NostrClientService, type SessionUser } from './nostr-client.service';
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +18,7 @@ export class NostrSessionService {
   private readonly AUTH_TIMEOUT_MS = 120000;
   private externalAuthTimeout?: ReturnType<typeof setTimeout>;
   private bunkerAuthTimeout?: ReturnType<typeof setTimeout>;
+  private externalInstructionsUnsubscribe?: () => void;
 
   readonly user = signal<SessionUser | null>(null);
   readonly authModalOpen = signal(false);
@@ -107,6 +112,7 @@ export class NostrSessionService {
     this.error.set(null);
     this.facade.clearError();
     this.currentExternalAttemptId++;
+    this.clearExternalInstructionsSubscription();
     const attemptId = this.currentExternalAttemptId;
 
     try {
@@ -118,7 +124,8 @@ export class NostrSessionService {
         return null;
       }
 
-      const uri = attempt.instructions?.launchUrl ?? attempt.instructions?.copyValue ?? null;
+      this.bindExternalInstructions(attemptId, attempt);
+      const uri = resolveExternalAuthUri(attempt.instructions);
       this.externalAuthUri.set(uri);
       this.waitingForExternalAuth.set(true);
       void this.finishExternalAppLogin(attemptId);
@@ -137,6 +144,7 @@ export class NostrSessionService {
 
   cancelExternalAppLogin(): void {
     void this.facade.cancelCurrentAttempt().catch(() => undefined);
+    this.clearExternalInstructionsSubscription();
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
     this.currentExternalAttemptId++;
@@ -190,6 +198,7 @@ export class NostrSessionService {
   async disconnect(): Promise<void> {
     this.currentExternalAttemptId++;
     this.currentBunkerAttemptId++;
+    this.clearExternalInstructionsSubscription();
     if (this.externalAuthTimeout) {
       clearTimeout(this.externalAuthTimeout);
       this.externalAuthTimeout = undefined;
@@ -238,6 +247,7 @@ export class NostrSessionService {
       this.error.set(err instanceof Error ? err.message : 'External app login failed.');
     } finally {
       if (attemptId === this.currentExternalAttemptId) {
+        this.clearExternalInstructionsSubscription();
         this.externalAuthUri.set(null);
         this.waitingForExternalAuth.set(false);
         if (this.externalAuthTimeout) {
@@ -254,6 +264,7 @@ export class NostrSessionService {
     }
 
     this.currentExternalAttemptId++;
+    this.clearExternalInstructionsSubscription();
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
     if (this.externalAuthTimeout) {
@@ -262,6 +273,27 @@ export class NostrSessionService {
     }
     this.error.set('External app login timed out. Please try again.');
     void this.facade.cancelCurrentAttempt().catch(() => undefined);
+  }
+
+  private bindExternalInstructions(attemptId: number, attempt: ConnectionAttempt): void {
+    this.clearExternalInstructionsSubscription();
+
+    this.externalInstructionsUnsubscribe = attempt.onInstructionsChange((instructions) => {
+      if (attemptId !== this.currentExternalAttemptId) {
+        return;
+      }
+
+      this.externalAuthUri.set(resolveExternalAuthUri(instructions));
+    });
+  }
+
+  private clearExternalInstructionsSubscription(): void {
+    if (!this.externalInstructionsUnsubscribe) {
+      return;
+    }
+
+    this.externalInstructionsUnsubscribe();
+    this.externalInstructionsUnsubscribe = undefined;
   }
 
   private async finishBunkerLogin(attemptId: number): Promise<void> {
@@ -316,4 +348,8 @@ export class NostrSessionService {
     this.error.set('Bunker login timed out. Please try again.');
     void this.facade.cancelCurrentAttempt().catch(() => undefined);
   }
+}
+
+function resolveExternalAuthUri(instructions: ConnectionAttemptInstructions | null): string | null {
+  return instructions?.authUrl ?? instructions?.launchUrl ?? instructions?.copyValue ?? null;
 }

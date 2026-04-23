@@ -10,6 +10,7 @@ Ce dossier implemente le domaine de connexion Nostr de maniere decouplee : metho
 - [NIP-07 method](./application/nip07-connection-method.ts)
 - [NIP-46 nostrconnect method](./application/nip46-nostrconnect-connection-method.ts)
 - [NIP-46 bunker method](./application/nip46-bunker-connection-method.ts)
+- [Connection attempt model](./domain/connection-attempt.ts)
 - [Connection session model](./domain/connection-session.ts)
 
 ## Architecture de flux
@@ -23,13 +24,13 @@ flowchart LR
   Active[ActiveConnection]
   Store[ConnectionSessionStore]
 
-  Facade --> Orchestrator
-  Orchestrator --> Method
-  Method --> Attempt
-  Attempt --> Active
-  Active --> Store
-  Store --> Orchestrator
-  Orchestrator --> Facade
+  Facade -->|start / complete| Orchestrator
+  Orchestrator -->|start(request)| Method
+  Method -->|attempt| Attempt
+  Attempt -->|complete()| Active
+  Active -->|setCurrent| Store
+  Store -->|read current / revalidate| Orchestrator
+  Orchestrator -->|session| Facade
 ```
 
 ## Workflow login (generic)
@@ -46,7 +47,9 @@ sequenceDiagram
   UI->>Facade: startConnection(methodId, request)
   Facade->>Orch: start(...)
   Orch->>Method: method.start(request)
-  Method-->>Facade: attempt
+  Method-->>Orch: attempt
+  Orch-->>Facade: attempt
+  Facade-->>UI: attempt
   UI->>Facade: completeCurrentAttempt()
   Facade->>Orch: completeAttempt(attempt)
   Orch->>Attempt: attempt.complete()
@@ -54,6 +57,151 @@ sequenceDiagram
   Orch->>Store: setCurrent(activeConnection)
   Orch-->>Facade: ConnectionSession
 ```
+
+Lecture generique :
+
+1. l'UI demarre une methode de connexion
+2. la methode retourne une `ConnectionAttempt`
+3. l'UI complete ensuite cette tentative
+4. la tentative produit une `ActiveConnection`
+5. l'orchestrateur stocke cette connexion et expose une `ConnectionSession`
+
+Ce qui change selon la methode :
+
+- `nip07` : tentative immediate, sans instructions UI, sans app externe
+- `nip46-nostrconnect` : tentative avec URI/QR/deep link, puis attente d'une autorisation externe
+- `nip46-bunker` : tentative basee sur un `bunker://...`, sans instructions initiales pour l'UI, puis attente d'une autorisation bunker
+
+Contrat commun de tentative :
+
+- `attempt.instructions` represente l'etat initial disponible juste apres `start()`
+- `attempt.onInstructionsChange(...)` permet d'ecouter les mises a jour d'instructions pendant l'attente
+- aujourd'hui, ce mecanisme sert surtout a faire remonter un `authUrl` NIP-46 plus specifique que l'URI initiale
+
+## Workflow `nip07`
+
+Cas d'usage : extension navigateur NIP-07 deja disponible dans le navigateur.
+
+```mermaid
+sequenceDiagram
+  participant UI as NostrSessionService
+  participant Facade as ConnectionFacade
+  participant Orch as ConnectionOrchestrator
+  participant Method as Nip07ConnectionMethod
+  participant Attempt as ImmediateConnectionAttempt
+  participant Signer as Nip07ConnectionSigner
+  participant Store as SessionStore
+
+  UI->>Facade: startConnection('nip07', request)
+  Facade->>Orch: start(...)
+  Orch->>Method: start(request)
+  Method->>Signer: resolve provider + create signer
+  Method-->>Orch: attempt (pas d'instructions initiales UI)
+  Orch-->>Facade: attempt
+  Facade-->>UI: currentAttempt
+  UI->>Facade: completeCurrentAttempt()
+  Facade->>Orch: completeAttempt(attempt)
+  Orch->>Attempt: complete()
+  Attempt->>Signer: getPublicKey()
+  Attempt-->>Orch: ActiveConnection(session)
+  Orch->>Store: setCurrent(activeConnection)
+  Orch-->>Facade: ConnectionSession
+```
+
+Points clefs :
+
+- `start()` ne fait pas encore la session, il prepare une tentative immediate
+- `instructions = null` : il n'y a rien a afficher ou scanner dans l'UI
+- `complete()` lit la pubkey via le signer NIP-07, construit la session puis retourne une connexion active
+- la revalidation relit ensuite la pubkey via le meme signer
+
+## Workflow `nip46-nostrconnect`
+
+Cas d'usage : l'app genere un URI nostrconnect puis attend qu'une app externe approuve la connexion.
+
+```mermaid
+sequenceDiagram
+  participant UI as NostrSessionService
+  participant Facade as ConnectionFacade
+  participant Orch as ConnectionOrchestrator
+  participant Method as Nip46NostrconnectConnectionMethod
+  participant Starter as NdkNip46NostrconnectStarter
+  participant Attempt as Nip46ConnectionAttempt
+  participant Handle as Nip46AttemptHandle
+  participant Store as SessionStore
+
+  UI->>Facade: startConnection('nip46-nostrconnect', request)
+  Facade->>Orch: start(...)
+  Orch->>Method: start(request)
+  Method->>Starter: start()
+  Starter-->>Method: handle + nostrconnect URI
+  Method-->>Orch: attempt (launchUrl/copyValue/qrCodeValue)
+  Orch-->>Facade: attempt
+  Facade-->>UI: attempt.instructions
+  UI->>UI: ouvre le deep link puis garde URI / QR en fallback
+  Handle-->>Attempt: authUrl event
+  Attempt-->>UI: onInstructionsChange(authUrl)
+  UI->>Facade: completeCurrentAttempt()
+  Facade->>Orch: completeAttempt(attempt)
+  Orch->>Attempt: complete()
+  Attempt->>Handle: waitForConnection()
+  Handle-->>Attempt: remote signer ready
+  Attempt-->>Orch: ActiveConnection(session)
+  Orch->>Store: setCurrent(activeConnection)
+  Orch-->>Facade: ConnectionSession
+```
+
+Points clefs :
+
+- `start()` cree d'abord un handle NIP-46 et expose des instructions UI
+- l'UI resout l'URI externe via `authUrl ?? launchUrl ?? copyValue`
+- la modal ouvre automatiquement l'URI disponible puis garde `copyValue` / QR comme fallback visible
+- si le remote signer emet un `auth_url`, la tentative met a jour ses instructions via `onInstructionsChange(...)`
+- `complete()` ne termine pas immediatement : il attend `waitForConnection()`
+- une fois le signer distant pret, la tentative construit la session et l'orchestrateur la stocke
+
+## Workflow `nip46-bunker`
+
+Cas d'usage : l'utilisateur fournit un token `bunker://...` deja genere par un bunker distant.
+
+```mermaid
+sequenceDiagram
+  participant UI as NostrSessionService
+  participant Facade as ConnectionFacade
+  participant Orch as ConnectionOrchestrator
+  participant Method as Nip46BunkerConnectionMethod
+  participant Starter as NdkNip46BunkerStarter
+  participant Attempt as Nip46ConnectionAttempt
+  participant Handle as Nip46AttemptHandle
+  participant Store as SessionStore
+
+  UI->>Facade: startConnection('nip46-bunker', request + connectionToken)
+  Facade->>Orch: start(...)
+  Orch->>Method: start(request)
+  Method->>Method: normalize + validate connectionToken
+  Method->>Starter: start(connectionToken)
+  Starter-->>Method: handle
+  Method-->>Orch: attempt (pas d'instructions initiales UI)
+  Orch-->>Facade: attempt
+  Facade-->>UI: currentAttempt
+  UI->>UI: waitingForBunkerAuth = true
+  UI->>Facade: completeCurrentAttempt()
+  Facade->>Orch: completeAttempt(attempt)
+  Orch->>Attempt: complete()
+  Attempt->>Handle: waitForConnection()
+  Handle-->>Attempt: remote signer ready
+  Attempt-->>Orch: ActiveConnection(session)
+  Orch->>Store: setCurrent(activeConnection)
+  Orch-->>Facade: ConnectionSession
+```
+
+Points clefs :
+
+- `start()` exige un `connectionToken` dans la requete
+- la methode verifie le schema `bunker://`, la pubkey bunker et au moins un relay URL
+- le starter derive ses relays depuis le token avant de creer le signer bunker
+- il n'y a pas d'instructions initiales utiles a afficher dans l'UI : le flow courant est surtout un etat d'attente bunker
+- comme pour nostrconnect, `complete()` attend que le signer distant soit pret
 
 ## Methodes supportees
 

@@ -40,6 +40,10 @@ export class FakeConnectionAttempt implements ConnectionAttempt {
     return this.connection;
   }
 
+  onInstructionsChange(): () => void {
+    return () => undefined;
+  }
+
   async cancel(): Promise<void> {
     this.cancelCalls += 1;
   }

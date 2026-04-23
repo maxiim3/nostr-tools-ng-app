@@ -201,6 +201,39 @@ describe('NostrSessionService', () => {
     expect(session.error()).toBeNull();
   });
 
+  it('updates the external auth URI when the active attempt publishes a new auth URL', async () => {
+    let notifyInstructions:
+      | ((instructions: ConnectionAttemptInstructions | null) => void)
+      | undefined;
+
+    facadeState.startConnectionResult = createFakeAttempt(
+      'nip46-nostrconnect',
+      {
+        launchUrl: 'nostrconnect://example',
+      },
+      (listener) => {
+        notifyInstructions = listener;
+        return () => {
+          notifyInstructions = undefined;
+        };
+      }
+    );
+    facadeState.completeFn = () => createDeferred<ConnectionSession>().promise;
+
+    const session = createService();
+
+    await session.beginExternalAppLogin();
+    await flushAsync();
+
+    expect(session.externalAuthUri()).toBe('nostrconnect://example');
+
+    notifyInstructions?.({
+      authUrl: 'https://getalby.com/auth',
+    });
+
+    expect(session.externalAuthUri()).toBe('https://getalby.com/auth');
+  });
+
   it('reports an error when external app login cannot start', async () => {
     facadeState.startConnectionError = new Error('Unable to create external app login link.');
 
@@ -757,11 +790,19 @@ function createFacadeProxy(state: FacadeState) {
 
 function createFakeAttempt(
   methodId: string,
-  instructions: ConnectionAttemptInstructions | null
+  instructions: ConnectionAttemptInstructions | null,
+  onInstructionsChange?: (
+    listener: (instructions: ConnectionAttemptInstructions | null) => void
+  ) => () => void
 ): ConnectionAttempt {
   return {
     methodId: methodId as never,
     instructions,
+    onInstructionsChange:
+      onInstructionsChange ??
+      (() => {
+        return () => undefined;
+      }),
     complete: async (): Promise<ActiveConnection> => null as never,
     cancel: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   };

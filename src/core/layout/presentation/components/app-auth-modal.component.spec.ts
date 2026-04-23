@@ -100,12 +100,22 @@ describe('AppAuthModalComponent', () => {
   });
 
   it('starts external auth, shows the waiting state, and renders a QR code', async () => {
+    const openExternalUriSpy = vi
+      .spyOn(
+        AppAuthModalComponent.prototype as unknown as { openExternalUri: (uri: string) => void },
+        'openExternalUri'
+      )
+      .mockImplementation(() => undefined);
+
     fixture.detectChanges();
 
     await component['startExternalApp']();
+    await flushAsync();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(session.beginExternalAppLogin).toHaveBeenCalledTimes(1);
+    expect(openExternalUriSpy).toHaveBeenCalledWith('nostrconnect://example');
     expect(session.externalAuthUri()).toBe('nostrconnect://example');
     expect(session.waitingForExternalAuth()).toBe(true);
     expect(toDataUrlMock).toHaveBeenCalledWith('nostrconnect://example', { width: 192, margin: 2 });
@@ -168,11 +178,19 @@ describe('AppAuthModalComponent', () => {
 
   it('clears QR and copied state when startExternalApp returns null', async () => {
     session.beginExternalAppLogin.mockResolvedValue(null);
+    const openExternalUriSpy = vi
+      .spyOn(
+        AppAuthModalComponent.prototype as unknown as { openExternalUri: (uri: string) => void },
+        'openExternalUri'
+      )
+      .mockImplementation(() => undefined);
 
     await component['startExternalApp']();
+    await flushAsync();
 
     expect(component['externalAuthQr']()).toBeNull();
     expect(component['copied']()).toBe(false);
+    expect(openExternalUriSpy).not.toHaveBeenCalled();
   });
 
   it('resets local state on cancelExternalApp', () => {

@@ -22,6 +22,7 @@ Docs architecture produit existantes :
 
 - [Mission](docs/superpowers/documentation/mission.md)
 - [Architecture globale](docs/superpowers/documentation/architecture.md)
+- [Tutoriel Mermaid](MERMAID.md)
 
 ## Demarrage local
 

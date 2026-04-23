@@ -2,7 +2,24 @@
 
 Date: 2026-04-21
 Updated: 2026-04-23
-Status: in_progress
+Status: historical
+
+## Role of this document
+
+Ce document est un journal historique du refactor auth initial.
+
+Il sert a comprendre :
+
+- ce qui a ete fait
+- dans quel ordre
+- avec quels commits
+
+Il ne sert plus de board actif.
+
+Pour le travail en cours, utiliser :
+
+- `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`
+- `docs/superpowers/specs/2026-04-23-auth-mobile-web-ux-spec.md`
 
 ## Documentation
 
@@ -69,10 +86,10 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 - `NostrClientService` is now clean: `connectWithPrivateKey()` kept (nsec temporary path), `getHttpAuthSigner()` + `NdkConnectionSignerAdapter` replace legacy `createHttpAuthHeader()`.
 - NIP-98 unified: `NostrHttpAuthService` uses `Nip98HttpAuthService` (nostr-connection domain) as single source, with facade signer priority and client fallback.
 - Extension flow: facade source of truth, client only does NDK setup via `applyNip07Signer()`.
-- Commits: `e52c27d` (route francophone + unify nip98), `??????` (phase 3 auth cleanup).
+- Commits: `e52c27d` (route francophone + unify nip98), `4abaa3e` (phase 3 auth cleanup).
 - `bun run check` passes (215 tests).
 
-## Remaining Work
+## Follow-up After Initial Migration
 
 ### Phase 3: cleanup and hardening (done)
 
@@ -81,12 +98,13 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 - `nsec` path (`connectWithPrivateKey()`) kept as-is — temporary direct path, not registered in facade.
 - NIP-98 unified via `NostrHttpAuthService` (facade signer priority, client fallback).
 - Dead code removed; `bun run check` stays green (215 tests).
-- Commit: `??????`
+- Commit: `4abaa3e`
 
 ### Phase 4: milestone 1 remaining pages
 
 - Pack landing page (`/packs/francophone`) — done. Root `/` redirects to `/packs/francophone`, same content.
 - Admin dashboard members (`/packs/francophone/admin`) — postponed.
+- Active auth/mobile follow-up is no longer tracked here. Use the active roadmap board.
 
 ## Known Risks
 
@@ -94,9 +112,9 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 2. ~~NIP-07 double NDK instance~~: resolved — extension flow now uses facade as sole auth source; client only calls `applyNip07Signer()` (no duplicate `window.nostr` call).
 3. No client-side bunker URL format validation. Facade validates server-side.
 
-## Resume Checklist
+## Historical Resume Checklist
 
-1. Run `git status` and confirm workspace state.
-2. Run `bun run check` — should pass (225 tests).
-3. Phase 3 starts in `src/core/nostr/application/nostr-client.service.ts`.
-4. Phase 4 starts with route config in `src/app/app.routes.ts`.
+Cette checklist etait utile pendant le refactor initial.
+
+Ne plus l'utiliser comme source de travail courante.
+Le pilotage actif est maintenant dans `docs/superpowers/specs/2026-04-23-product-roadmap-board.md`.
