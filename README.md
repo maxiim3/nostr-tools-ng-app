@@ -1,93 +1,83 @@
-# NostrToolsNgApp
+# ToolStr (`nostr-tools-ng-app`)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.0.
+Application Angular centree sur Nostr, orientee "starter pack francophone" :
 
-## Development server
+- authentification Nostr (NIP-07, NIP-46, nsec)
+- requetes API signees en NIP-98
+- gestion des demandes d'acces et moderation admin
+- publication d'evenements Nostr (follow list, pack, DM)
 
-To start a local development server, run:
+## Documentation Nostr
 
-```bash
-ng serve
-```
+Pour comprendre le protocole Nostr dans le contexte exact du code :
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+1. [Index documentation source](src/README.md)
+2. [Core index](src/core/README.md)
+3. [Core Nostr (session, NIP-98, follow)](src/core/nostr/README.md)
+4. [Core Nostr Connection (NIP-07, NIP-46)](src/core/nostr-connection/README.md)
+5. [Core Zap workflow](src/core/zap/README.md)
+6. [Feature Packs workflow](src/features/packs/README.md)
 
-## Code scaffolding
+Docs architecture produit existantes :
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- [Mission](docs/superpowers/documentation/mission.md)
+- [Architecture globale](docs/superpowers/documentation/architecture.md)
 
-```bash
-ng generate component component-name
-```
+## Demarrage local
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Pre-requis :
 
-```bash
-ng generate --help
-```
+- Bun
+- Node.js (pour l'ecosysteme Angular CLI)
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Lancer le front :
 
 ```bash
-ng test
+bun install
+bun run start
 ```
 
-## Running end-to-end tests
+Le front tourne ensuite sur `http://localhost:4200`.
 
-For end-to-end (e2e) testing, run:
+Lancer l'API Bun (NIP-98 + SQLite) :
 
 ```bash
-ng e2e
+bun run api
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Par defaut, l'API tourne sur `http://127.0.0.1:3000`.
 
-## Additional Resources
+## Scripts utiles
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+bun run build
+bun run test
+bun run lint
+bun run typecheck
+bun run check
+```
 
-## Local database (SQLite only)
+## Base locale SQLite
 
-The project now uses a single SQLite database for API requests:
+Le projet utilise une base unique pour les demandes pack :
 
-- Runtime DB: `.runtime/pack-requests.sqlite` by default
-- Empty schema: `pack-requests.schema.sql`
-- SQL dump: `pack-requests.dump.sql`
+- runtime DB : `.runtime/pack-requests.sqlite`
+- schema vide : `pack-requests.schema.sql`
+- dump SQL : `pack-requests.dump.sql`
 
-The runtime path can be overridden with:
+Variables d'environnement :
 
 - `DATABASE_PATH=/absolute/path/to/pack-requests.sqlite`
 - `DATA_DIR=/absolute/path/to/runtime-dir`
 
-For Railway with a persistent volume, point `DATABASE_PATH` to the mounted volume, for example `/data/pack-requests.sqlite`.
-
-Helper commands:
+Commandes :
 
 ```bash
-npm run db:reset
-npm run db:dump
-npm run db:restore
+bun run db:reset
+bun run db:dump
+bun run db:restore
 ```
 
-- `db:reset`: recreate `.runtime/pack-requests.sqlite` with an empty `pack_requests` table
-- `db:dump`: export current `pack_requests` data to `pack-requests.dump.sql`
-- `db:restore`: recreate `.runtime/pack-requests.sqlite` from `pack-requests.dump.sql`
-
-Restore the dumped data into a fresh SQLite file with:
-
-```bash
-rm -f .runtime/pack-requests.sqlite
-sqlite3 .runtime/pack-requests.sqlite < pack-requests.dump.sql
-```
+- `db:reset` : recree une base vide
+- `db:dump` : exporte la table `pack_requests`
+- `db:restore` : recree la base depuis `pack-requests.dump.sql`
