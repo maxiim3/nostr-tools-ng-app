@@ -24,21 +24,21 @@ import { RouterLink } from '@angular/router';
 
       <section class="mx-auto mt-12 max-w-6xl">
         <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <article class="border-[3px] border-[#0a0a0a] bg-white p-6">
+          <article class="border-[3px] border-[#0a0a0a] bg-[#FF5C00] p-6 text-white">
             <div class="flex items-center justify-between gap-3">
               <h2 class="text-2xl font-extrabold">Starter pack francophone</h2>
               <span
-                class="border-[2px] border-[#0a0a0a] bg-[#FFE600] px-2 py-1 text-xs font-bold uppercase"
+                class="border-[2px] border-[#0a0a0a] bg-white px-2 py-1 text-xs font-bold uppercase text-[#0a0a0a]"
                 >Disponible</span
               >
             </div>
-            <p class="mt-4 text-sm leading-7 text-[#0a0a0a]/75 md:text-base">
+            <p class="mt-4 text-sm leading-7 text-white/85 md:text-base">
               Le point d'entree pour suivre rapidement des profils francophones actifs et savoir qui
               ecouter au depart.
             </p>
             <a
               routerLink="/packs/francophone/request"
-              class="btn btn-cta btn-sm mt-6 h-auto min-h-11 px-6 py-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#0a0a0a]"
+              class="btn btn-sm mt-6 h-auto min-h-11 bg-white px-6 py-3 text-sm text-[#0a0a0a] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
               Demander l'acces
             </a>
@@ -46,43 +46,46 @@ import { RouterLink } from '@angular/router';
 
           <article class="border-[3px] border-[#0a0a0a] bg-white p-6">
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-2xl font-extrabold">Profils recommandes</h2>
+              <h2 class="text-2xl font-extrabold">Fusion des listes</h2>
               <span
                 class="border-[2px] border-[#0a0a0a] bg-white px-2 py-1 text-xs font-bold uppercase"
                 >Bientot</span
               >
             </div>
             <p class="mt-4 text-sm leading-7 text-[#0a0a0a]/75 md:text-base">
-              Des selections par theme pour decouvrir des comptes utiles au-dela du starter pack.
+              Un outil pour fusionner plusieurs listes Nostr et construire plus vite une selection
+              utile.
             </p>
             <button
               type="button"
               disabled
               class="btn btn-sm mt-6 h-auto min-h-11 px-6 py-3 text-sm"
             >
-              En preparation
+              En construction
             </button>
           </article>
 
           <article
-            class="border-[3px] border-[#0a0a0a] bg-[#FF5C00] p-6 text-white md:col-span-2 xl:col-span-1"
+            class="border-[3px] border-[#0a0a0a] bg-[#f4f4f4] p-6 md:col-span-2 xl:col-span-1"
           >
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-2xl font-extrabold">Soutien & zaps</h2>
+              <h2 class="text-2xl font-extrabold text-[#0a0a0a]/75">Onboarding Nostr</h2>
               <span
-                class="border-[2px] border-[#0a0a0a] bg-white px-2 py-1 text-xs font-bold uppercase text-[#0a0a0a]"
-                >Actif</span
+                class="border-[2px] border-[#0a0a0a] bg-white px-2 py-1 text-xs font-bold uppercase text-[#0a0a0a]/80"
+                >Bientot</span
               >
             </div>
-            <p class="mt-4 text-sm leading-7 text-white/85 md:text-base">
-              Des actions simples pour soutenir celles et ceux qui font vivre l'ecosysteme.
+            <p class="mt-4 text-sm leading-7 text-[#0a0a0a]/60 md:text-base">
+              Un parcours pour comprendre Nostr et demarrer avec de bons reperes, cote utilisateur
+              comme cote developpeur.
             </p>
-            <a
-              routerLink="/packs/francophone/request"
-              class="btn btn-sm mt-6 h-auto min-h-11 bg-white px-6 py-3 text-sm text-[#0a0a0a] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-white"
+            <button
+              type="button"
+              disabled
+              class="btn btn-sm mt-6 h-auto min-h-11 px-6 py-3 text-sm opacity-70"
             >
-              Ouvrir le parcours starter pack
-            </a>
+              En construction
+            </button>
           </article>
         </div>
       </section>

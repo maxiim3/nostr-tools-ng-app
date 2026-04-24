@@ -26,7 +26,17 @@ La pillule `TOOLSTR · NOSTR FRANCOPHONE` est volontairement blanche. Dans les e
 
 La page presente ToolStr comme une boite a outils Nostr francophone, pas uniquement comme une page d'acces au starter pack.
 
-Le starter pack reste le module principal et disponible aujourd'hui, mais la structure permet d'ajouter d'autres modules plus tard sans changer la promesse generale de la home. C'est le point cle de scalabilite : chaque bloc represente un outil concret avec un statut clair.
+Le starter pack reste le module principal et disponible aujourd'hui. Cette iteration le met aussi en avant visuellement avec la carte la plus energetique, pour aligner priorite produit et priorite de lecture. La structure permet ensuite d'ajouter d'autres modules sans changer la promesse generale de la home. C'est le point cle de scalabilite : chaque bloc represente un outil concret avec un statut clair.
+
+## Roadmap modules
+
+Prochaines briques prevues dans la home, sans survendre leur disponibilite :
+
+- `Fusion des listes` : en construction, pour consolider plusieurs listes Nostr.
+- `Onboarding Nostr` : en construction, module dimmed tant que le contenu n'est pas pret.
+- `Profils recommandes` : interessant, mais reporte a plus tard dans la roadmap.
+
+L'onboarding devra ensuite se decliner en deux angles lors d'une iteration dediee : utilisateur et developpeur.
 
 ## Choix de layout
 
@@ -42,8 +52,9 @@ Cette structure laisse de la place pour assez de contenu sans surcharger la page
 
 - Fond `brutal-grid` pour rester coherent avec la direction artistique existante.
 - Cartes blanches avec bordures noires pour garder une lecture nette.
-- Jaune reserve au statut `Disponible`, afin de signaler l'action prioritaire.
-- Orange reserve au module `Soutien & zaps`, pour ajouter de l'energie sans dominer toute la page.
+- Le statut `Disponible` reste volontairement tres contraste pour signaler l'action prioritaire.
+- Orange reserve au module `Starter pack francophone`, pour marquer le parcours principal.
+- Gris clair reserve au module `Onboarding Nostr` pour assumer un etat WIP dimmed.
 - Badge principal blanc pour calmer le haut de page.
 
 Le resultat cherche une forme de douceur compatible avec la DA brutaliste : moins d'agressivite, mais toujours une identite forte.
