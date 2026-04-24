@@ -14,6 +14,13 @@ export const routes: Routes = [
       import('../features/home/presentation/pages/home.page').then((module) => module.HomePage),
   },
   {
+    path: 'home-test-3',
+    loadComponent: () =>
+      import('../features/home-test/presentation/pages/home-test-3.page').then(
+        (module) => module.HomeTest3Page
+      ),
+  },
+  {
     path: 'packs/francophone/request',
     loadComponent: () =>
       import('../features/packs/presentation/pages/pack-request.page').then(

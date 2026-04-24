@@ -3,7 +3,7 @@ import { francophoneAdminGuard } from '../features/packs/presentation/guards/fra
 
 describe('app.routes', () => {
   it('should define the correct number of active routes', () => {
-    expect(routes.length).toBe(6);
+    expect(routes.length).toBe(7);
   });
 
   it('should redirect root path to /packs/francophone', () => {
@@ -20,6 +20,12 @@ describe('app.routes', () => {
 
   it('should have the francophone request route', () => {
     const route = routes.find((r) => r.path === 'packs/francophone/request');
+    expect(route).toBeDefined();
+    expect(route!.loadComponent).toBeDefined();
+  });
+
+  it('should have the selected home test route', () => {
+    const route = routes.find((r) => r.path === 'home-test-3');
     expect(route).toBeDefined();
     expect(route!.loadComponent).toBeDefined();
   });
