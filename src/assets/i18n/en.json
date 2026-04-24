@@ -92,7 +92,7 @@
     }
   },
   "home": {
-    "title": "Toolstr",
+    "title": "TOOLSTR",
     "description": "A toolkit for the francophone Nostr community. Request access to the starter pack, follow key profiles, and explore the ecosystem.",
     "cta": "Join the starter pack"
   },
@@ -140,7 +140,7 @@
     "sections": {
       "purpose": {
         "title": "1. Purpose",
-        "body": "These terms of use (the \"ToS\") govern the use of the Toolstr website (the \"Service\"). Toolstr is a web platform that allows users to request access to the francophone Nostr starter pack, follow key profiles in the ecosystem, and send Lightning zaps. By accessing the Service, you accept these ToS without reservation."
+        "body": "These terms of use (the \"ToS\") govern the use of the TOOLSTR website (the \"Service\"). TOOLSTR is a web platform that allows users to request access to the francophone Nostr starter pack, follow key profiles in the ecosystem, and send Lightning zaps. By accessing the Service, you accept these ToS without reservation."
       },
       "definitions": {
         "title": "2. Definitions",

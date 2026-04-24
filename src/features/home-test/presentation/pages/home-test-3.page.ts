@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
     <main class="brutal-grid min-h-[calc(100vh-4rem)] px-6 py-12 text-[#0a0a0a]">
       <section class="mx-auto max-w-6xl space-y-6">
         <span class="brutal-sticker -rotate-1 bg-white text-xs text-[#0a0a0a]"
-          >TOOLSTR · NOSTR FRANCOPHONE</span
+          ><span data-title="TOOLSTR">TOOLSTR</span> · NOSTR FRANCOPHONE</span
         >
         <h1
           class="max-w-4xl text-balance text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl lg:text-8xl"
@@ -17,8 +17,8 @@ import { RouterLink } from '@angular/router';
           Moins de friction. Plus de liens. Un Nostr francophone plus accessible.
         </h1>
         <p class="max-w-3xl text-base leading-8 text-[#0a0a0a]/75 md:text-lg">
-          Commence avec le starter pack, decouvre les bons profils, puis retrouve ici les outils
-          utiles pour explorer Nostr sans partir de zero.
+          Pars avec les bons reperes : un starter pack francophone, des profils Nostr utiles, puis
+          des outils pour avancer sans repartir de zero.
         </p>
       </section>
 
@@ -92,11 +92,11 @@ import { RouterLink } from '@angular/router';
 
       <section class="mx-auto mt-14 max-w-6xl border-[3px] border-[#0a0a0a] bg-white p-8">
         <h2 class="text-balance text-3xl font-extrabold md:text-5xl">
-          ToolStr commence simple, mais n'est pas pense petit.
+          <span data-title="TOOLSTR">TOOLSTR</span> commence simple. Pas petit.
         </h2>
         <p class="mt-4 max-w-4xl text-sm leading-7 text-[#0a0a0a]/75 md:text-base">
-          Chaque outil doit repondre a une friction reelle : trouver qui suivre, comprendre les
-          usages, soutenir les bons projets, puis avancer dans Nostr avec plus de reperes.
+          Chaque outil part d'une vraie friction : trouver qui suivre, comprendre les usages,
+          soutenir les bons projets et garder le fil dans Nostr.
         </p>
       </section>
     </main>

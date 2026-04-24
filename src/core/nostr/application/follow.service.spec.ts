@@ -59,7 +59,7 @@ describe('FollowService', () => {
       3,
       [
         ['p', 'someotherpubkey', 'wss://relay.example.com', 'SomeRelay'],
-        ['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'ToolStr'],
+        ['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'TOOLSTR'],
       ],
       ''
     );
@@ -68,7 +68,7 @@ describe('FollowService', () => {
   it('skips publishing when already following owner', async () => {
     client.fetchEvents.mockResolvedValue([
       {
-        tags: [['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'ToolStr']],
+        tags: [['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'TOOLSTR']],
         content: 'existing-content',
         created_at: 1,
       } as any,
@@ -91,7 +91,7 @@ describe('FollowService', () => {
 
     expect(client.publishEvent).toHaveBeenCalledWith(
       3,
-      [['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'ToolStr']],
+      [['p', OWNER_PUBKEY, 'wss://relay.damus.io', 'TOOLSTR']],
       ''
     );
   });

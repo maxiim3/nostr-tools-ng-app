@@ -18,7 +18,7 @@ import { ZapService } from '../../../zap/zap.service';
           routerLink="/packs/francophone"
           class="shrink-0 text-3xl font-extrabold uppercase text-white tracking-tight"
         >
-          {{ project.name }}
+          <span data-title="TOOLSTR">{{ project.name }}</span>
         </a>
 
         <nav class="hidden flex-1 items-center gap-6 md:flex">

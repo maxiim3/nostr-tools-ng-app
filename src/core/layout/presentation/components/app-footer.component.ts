@@ -97,8 +97,10 @@ import { ZapService } from '../../../zap/zap.service';
         </div>
 
         <div class="mt-10 border-t border-white/10 pt-6 text-center">
-          <span class="text-2xl font-extrabold text-white/30 uppercase tracking-tight"
-            >ToolStr</span
+          <span
+            data-title="TOOLSTR"
+            class="text-2xl font-extrabold text-white/30 uppercase tracking-tight"
+            >TOOLSTR</span
           >
         </div>
       </div>

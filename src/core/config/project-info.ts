@@ -1,5 +1,5 @@
 export const PROJECT_INFO = {
-  name: 'ToolStr',
+  name: 'TOOLSTR',
   ownerNpub: 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du',
   primalProfileUrl:
     'https://primal.net/p/npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du',
