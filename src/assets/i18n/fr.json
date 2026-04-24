@@ -94,7 +94,38 @@
   "home": {
     "title": "TOOLSTR",
     "description": "Une boîte à outils pour la communauté francophone de Nostr. Demande l'accès au starter pack, suis les profils clés et découvre l'écosystème.",
-    "cta": "Rejoindre\nle Starter Pack"
+    "cta": "Rejoindre\nle Starter Pack",
+    "landing": {
+      "eyebrowSuffix": "NOSTR FRANCOPHONE",
+      "hero": {
+        "title": "Moins de friction. Plus de liens. Un Nostr francophone plus accessible.",
+        "description": "Pars avec les bons repères : un starter pack francophone, des profils Nostr utiles, puis des outils pour avancer sans repartir de zéro."
+      },
+      "tools": {
+        "starterPack": {
+          "title": "Starter pack francophone",
+          "status": "Disponible",
+          "description": "Le point d'entrée pour suivre rapidement des profils francophones actifs et savoir qui écouter au départ.",
+          "cta": "Demander l'accès"
+        },
+        "listMerge": {
+          "title": "Fusion des listes",
+          "status": "Bientôt",
+          "description": "Un outil pour fusionner plusieurs listes Nostr et construire plus vite une sélection utile.",
+          "cta": "En construction"
+        },
+        "onboarding": {
+          "title": "Onboarding Nostr",
+          "status": "Bientôt",
+          "description": "Un parcours pour comprendre Nostr et démarrer avec de bons repères, côté utilisateur comme côté développeur.",
+          "cta": "En construction"
+        }
+      },
+      "closing": {
+        "title": "TOOLSTR commence simple. Pas petit.",
+        "description": "Chaque outil part d'une vraie friction : trouver qui suivre, comprendre les usages, soutenir les bons projets et garder le fil dans Nostr."
+      }
+    }
   },
   "supportCard": {
     "message": "Ensemble, faisons grandir Nostr, le réseau décentralisé et souverain.",

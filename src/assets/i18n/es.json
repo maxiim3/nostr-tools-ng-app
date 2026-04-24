@@ -94,7 +94,38 @@
   "home": {
     "title": "TOOLSTR",
     "description": "Una caja de herramientas para la comunidad francófona de Nostr. Solicita acceso al starter pack, sigue perfiles clave y descubre el ecosistema.",
-    "cta": "Unirse al starter pack"
+    "cta": "Unirse al starter pack",
+    "landing": {
+      "eyebrowSuffix": "NOSTR FRANCÓFONO",
+      "hero": {
+        "title": "Menos fricción. Más conexiones. Un Nostr francófono más accesible.",
+        "description": "Empieza con las referencias adecuadas: un starter pack francófono, perfiles útiles de Nostr y herramientas para avanzar sin partir de cero."
+      },
+      "tools": {
+        "starterPack": {
+          "title": "Starter pack francófono",
+          "status": "Disponible",
+          "description": "El punto de entrada para seguir rápidamente perfiles francófonos activos y saber a quién escuchar desde el principio.",
+          "cta": "Solicitar acceso"
+        },
+        "listMerge": {
+          "title": "Fusión de listas",
+          "status": "Próximamente",
+          "description": "Una herramienta para fusionar varias listas de Nostr y construir más rápido una selección útil.",
+          "cta": "En construcción"
+        },
+        "onboarding": {
+          "title": "Onboarding Nostr",
+          "status": "Próximamente",
+          "description": "Un recorrido para entender Nostr y empezar con buenas referencias, tanto como usuario como desarrollador.",
+          "cta": "En construcción"
+        }
+      },
+      "closing": {
+        "title": "TOOLSTR empieza simple. No pequeño.",
+        "description": "Cada herramienta nace de una fricción real: encontrar a quién seguir, entender los usos, apoyar los buenos proyectos y no perder el hilo en Nostr."
+      }
+    }
   },
   "supportCard": {
     "message": "Juntos, hagamos crecer Nostr, la red descentralizada y soberana.",

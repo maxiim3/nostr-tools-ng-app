@@ -94,7 +94,38 @@
   "home": {
     "title": "TOOLSTR",
     "description": "A toolkit for the francophone Nostr community. Request access to the starter pack, follow key profiles, and explore the ecosystem.",
-    "cta": "Join the starter pack"
+    "cta": "Join the starter pack",
+    "landing": {
+      "eyebrowSuffix": "FRANCOPHONE NOSTR",
+      "hero": {
+        "title": "Less friction. More connections. A more accessible Francophone Nostr.",
+        "description": "Start with the right bearings: a Francophone starter pack, useful Nostr profiles, then tools to move forward without starting from scratch."
+      },
+      "tools": {
+        "starterPack": {
+          "title": "Francophone starter pack",
+          "status": "Available",
+          "description": "The entry point for quickly following active Francophone profiles and knowing who to listen to at the start.",
+          "cta": "Request access"
+        },
+        "listMerge": {
+          "title": "List merge",
+          "status": "Soon",
+          "description": "A tool to merge multiple Nostr lists and build a useful selection faster.",
+          "cta": "In progress"
+        },
+        "onboarding": {
+          "title": "Nostr onboarding",
+          "status": "Soon",
+          "description": "A guided path to understand Nostr and get started with the right bearings, as a user or developer.",
+          "cta": "In progress"
+        }
+      },
+      "closing": {
+        "title": "TOOLSTR starts simple. Not small.",
+        "description": "Every tool starts from real friction: finding who to follow, understanding how Nostr is used, supporting the right projects, and keeping the thread."
+      }
+    }
   },
   "supportCard": {
     "message": "Together, let's grow Nostr, the decentralized and sovereign network.",
