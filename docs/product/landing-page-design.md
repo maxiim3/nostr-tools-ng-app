@@ -1,4 +1,4 @@
-# Home Test 3 - Design Notes
+# Landing Page - Direction Artistique
 
 ## Direction copy retenue
 
@@ -8,8 +8,8 @@ Objectif : rester memorable sans perdre la clarte immediate.
 
 - Badge : `TOOLSTR · NOSTR FRANCOPHONE`
 - Hero : `Moins de friction. Plus de liens. Un Nostr francophone plus accessible.`
-- Description : `Commence avec le starter pack, decouvre les bons profils, puis retrouve ici les outils utiles pour explorer Nostr sans partir de zero.`
-- Bloc final : `ToolStr commence simple, mais n'est pas pense petit.`
+- Description : `Pars avec les bons reperes : un starter pack francophone, des profils Nostr utiles, puis des outils pour avancer sans repartir de zero.`
+- Bloc final : `ToolStr commence simple. Pas petit.`
 
 Ce choix evite un ton trop startup et evite aussi un ton trop technique. Le texte reste direct,
 communautaire, et compatible avec une home qui devra evoluer.
@@ -61,7 +61,7 @@ Le resultat cherche une forme de douceur compatible avec la DA brutaliste : moin
 
 ## Regles pour les prochaines iterations
 
-- Garder `home-test-3` comme base de travail.
+- Garder la home actuelle comme base de travail.
 - Ne pas revenir vers une palette trop jaune ou trop orange sur toute la page.
 - Eviter d'ajouter trop de cartes : la force de cette version vient de sa respiration.
 - Chaque nouveau module doit avoir un statut explicite : `Disponible`, `Actif`, `Bientot`, ou equivalent.

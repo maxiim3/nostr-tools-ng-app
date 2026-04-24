@@ -6,18 +6,19 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
+    loadComponent: () =>
+      import('../features/home/presentation/pages/home.page').then((module) => module.HomePage),
+  },
+  {
+    path: 'packs',
+    pathMatch: 'full',
     redirectTo: 'packs/francophone',
   },
   {
     path: 'packs/francophone',
     loadComponent: () =>
-      import('../features/home/presentation/pages/home.page').then((module) => module.HomePage),
-  },
-  {
-    path: 'home-test-3',
-    loadComponent: () =>
-      import('../features/home-test/presentation/pages/home-test-3.page').then(
-        (module) => module.HomeTest3Page
+      import('../features/packs/presentation/pages/pack-fr.page').then(
+        (module) => module.PackFRPage
       ),
   },
   {
@@ -44,6 +45,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'packs/francophone',
+    redirectTo: '/',
   },
 ];

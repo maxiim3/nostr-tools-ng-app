@@ -17,6 +17,7 @@ Le but :
 | --------------------------------------- | ---------------------------------------------------------------------- |
 | Comprendre le produit                   | [product/mission.md](product/mission.md)                               |
 | Voir la direction produit               | [product/roadmap.md](product/roadmap.md)                               |
+| Comprendre la direction artistique LP   | [product/landing-page-design.md](product/landing-page-design.md)       |
 | Comprendre l'architecture du repo       | [architecture/overview.md](architecture/overview.md)                   |
 | Lire les decisions structurantes        | [architecture/decisions/README.md](architecture/decisions/README.md)   |
 | Lire les contraintes auth stables       | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
@@ -40,6 +41,7 @@ flowchart TD
 
   Product --> Mission[mission.md]
   Product --> Roadmap[roadmap.md]
+  Product --> LandingDesign[landing-page-design.md]
   Product --> Specs[specs/]
   Planning --> Board[board.md]
   Architecture --> Overview[overview.md]

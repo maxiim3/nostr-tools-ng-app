@@ -6,13 +6,21 @@ describe('app.routes', () => {
     expect(routes.length).toBe(7);
   });
 
-  it('should redirect root path to /packs/francophone', () => {
+  it('should load the landing page on root path', () => {
     const route = routes.find((r) => r.path === '');
     expect(route).toBeDefined();
+    expect(route!.pathMatch).toBe('full');
+    expect(route!.loadComponent).toBeDefined();
+  });
+
+  it('should redirect packs path to /packs/francophone', () => {
+    const route = routes.find((r) => r.path === 'packs');
+    expect(route).toBeDefined();
+    expect(route!.pathMatch).toBe('full');
     expect(route!.redirectTo).toBe('packs/francophone');
   });
 
-  it('should have a francophone landing route', () => {
+  it('should have the francophone pack route', () => {
     const route = routes.find((r) => r.path === 'packs/francophone');
     expect(route).toBeDefined();
     expect(route!.loadComponent).toBeDefined();
@@ -20,12 +28,6 @@ describe('app.routes', () => {
 
   it('should have the francophone request route', () => {
     const route = routes.find((r) => r.path === 'packs/francophone/request');
-    expect(route).toBeDefined();
-    expect(route!.loadComponent).toBeDefined();
-  });
-
-  it('should have the selected home test route', () => {
-    const route = routes.find((r) => r.path === 'home-test-3');
     expect(route).toBeDefined();
     expect(route!.loadComponent).toBeDefined();
   });
@@ -42,9 +44,9 @@ describe('app.routes', () => {
     expect(route!.loadComponent).toBeDefined();
   });
 
-  it('should redirect unknown paths to /packs/francophone', () => {
+  it('should redirect unknown paths to root', () => {
     const route = routes.find((r) => r.path === '**');
     expect(route).toBeDefined();
-    expect(route!.redirectTo).toBe('packs/francophone');
+    expect(route!.redirectTo).toBe('/');
   });
 });

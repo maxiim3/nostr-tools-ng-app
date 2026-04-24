@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 // import { PROJECT_INFO } from '../../../../core/config/project-info';
 // import { NostrClientService, type SessionUser } from '../../../../core/nostr/application/nostr-client.service';
@@ -8,7 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'home-page',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: '',
