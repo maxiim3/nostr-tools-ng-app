@@ -56,6 +56,8 @@ Ce document ne couvre pas:
 - le remplacement immediat du systeme existant;
 - une session serveur classique post-login;
 - un mecanisme auth applicatif base sur cookie ou JWT;
+- une stack OAuth/PKCE/DPoP pour le flow courant;
+- les contraintes natives Android/iOS (assetlinks, AASA, Secure Enclave, pinning natif);
 - le design visuel de la nouvelle modale;
 - une migration backend hors `NIP-98`.
 
@@ -196,10 +198,20 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 
 ### Persistance locale NIP-46
 
+Target policy pour `AUTH-02` (implementation en cours de planification, non livree a ce stade).
+
 - la persistance locale sert uniquement a restaurer un signer `NIP-46` apres reload;
 - elle ne doit jamais simuler un etat connecte si le signer n'est pas restorable;
 - un payload de restore invalide doit etre purge immediatement;
 - en cas d'echec de restore, revenir a un etat non connecte et proposer une reconnexion explicite.
+
+### Extraction securite PWA (scope actuel)
+
+- la checklist `docs/research/Remote‑signer threat‑model checklist.md` est un input de recherche, pas une norme automatique de merge;
+- priorites actuelles: correlation stricte NIP-46 (`secret`, `id`, timeout), permissions minimales, nettoyage logout, fail-closed;
+- redaction obligatoire dans les logs des valeurs sensibles (`secret`, token bunker, `auth_url`, token NIP-98);
+- liens externes ouverts par l'app doivent eviter `window.opener` (ex: `rel="noopener"` quand applicable);
+- la webapp reste sur HTTPS/WSS uniquement et n'introduit pas de session backend.
 
 ### Separation des couches
 

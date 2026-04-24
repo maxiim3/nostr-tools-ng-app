@@ -1,6 +1,8 @@
 # Core Nostr
 
-Ce dossier porte la couche applicative Nostr "utilisee par l'UI" : session utilisateur, client NDK, auth HTTP NIP-98 et operations metier simples (follow, DM, publication).
+Ce dossier porte la couche Nostr utilisee par l'UI: etat de session local, client NDK, auth HTTP NIP-98 et operations metier simples (follow, DM, publication).
+
+La session applicative est locale au frontend. Le backend reste stateless: les appels proteges sont signes requete par requete via NIP-98.
 
 ## Fichiers clefs
 
@@ -12,100 +14,35 @@ Ce dossier porte la couche applicative Nostr "utilisee par l'UI" : session utili
 - [Auth modal component](../layout/presentation/components/app-auth-modal.component.ts)
 - [Connection facade (methodes NIP-07/NIP-46)](../nostr-connection/application/connection-facade.ts)
 
-## Workflow auth utilisateur (UI -> session -> signer)
+## Workflow auth mobile PWA (signer externe / bunker)
 
 ```mermaid
 sequenceDiagram
-  participant UI as Auth Modal
+  participant UI as Auth modal / PWA
   participant Session as NostrSessionService
   participant Facade as NostrConnectionFacadeService
-  participant Method as NIP-07 / NIP-46 method
-  participant Attempt as ConnectionAttempt
+  participant Signer as App externe / bunker
   participant Client as NostrClientService
 
-  UI->>Session: start login
-  Session->>Facade: startConnection(methodId, request)
-  Facade->>Method: start(request)
-  Method-->>Facade: attempt
-  Facade-->>Session: currentAttempt
-
-  opt NIP-46 instructions update
-    Attempt-->>Session: onInstructionsChange(authUrl | launchUrl)
-    Session-->>UI: externalAuthUri + waiting flags
-  end
-
+  UI->>Session: demarrer login mobile
+  Session->>Facade: startConnection('nip46-nostrconnect' | 'nip46-bunker')
+  Facade-->>Session: ConnectionAttempt
+  Session-->>UI: URI / QR / waiting state
+  UI->>Signer: ouvrir app externe ou valider bunker
   Session->>Facade: completeCurrentAttempt()
   Facade-->>Session: ConnectionSession
   Session->>Client: apply signer
   Session->>Client: fetchProfile(session.npub)
   Client-->>Session: SessionUser
+  Session-->>UI: authenticated state
 ```
 
 Points importants :
 
 - `NostrSessionService` conserve l'etat UI (`authModalOpen`, `error`, `waitingForExternalAuth`, etc.)
-- la connexion est negociee via le domaine `core/nostr-connection`
-- une fois connecte, le signer est applique dans `NostrClientService` (pont legacy + nouveau domaine)
-
-## Workflow restore au demarrage (AUTH-02)
-
-```mermaid
-sequenceDiagram
-  participant Session as NostrSessionService
-  participant Facade as NostrConnectionFacadeService
-  participant Client as NostrClientService
-  participant Profile as fetchProfile
-
-  Session->>Facade: restoreConnectionSnapshot(snapshot)
-  Facade-->>Session: ConnectionSession | null
-  Session->>Client: applyNdkSigner(restoredSigner, pubkeyHex)
-  Session->>Profile: fetchProfile(session.npub)
-  Profile-->>Session: SessionUser
-```
-
-Contraintes du restore:
-
-- ne pas marquer l'utilisateur connecte tant que facade + signer client ne sont pas tous les deux valides;
-- en cas d'echec de restore, purger le snapshot local puis revenir a un etat non connecte;
-- aucun ajout de session backend: les appels proteges restent signes en `NIP-98`.
-
-Particularites auth externe :
-
-- pour `nip46-nostrconnect`, `NostrSessionService` ecoute maintenant les mises a jour d'instructions via `attempt.onInstructionsChange(...)`
-- `externalAuthUri` peut donc evoluer de l'URI initiale vers un `authUrl` plus precis emis pendant la tentative
-- `AppAuthModalComponent` ouvre l'URI initiale retournee par `beginExternalAppLogin()` puis regenere le QR a partir de l'`externalAuthUri` courant
-
-## Workflow auth externe reactif
-
-```mermaid
-sequenceDiagram
-  participant Modal as AppAuthModalComponent
-  participant Session as NostrSessionService
-  participant Facade as NostrConnectionFacadeService
-  participant Attempt as ConnectionAttempt
-  participant Client as NostrClientService
-
-  Modal->>Session: beginExternalAppLogin()
-  Session->>Facade: startConnection('nip46-nostrconnect', ...)
-  Facade-->>Session: attempt
-  Session->>Attempt: onInstructionsChange(listener)
-  Session-->>Modal: externalAuthUri = launchUrl
-  Modal->>Modal: openExternalUri(uri)
-  Modal->>Modal: syncExternalAuthQr(externalAuthUri)
-  Attempt-->>Session: instructions update (authUrl)
-  Session-->>Modal: externalAuthUri updated
-  Modal->>Modal: syncExternalAuthQr(externalAuthUri)
-  Session->>Facade: completeCurrentAttempt()
-  Facade-->>Session: ConnectionSession
-  Session->>Client: applyNdkSigner + fetchProfile
-```
-
-Lecture :
-
-- le service session garde la meme tentative active pendant tout le flow
-- l'URI initiale est ouverte automatiquement quand `beginExternalAppLogin()` reussit
-- si le signer emet un `authUrl` plus precis ensuite, l'UI met a jour son etat et le QR sans recreer de nouvelle tentative
-- la completion continue a se faire sur la meme `ConnectionAttempt`
+- la negotiation de connexion passe par le domaine `core/nostr-connection`;
+- une fois connecte, le signer est applique dans `NostrClientService`;
+- `bunker://` est supporte comme mode avance, sans devenir le chemin principal mobile.
 
 ## Workflow auth HTTP NIP-98 (frontend -> backend)
 

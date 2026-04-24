@@ -21,7 +21,7 @@ Capacites ciblees de ce milestone :
 
 - pages publiques pack et request (`/packs/francophone`, `/packs/francophone/request`)
 - interface admin requests (`/packs/francophone/admin/requests`)
-- auth Nostr webapp (NIP-07, NIP-46 Nostr Connect, bunker en mode avance, `nsec` temporaire)
+- auth Nostr webapp/PWA (NIP-07 desktop, NIP-46 Nostr Connect mobile, bunker en mode avance)
 - backend HTTP NIP-98 pour les routes protegees
 - shell global (header/footer), zap modal, i18n fr/en/es, page CGU
 

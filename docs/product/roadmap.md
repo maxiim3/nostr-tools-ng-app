@@ -17,7 +17,7 @@ Le statut detaille (`In Progress`, `Ready`, `Blocked`, `Done`) reste uniquement 
 ## Contraintes produit actuelles
 
 - Le produit reste gratuit pour l'instant.
-- Le produit est une webapp, pas une app mobile native.
+- Le produit est une webapp/PWA, pas une app mobile native.
 - L'auth desktop navigateur fonctionne deja de facon acceptable.
 - La priorite immediate est l'auth mobile via application externe.
 - `bunker://` reste disponible, mais n'est pas la voie UX principale pour le grand public.
@@ -28,14 +28,13 @@ Le statut detaille (`In Progress`, `Ready`, `Blocked`, `Done`) reste uniquement 
 flowchart LR
   subgraph Now[Now]
     A1[Fiabiliser l auth mobile application externe]
-    A2[Valider le restore Nostr Connect via NDK]
-    A3[Restaurer localement le signer Nostr Connect]
+    A2[Rendre bunker utilisable en mode avance]
   end
 
   subgraph Next[Next]
-    B1[Reduire les permissions demandees au login]
-    B2[Revoir l UX auth mobile]
-    B3[Repositionner bunker comme mode avance]
+    B1[Restaurer localement le signer Nostr Connect]
+    B2[Reduire les permissions demandees au login]
+    B3[Revoir l UX auth mobile]
   end
 
   subgraph Later[Later]
@@ -44,7 +43,7 @@ flowchart LR
     C3[Feed pack francophone]
   end
 
-  A1 --> A2 --> A3 --> B1 --> B2 --> B3 --> C1
+  A1 --> A2 --> B1 --> B2 --> B3 --> C1
   C1 --> C2 --> C3
 ```
 

@@ -14,6 +14,7 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 ## Contexte
 
 - Le produit est une webapp.
+- Le produit cible mobile est une PWA (pas une app native).
 - Sur desktop, le chemin principal reste le signer navigateur.
 - Sur mobile, le chemin principal est `Nostr Connect` via application externe, par exemple Alby.
 - Le flow actuel est percu comme lent et fragile : l'utilisateur doit parfois recliquer pour relancer l'auth.
@@ -24,8 +25,8 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 - Le premier clic ouvre bien l'application externe.
 - Une tentative auth en plusieurs etapes reste la meme tentative, sans restart inutile.
 - Le retour sur le site est clair : connecte, en attente, timeout, echec.
-- Le retour sur le site peut restaurer une connexion `NIP-46` deja autorisee sans pairing complet.
-- La restauration garde une vraie auth Nostr signante, sans session backend.
+- Le mode `bunker://` reste disponible pour les usages avances.
+- Le backend reste en auth `NIP-98` stateless (pas de session serveur).
 - Le produit reste gratuit et n'introduit pas de mur payant.
 
 ## Non-goals
@@ -34,6 +35,7 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 - Faire de `bunker://` le chemin principal grand public.
 - Resoudre dans cette spec toute la dette protocolaire de NIP-46.
 - Introduire un modele de session backend (cookie, JWT, session serveur).
+- Transformer une checklist securite de recherche en gate obligatoire de merge pour ce chantier.
 
 ## User stories
 
@@ -48,7 +50,7 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 flowchart TD
   User[Utilisateur] --> Device{Contexte}
   Device -->|Desktop web| NIP07[Signer navigateur]
-  Device -->|Mobile web| ExternalApp[Application externe via Nostr Connect]
+  Device -->|Mobile PWA| ExternalApp[Application externe via Nostr Connect]
   Device -->|Mode avance| Bunker[bunker:// manuel]
 ```
 
@@ -74,10 +76,6 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
-  Idle --> Restoring: retour sur site
-  Restoring --> Connected: restore signer ok
-  Restoring --> RestoreFailed: restore impossible
-  RestoreFailed --> Idle: reconnecter
   Idle --> Starting: clic application externe
   Starting --> WaitingSigner: URI ouverte
   WaitingSigner --> WaitingSigner: nouvelle instruction / authUrl
@@ -97,13 +95,11 @@ stateDiagram-v2
 - Si le signer renvoie une nouvelle instruction pendant la meme tentative, la webapp suit cette instruction sans restart complet.
 - L'utilisateur n'a pas besoin de demarrer une nouvelle tentative juste pour finir la meme auth.
 - L'UI expose des etats explicites : `en attente`, `reessayer`, `annuler`, `deconnecter`.
-- La restauration mobile redonne un signer actif capable de signer (pas seulement un profil affiche).
-- En cas d'echec de restauration, la webapp purge l'etat local et propose une reconnexion explicite.
 - L'auth backend reste `NIP-98` stateless, sans session serveur.
 - `bunker://` reste present mais secondaire.
 
 ## Open Questions
 
-- Quelle duree de persistance locale est acceptable pour une session Nostr Connect ?
+- Quelle strategie de reprise locale retenir dans une iteration suivante (`AUTH-02`) ?
 - Quelles permissions minimales doivent etre demandees au login initial ?
 - A quel moment precise afficher un mode lecture seule dans l'UX auth ?

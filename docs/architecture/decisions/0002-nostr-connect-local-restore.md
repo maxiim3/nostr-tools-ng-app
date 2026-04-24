@@ -2,6 +2,7 @@
 
 Date: 2026-04-24
 Status: accepted
+Implementation: pending (`AUTH-02`)
 
 ## Context
 
@@ -35,6 +36,11 @@ Le restore doit reconstruire une connexion signante reelle, pas seulement un aff
 - au demarrage, la webapp tente un restore silencieux puis revalide la pubkey;
 - en cas d'echec de restore: purge locale + retour a l'etat non connecte + action de reconnexion explicite;
 - le backend reste stateless cote auth et continue a verifier `NIP-98`.
+
+Note d'avancement:
+
+- cette ADR fixe la direction d'architecture;
+- l'implementation reste planifiee dans le board (`AUTH-02`).
 
 Risques acceptes:
 

@@ -8,7 +8,7 @@
 
 ## Lecture rapide
 
-1. `nostr-connection` gere la negotiation et la reprise locale de connexion (NIP-07 / NIP-46)
+1. `nostr-connection` gere la negotiation de connexion (NIP-07 / NIP-46)
 2. `nostr` gere la session app, les operations Nostr et l'auth HTTP NIP-98
 3. `zap` gere l'UX lightning + publication du zap request event
 

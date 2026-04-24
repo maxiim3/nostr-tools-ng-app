@@ -45,7 +45,7 @@ Si ce document contredit un document historique, ce document gagne.
 
 - `AUTH-06` One-shot perms bunker complet.
   Blocker: avec notre stack NDK actuelle, le flow bunker ne donne pas un point propre pour pousser toutes les requested perms dans `connect`.
-  Decision needed: patch NDK, contourner avec une impl bas niveau, ou accepter bunker comme flow plus avance et moins optimise.
+  Note: ce sujet est non-bloquant pour le chemin principal mobile PWA (`nip46-nostrconnect`) et peut rester en mode avance.
 
 ### Done Recently
 

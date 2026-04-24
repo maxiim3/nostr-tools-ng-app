@@ -1,6 +1,8 @@
 # Core Nostr Connection
 
-Ce dossier implemente le domaine de connexion Nostr de maniere decouplee : methodes de connexion, tentatives, session, capabilities et orchestration.
+Ce dossier implemente le domaine de connexion Nostr de maniere decouplee : methodes de connexion, tentatives, session locale, capabilities et orchestration.
+
+Il ne cree pas de session backend: le frontend obtient un signer local, puis les appels API proteges restent verifies via `NIP-98`.
 
 ## Fichiers clefs
 
@@ -66,35 +68,15 @@ Lecture generique :
 4. la tentative produit une `ActiveConnection`
 5. l'orchestrateur stocke cette connexion et expose une `ConnectionSession`
 
-## Workflow restore local `nip46-nostrconnect`
+## Persistance / restore
 
-Objectif: reprendre une connexion Nostr Connect cote webapp apres reload, sans introduire de session backend.
+Etat actuel: la connexion active est stockee en memoire via `InMemoryConnectionSessionStore`.
 
-```mermaid
-sequenceDiagram
-  participant Boot as App bootstrap
-  participant Facade as ConnectionFacade
-  participant Orch as ConnectionOrchestrator
-  participant Method as Nip46NostrconnectConnectionMethod
-  participant Starter as NdkNip46NostrconnectStarter
-  participant Store as SessionStore
+Consequence:
 
-  Boot->>Facade: restoreConnectionSnapshot(snapshot)
-  Facade->>Orch: restore(snapshot)
-  Orch->>Method: restore(snapshot)
-  Method->>Starter: restoreFromPayload(payload)
-  Starter-->>Method: remote signer restored
-  Method-->>Orch: ActiveConnection(session)
-  Orch->>Store: setCurrent(activeConnection)
-  Orch-->>Facade: ConnectionSession
-```
-
-Points clefs du restore:
-
-- le snapshot local doit reconstruire un signer actif, pas seulement un profil utilisateur;
-- une restauration invalide doit etre purgee puis forcer une reconnexion explicite;
-- le payload de restore est sensible et doit etre supprime au logout;
-- ce flow ne remplace pas `NIP-98`: le backend reste stateless et verifie les signatures requete par requete.
+- apres reload de la PWA, l'utilisateur doit relancer un flow `nip46-nostrconnect` ou `nip46-bunker`;
+- aucun modele de session backend n'est introduit;
+- le backend continue a verifier les requetes avec `NIP-98`.
 
 Ce qui change selon la methode :
 
