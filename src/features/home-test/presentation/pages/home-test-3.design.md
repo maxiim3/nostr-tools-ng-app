@@ -1,12 +1,26 @@
 # Home Test 3 - Design Notes
 
+## Direction copy retenue
+
+Le wording de la page est construit sur un mix **manifeste leger + produit + communaute**.
+
+Objectif : rester memorable sans perdre la clarte immediate.
+
+- Badge : `TOOLSTR · NOSTR FRANCOPHONE`
+- Hero : `Moins de friction. Plus de liens. Un Nostr francophone plus accessible.`
+- Description : `Commence avec le starter pack, decouvre les bons profils, puis retrouve ici les outils utiles pour explorer Nostr sans partir de zero.`
+- Bloc final : `ToolStr commence simple, mais n'est pas pense petit.`
+
+Ce choix evite un ton trop startup et evite aussi un ton trop technique. Le texte reste direct,
+communautaire, et compatible avec une home qui devra evoluer.
+
 ## Pourquoi cette version
 
 Cette version a ete retenue comme base parce qu'elle conserve l'identite brutaliste du site tout en rendant la landing plus lisible, plus douce et plus scalable.
 
 Elle garde les codes visuels existants de ToolStr : bordures noires franches, typographie massive, grille de fond, contrastes nets et composants tres directs. En revanche, elle reduit l'agressivite visuelle des variantes precedentes en limitant les aplats jaunes et en utilisant le jaune comme signal ponctuel plutot que comme surface dominante.
 
-La petite pillule `TOOLSTR · TOOLBOARD` est volontairement blanche. Dans les essais precedents, le jaune etait tres voyant et prenait trop vite le role de point focal principal. Ici, le badge reste identifiable sans voler l'attention au titre et aux modules.
+La pillule `TOOLSTR · NOSTR FRANCOPHONE` est volontairement blanche. Dans les essais precedents, le jaune etait tres voyant et prenait trop vite le role de point focal principal. Ici, le badge reste identifiable sans voler l'attention au titre et aux modules.
 
 ## Direction produit
 
