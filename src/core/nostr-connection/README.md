@@ -66,6 +66,36 @@ Lecture generique :
 4. la tentative produit une `ActiveConnection`
 5. l'orchestrateur stocke cette connexion et expose une `ConnectionSession`
 
+## Workflow restore local `nip46-nostrconnect`
+
+Objectif: reprendre une connexion Nostr Connect cote webapp apres reload, sans introduire de session backend.
+
+```mermaid
+sequenceDiagram
+  participant Boot as App bootstrap
+  participant Facade as ConnectionFacade
+  participant Orch as ConnectionOrchestrator
+  participant Method as Nip46NostrconnectConnectionMethod
+  participant Starter as NdkNip46NostrconnectStarter
+  participant Store as SessionStore
+
+  Boot->>Facade: restoreConnectionSnapshot(snapshot)
+  Facade->>Orch: restore(snapshot)
+  Orch->>Method: restore(snapshot)
+  Method->>Starter: restoreFromPayload(payload)
+  Starter-->>Method: remote signer restored
+  Method-->>Orch: ActiveConnection(session)
+  Orch->>Store: setCurrent(activeConnection)
+  Orch-->>Facade: ConnectionSession
+```
+
+Points clefs du restore:
+
+- le snapshot local doit reconstruire un signer actif, pas seulement un profil utilisateur;
+- une restauration invalide doit etre purgee puis forcer une reconnexion explicite;
+- le payload de restore est sensible et doit etre supprime au logout;
+- ce flow ne remplace pas `NIP-98`: le backend reste stateless et verifie les signatures requete par requete.
+
 Ce qui change selon la methode :
 
 - `nip07` : tentative immediate, sans instructions UI, sans app externe

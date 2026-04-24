@@ -1,7 +1,7 @@
 # Auth Mobile Web UX Spec
 
 Date: 2026-04-23
-Updated: 2026-04-23
+Updated: 2026-04-24
 Status: draft
 
 ## Role of this document
@@ -24,6 +24,8 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 - Le premier clic ouvre bien l'application externe.
 - Une tentative auth en plusieurs etapes reste la meme tentative, sans restart inutile.
 - Le retour sur le site est clair : connecte, en attente, timeout, echec.
+- Le retour sur le site peut restaurer une connexion `NIP-46` deja autorisee sans pairing complet.
+- La restauration garde une vraie auth Nostr signante, sans session backend.
 - Le produit reste gratuit et n'introduit pas de mur payant.
 
 ## Non-goals
@@ -31,6 +33,7 @@ Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 - Construire une app native Android ou iOS.
 - Faire de `bunker://` le chemin principal grand public.
 - Resoudre dans cette spec toute la dette protocolaire de NIP-46.
+- Introduire un modele de session backend (cookie, JWT, session serveur).
 
 ## User stories
 
@@ -71,6 +74,10 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
+  Idle --> Restoring: retour sur site
+  Restoring --> Connected: restore signer ok
+  Restoring --> RestoreFailed: restore impossible
+  RestoreFailed --> Idle: reconnecter
   Idle --> Starting: clic application externe
   Starting --> WaitingSigner: URI ouverte
   WaitingSigner --> WaitingSigner: nouvelle instruction / authUrl
@@ -90,7 +97,9 @@ stateDiagram-v2
 - Si le signer renvoie une nouvelle instruction pendant la meme tentative, la webapp suit cette instruction sans restart complet.
 - L'utilisateur n'a pas besoin de demarrer une nouvelle tentative juste pour finir la meme auth.
 - L'UI expose des etats explicites : `en attente`, `reessayer`, `annuler`, `deconnecter`.
-- La persistance de session Nostr Connect est traitee comme une suite de ce chantier.
+- La restauration mobile redonne un signer actif capable de signer (pas seulement un profil affiche).
+- En cas d'echec de restauration, la webapp purge l'etat local et propose une reconnexion explicite.
+- L'auth backend reste `NIP-98` stateless, sans session serveur.
 - `bunker://` reste present mais secondaire.
 
 ## Open Questions

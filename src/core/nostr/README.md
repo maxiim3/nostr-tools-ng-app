@@ -15,25 +15,30 @@ Ce dossier porte la couche applicative Nostr "utilisee par l'UI" : session utili
 ## Workflow auth utilisateur (UI -> session -> signer)
 
 ```mermaid
-flowchart TD
-  UI[Auth Modal<br/>app-auth-modal.component.ts]
-  Session[NostrSessionService]
-  Facade[NostrConnectionFacadeService]
-  Conn[NIP-07 or NIP-46 method]
-  Attempt[ConnectionAttempt<br/>instructions / authUrl updates]
-  Client[NostrClientService]
-  Profile[fetchProfile + SessionUser]
+sequenceDiagram
+  participant UI as Auth Modal
+  participant Session as NostrSessionService
+  participant Facade as NostrConnectionFacadeService
+  participant Method as NIP-07 / NIP-46 method
+  participant Attempt as ConnectionAttempt
+  participant Client as NostrClientService
 
-  UI --> Session
-  Session --> Facade
-  Facade --> Conn
-  Conn -->|start() returns| Attempt
-  Attempt -->|onInstructionsChange| Session
-  Facade -->|complete() returns session| Session
-  Session -->|externalAuthUri + waiting flags| UI
-  Session --> Client
-  Client --> Profile
-  Profile --> Session
+  UI->>Session: start login
+  Session->>Facade: startConnection(methodId, request)
+  Facade->>Method: start(request)
+  Method-->>Facade: attempt
+  Facade-->>Session: currentAttempt
+
+  opt NIP-46 instructions update
+    Attempt-->>Session: onInstructionsChange(authUrl | launchUrl)
+    Session-->>UI: externalAuthUri + waiting flags
+  end
+
+  Session->>Facade: completeCurrentAttempt()
+  Facade-->>Session: ConnectionSession
+  Session->>Client: apply signer
+  Session->>Client: fetchProfile(session.npub)
+  Client-->>Session: SessionUser
 ```
 
 Points importants :
@@ -41,6 +46,28 @@ Points importants :
 - `NostrSessionService` conserve l'etat UI (`authModalOpen`, `error`, `waitingForExternalAuth`, etc.)
 - la connexion est negociee via le domaine `core/nostr-connection`
 - une fois connecte, le signer est applique dans `NostrClientService` (pont legacy + nouveau domaine)
+
+## Workflow restore au demarrage (AUTH-02)
+
+```mermaid
+sequenceDiagram
+  participant Session as NostrSessionService
+  participant Facade as NostrConnectionFacadeService
+  participant Client as NostrClientService
+  participant Profile as fetchProfile
+
+  Session->>Facade: restoreConnectionSnapshot(snapshot)
+  Facade-->>Session: ConnectionSession | null
+  Session->>Client: applyNdkSigner(restoredSigner, pubkeyHex)
+  Session->>Profile: fetchProfile(session.npub)
+  Profile-->>Session: SessionUser
+```
+
+Contraintes du restore:
+
+- ne pas marquer l'utilisateur connecte tant que facade + signer client ne sont pas tous les deux valides;
+- en cas d'echec de restore, purger le snapshot local puis revenir a un etat non connecte;
+- aucun ajout de session backend: les appels proteges restent signes en `NIP-98`.
 
 Particularites auth externe :
 

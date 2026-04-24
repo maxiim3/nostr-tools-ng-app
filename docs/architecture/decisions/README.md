@@ -12,3 +12,4 @@ Regles simples :
 Documents actifs :
 
 - `0001-docs-taxonomy.md` — taxonomie documentaire par role
+- `0002-nostr-connect-local-restore.md` — restore local NIP-46 sans session backend

@@ -131,7 +131,7 @@ Etat actuel :
 1. `core/nostr-connection/` est integre pour `NIP-07`, `NIP-46 Nostr Connect` et `NIP-46 Bunker`
 2. `NostrSessionService` reste l'adapter principal consomme par l'UI
 3. `NostrClientService` garde le role NDK + signer + `nsec` temporaire
-4. Le follow-up actif porte maintenant sur l'UX mobile auth, la persistance de session NIP-46 et la reduction des permissions demandees
+4. Le follow-up actif porte maintenant sur l'UX mobile auth, la persistance locale de session NIP-46 (sans session backend) et la reduction des permissions demandees
 
 Voir :
 

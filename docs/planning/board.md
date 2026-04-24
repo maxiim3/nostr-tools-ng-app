@@ -1,7 +1,7 @@
 # Delivery Board
 
 Date: 2026-04-23
-Updated: 2026-04-23
+Updated: 2026-04-24
 Status: active
 
 ## Role of this document
@@ -28,8 +28,9 @@ Si ce document contredit un document historique, ce document gagne.
 
 ### Ready
 
-- `AUTH-02` Persister la session `Nostr Connect` dans la webapp.
-  Done when: un utilisateur mobile peut revenir sur le site sans refaire un pairing complet tant que la session locale est encore valable.
+- `AUTH-02` Restaurer localement le signer `Nostr Connect` dans la webapp.
+  Done when: un utilisateur mobile peut revenir sur le site sans refaire un pairing complet tant que la session locale est encore valable, avec un signer restaure capable de signer (pas seulement un profil local).
+  Note: prerequis technique a verifier en amont: restauration `NDKNip46Signer.fromPayload(...)` exploitable apres reload.
 
 - `AUTH-03` Reduire les permissions demandees au login au strict necessaire.
   Done when: le flow de login ne demande que ce qui est utile au demarrage, puis les autres permissions arrivent au besoin.

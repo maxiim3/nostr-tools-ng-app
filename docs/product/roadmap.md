@@ -1,7 +1,7 @@
 # Product Roadmap
 
 Date: 2026-04-23
-Updated: 2026-04-23
+Updated: 2026-04-24
 Status: active
 
 ## Role of this document
@@ -28,7 +28,8 @@ Le statut detaille (`In Progress`, `Ready`, `Blocked`, `Done`) reste uniquement 
 flowchart LR
   subgraph Now[Now]
     A1[Fiabiliser l auth mobile application externe]
-    A2[Persister la session Nostr Connect]
+    A2[Valider le restore Nostr Connect via NDK]
+    A3[Restaurer localement le signer Nostr Connect]
   end
 
   subgraph Next[Next]
@@ -43,20 +44,20 @@ flowchart LR
     C3[Feed pack francophone]
   end
 
-  A1 --> A2 --> B1 --> B2 --> B3 --> C1
+  A1 --> A2 --> A3 --> B1 --> B2 --> B3 --> C1
   C1 --> C2 --> C3
 ```
 
 ## Priority Themes
 
-| Priority | Theme                             | Outcome attendu                                                |
-| -------- | --------------------------------- | -------------------------------------------------------------- |
-| P0       | Systeme documentaire lisible      | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
-| P1       | Auth mobile application externe   | Un flow Alby/mobile fiable sans relancer plusieurs tentatives  |
-| P1       | Session Nostr Connect persistante | Eviter de repartir de zero apres reload ou retour sur le site  |
-| P2       | Permissions plus fines            | Moins de friction et moins de prompts                          |
-| P2       | UX auth mobile                    | Etats plus explicites : connexion, reprise, echec, read-only   |
-| P3       | Bunker                            | Le garder utile sans le faire porter l'UX principale           |
+| Priority | Theme                              | Outcome attendu                                                |
+| -------- | ---------------------------------- | -------------------------------------------------------------- |
+| P0       | Systeme documentaire lisible       | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
+| P1       | Auth mobile application externe    | Un flow Alby/mobile fiable sans relancer plusieurs tentatives  |
+| P1       | Restore local signer Nostr Connect | Eviter de repartir de zero apres reload ou retour sur le site  |
+| P2       | Permissions plus fines             | Moins de friction et moins de prompts                          |
+| P2       | UX auth mobile                     | Etats plus explicites : connexion, reprise, echec, read-only   |
+| P3       | Bunker                             | Le garder utile sans le faire porter l'UX principale           |
 
 ## Related Documents
 

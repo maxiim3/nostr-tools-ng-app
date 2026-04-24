@@ -1,6 +1,7 @@
 # Nostr Auth Rules
 
 Date: 2026-04-21
+Updated: 2026-04-24
 Statut: reference
 
 Historical execution journal: [../history/auth-refactor-journal.md](../history/auth-refactor-journal.md)
@@ -54,6 +55,7 @@ Ce document ne couvre pas:
 
 - le remplacement immediat du systeme existant;
 - une session serveur classique post-login;
+- un mecanisme auth applicatif base sur cookie ou JWT;
 - le design visuel de la nouvelle modale;
 - une migration backend hors `NIP-98`.
 
@@ -192,6 +194,13 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 - supprimer le `client-keypair` au logout;
 - nettoyer tout etat transitoire au logout: URI, QR, timers, callbacks, tentative en cours.
 
+### Persistance locale NIP-46
+
+- la persistance locale sert uniquement a restaurer un signer `NIP-46` apres reload;
+- elle ne doit jamais simuler un etat connecte si le signer n'est pas restorable;
+- un payload de restore invalide doit etre purge immediatement;
+- en cas d'echec de restore, revenir a un etat non connecte et proposer une reconnexion explicite.
+
 ### Separation des couches
 
 - separer signer, session, auth HTTP et presentation;
@@ -212,6 +221,7 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 - sert au remote signing via `nostrconnect://` et `bunker://`;
 - doit gerer `secret`, `perms`, correlation des messages par `id`, et events `kind:24133`;
 - doit gerer `auth_url` si le signer demande une authentification complementaire;
+- note de mapping: le champ protocolaire `auth_url` peut etre expose cote app sous la forme `authUrl`;
 - doit limiter l'exposition de la cle privee au minimum de systemes possible.
 
 ### NIP-55
@@ -226,6 +236,7 @@ L'auth HTTP est un service separe qui transforme le signer courant en header `NI
 - avec corps HTTP, le `payload` doit etre ajoute et verifie lorsque le backend l'exige;
 - le serveur doit verifier `kind`, `created_at`, URL exacte, methode exacte, `payload` si applicable, et signature valide;
 - toute requete invalide doit produire un `401 Unauthorized`.
+- cette regle ne doit pas etre remplacee par un modele de session applicative serveur.
 
 ### NIP-42
 
@@ -308,7 +319,8 @@ Note produit : ce flow existe pour les usages avances. Le flow mobile par defaut
 - faire dependre le domaine metier d'objets NDK, de `window.nostr` ou de deep-links;
 - supposer qu'un seul relay suffit par defaut pour tous les flows `NIP-46`;
 - partager un etat mutable commun entre ancien et nouveau systeme;
-- faire du protocole directement dans les composants de presentation.
+- faire du protocole directement dans les composants de presentation;
+- considerer un cache profil local comme preuve d'authentification.
 
 ## Ne pas faire
 
@@ -316,6 +328,7 @@ Note produit : ce flow existe pour les usages avances. Le flow mobile par defaut
 - ne pas remplacer les services existants avant d'avoir les contrats et les tests;
 - ne pas commencer par l'UI;
 - ne pas introduire une session serveur classique sans decision produit explicite;
+- ne pas introduire un cookie auth ou un JWT applicatif;
 - ne pas demander des permissions `NIP-46` trop larges par defaut;
 - ne pas stocker durablement une cle privee brute;
 - ne pas accepter une reponse externe non correlee et non validee;
