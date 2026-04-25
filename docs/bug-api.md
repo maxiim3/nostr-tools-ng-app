@@ -33,7 +33,7 @@ curl http://127.0.0.1:3000/api/health
 Reponse attendue :
 
 ```json
-{"ok":true}
+{ "ok": true }
 ```
 
 ## Relance

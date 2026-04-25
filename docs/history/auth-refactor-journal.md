@@ -113,6 +113,185 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 2. ~~NIP-07 double NDK instance~~: resolved — extension flow now uses facade as sole auth source; client only calls `applyNip07Signer()` (no duplicate `window.nostr` call).
 3. No client-side bunker URL format validation. Facade validates server-side.
 
+## Post-deployment mobile/auth triage - 2026-04-25
+
+Historical snapshot; active tracking remains in [../planning/board.md](../planning/board.md)
+and [../product/roadmap.md](../product/roadmap.md).
+
+Context:
+
+- Mobile test performed after deployment.
+- Browser extension auth works well and feels more fluid.
+- Mobile external app auth correctly offers installed apps, including Amber and Primal.
+- Auth and persistence still need hardening before the production flow can be considered stable.
+
+### P0 - Migrate runtime database to Supabase
+
+- Impact: critical.
+- Urgency: immediate.
+- Effort: M/L.
+- Risk: high.
+- Uncertainty: medium.
+- Dependencies/blockers: Supabase schema, environment variables, backend endpoint migration, deployment configuration.
+
+Problem:
+
+- Current SQLite storage at `.runtime/pack-requests.sqlite` appears non-persistent in deployment.
+- A previously submitted pack request was not visible after a new deployment.
+- This creates a data-loss risk for users and admins.
+
+Completion criteria:
+
+- Existing endpoints keep the same external behavior: `GET /api/pack-requests/me`, `POST /api/pack-requests`, `GET /api/admin/pack-requests`, `POST /api/admin/pack-requests/:pubkey/approve`, `POST /api/admin/pack-requests/:pubkey/reject`.
+- Pack request data survives redeployments.
+- Admin access remains protected by NIP-98.
+- Required Supabase environment variables are documented.
+- Creation, read, approval, and rejection flows are covered by tests or a documented manual verification.
+
+Next action:
+
+- Audit `server.mjs` and the current SQLite scripts, then define the minimal Supabase schema for `pack_requests`.
+
+### P0 - Fix Nostr session persistence after refresh
+
+- Impact: critical.
+- Urgency: immediate.
+- Effort: M.
+- Risk: high.
+- Uncertainty: high.
+- Dependencies/blockers: NIP-07 behavior, NIP-46 behavior, Amber/Primal authorization behavior, client-side storage, NDK signer restoration.
+
+Problem:
+
+- After a successful connection through either browser extension or mobile external app, refreshing the page loses the connection.
+- If the external app grants authorization for five minutes, the web app should keep or revalidate that connection during that window.
+- Mobile connection can feel unstable or disconnect too quickly.
+
+Hypotheses to validate:
+
+- The app does not persist enough client-side session information.
+- The active signer is not restored or revalidated during app startup.
+- The signer authorization is still valid, but the app does not ping/revalidate it correctly.
+- The `nostr-connection` lifecycle clears the active state too early.
+
+Completion criteria:
+
+- NIP-07 extension connection survives refresh while the extension authorization is still valid.
+- Mobile Amber/Primal connection is restored or revalidated after refresh while authorization is still valid.
+- If authorization is expired or denied, the app cleanly returns to a disconnected state with clear UI feedback.
+- Desktop extension and mobile external app verification scenarios are documented.
+
+Next action:
+
+- Audit startup and restore behavior in `NostrSessionService`, `NostrConnectionFacadeService`, and the active signer/session lifecycle.
+
+### P1 - Add loading/disabled state to extension auth button
+
+- Impact: high.
+- Urgency: short term.
+- Effort: S.
+- Risk: low.
+- Uncertainty: low.
+- Dependencies/blockers: current auth modal state and connection attempt state.
+
+Problem:
+
+- Clicking the extension auth button has a visible latency before the extension response and redirect/waiting state.
+- The button remains active during this latency and does not provide enough feedback.
+- This allows double clicks and makes the flow feel unresponsive.
+
+Completion criteria:
+
+- The extension auth button shows a small loading indicator during the pending attempt.
+- The button is disabled while the attempt is pending.
+- The loading state is accessible to screen readers.
+- The state resets correctly on success, error, cancellation, or timeout.
+
+Next action:
+
+- Identify the auth modal extension button and bind its loading/disabled state to the existing connection attempt state.
+
+### P1 - Define a lightweight generic strategy for loading buttons
+
+- Impact: medium.
+- Urgency: short term.
+- Effort: M.
+- Risk: medium.
+- Uncertainty: medium.
+- Dependencies/blockers: existing shared UI components and number of async button usages.
+
+Problem:
+
+- Loading feedback is likely needed beyond the extension auth button.
+- Duplicating loading/disabled behavior across several buttons would increase UI inconsistency.
+
+Recommended approach:
+
+- First fix the auth modal locally to address the production issue.
+- Extract a shared component or directive only if at least three similar async button usages are confirmed.
+
+Completion criteria:
+
+- A consistent pattern exists for `loading`, `disabled`, and accessible labels.
+- The loader does not remove the textual label without an accessible alternative.
+- Double submission is prevented.
+- Styling remains consistent with the existing UI.
+
+Next action:
+
+- After fixing the extension button, inventory similar async buttons: external app auth, bunker auth, request submit, admin approve/reject.
+
+### P1 - Stabilize mobile external app flow with Amber and Primal
+
+- Impact: high.
+- Urgency: short term.
+- Effort: M.
+- Risk: high.
+- Uncertainty: high.
+- Dependencies/blockers: mobile deep links, signer callbacks, browser return flow, Amber/Primal behavior.
+
+Problem:
+
+- Mobile app opening works and correctly proposes Amber/Primal.
+- The flow is fast, but the resulting session is not stable enough.
+- It is unclear whether the issue comes from app authorization, callback handling, signer restoration, or web session lifecycle.
+
+Completion criteria:
+
+- Amber mobile flow is manually verified and documented.
+- Primal mobile flow is manually verified and documented.
+- Waiting, success, refusal, and timeout states are visible and understandable.
+- Refresh does not break a still-valid external app authorization.
+- Errors are explicit when authorization is refused or expired.
+
+Next action:
+
+- Reproduce on mobile with targeted logs around attempt start, callback handling, active signer state, active session state, and refresh.
+
+### P2 - Update architecture documentation after Supabase migration
+
+- Impact: medium.
+- Urgency: after migration.
+- Effort: S.
+- Risk: low.
+- Uncertainty: low.
+- Dependencies/blockers: Supabase migration completed and verified.
+
+Problem:
+
+- `architecture.md` currently documents the backend as Bun + SQLite with `.runtime/pack-requests.sqlite`.
+- That will become inaccurate after the Supabase migration.
+
+Completion criteria:
+
+- `architecture.md` documents Supabase as the persistent data store.
+- This project plan marks the migration as complete.
+- Required environment variables are listed.
+
+Next action:
+
+- Update documentation once the Supabase migration is implemented and verified.
+
 ## Historical Resume Checklist
 
 Cette checklist etait utile pendant le refactor initial.
