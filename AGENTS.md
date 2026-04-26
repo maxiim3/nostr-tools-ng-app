@@ -60,4 +60,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - No scope, no body unless necessary
 - One logical change per commit
 - Group related file changes together (domain, service, component)
-- Before committing, use the repo scripts from `package.json` for formatting, linting, and checks (`bun run fix`, `bun run check`, or the targeted `bun run ...` scripts) instead of calling the tools directly
+- Always use the repo scripts from `package.json` for formatting, linting, type checking, testing, and build verification.
+- Never call the underlying tools directly with commands like `bunx prettier`, `prettier`, `ng lint`, `tsc`, or `ng test` unless the user explicitly asks for that exact command.
+- Preferred commands are `bun run format`, `bun run format:check`, `bun run lint`, `bun run lint:css`, `bun run typecheck`, `bun run test`, `bun run build`, `bun run fix`, and `bun run check`.
+- Before committing, use `bun run fix`, `bun run check`, or the targeted `bun run ...` scripts from `package.json`.
