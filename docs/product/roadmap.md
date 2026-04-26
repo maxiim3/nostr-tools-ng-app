@@ -1,7 +1,7 @@
 # Product Roadmap
 
 Date: 2026-04-23
-Updated: 2026-04-24
+Updated: 2026-04-25
 Status: active
 
 ## Role of this document
@@ -27,6 +27,8 @@ Le statut detaille (`In Progress`, `Ready`, `Blocked`, `Done`) reste uniquement 
 ```mermaid
 flowchart LR
   subgraph Now[Now]
+    N0[Migrer DB vers Supabase]
+    N1[Restaurer session Nostr apres refresh]
     A1[Fiabiliser l auth mobile application externe]
     A2[Rendre bunker utilisable en mode avance]
   end
@@ -43,20 +45,23 @@ flowchart LR
     C3[Feed pack francophone]
   end
 
-  A1 --> A2 --> B1 --> B2 --> B3 --> C1
+  N0 --> N1 --> A1 --> A2 --> B1 --> B2 --> B3 --> C1
   C1 --> C2 --> C3
 ```
 
 ## Priority Themes
 
-| Priority | Theme                              | Outcome attendu                                                |
-| -------- | ---------------------------------- | -------------------------------------------------------------- |
-| P0       | Systeme documentaire lisible       | Savoir ou lire, ecrire, historiser et planifier sans ambiguite |
-| P1       | Auth mobile application externe    | Un flow Alby/mobile fiable sans relancer plusieurs tentatives  |
-| P1       | Restore local signer Nostr Connect | Eviter de repartir de zero apres reload ou retour sur le site  |
-| P2       | Permissions plus fines             | Moins de friction et moins de prompts                          |
-| P2       | UX auth mobile                     | Etats plus explicites : connexion, reprise, echec, read-only   |
-| P3       | Bunker                             | Le garder utile sans le faire porter l'UX principale           |
+| Priority | Theme                              | Outcome attendu                                                 |
+| -------- | ---------------------------------- | --------------------------------------------------------------- |
+| P0       | Persistance donnees Supabase       | Les pack requests survivent aux redeploiements                  |
+| P0       | Persistance session Nostr          | Refresh ne casse pas une autorisation NIP-07 / NIP-46 valide    |
+| P0       | Systeme documentaire lisible       | Savoir ou lire, ecrire, historiser et planifier sans ambiguite  |
+| P1       | Auth mobile application externe    | Un flow Alby/mobile fiable sans relancer plusieurs tentatives   |
+| P1       | Restore local signer Nostr Connect | Eviter de repartir de zero apres reload ou retour sur le site   |
+| P1       | Loader / disabled sur boutons auth | Eviter double-clic et donner un retour visuel pendant l'attente |
+| P2       | Permissions plus fines             | Moins de friction et moins de prompts                           |
+| P2       | UX auth mobile                     | Etats plus explicites : connexion, reprise, echec, read-only    |
+| P3       | Bunker                             | Le garder utile sans le faire porter l'UX principale            |
 
 ## Related Documents
 

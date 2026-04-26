@@ -1,7 +1,7 @@
 # Delivery Board
 
 Date: 2026-04-23
-Updated: 2026-04-24
+Updated: 2026-04-25
 Status: active
 
 ## Role of this document
@@ -29,6 +29,29 @@ Si ce document contredit un document historique, ce document gagne.
   Note: desktop extension OK; bunker via QR code scanne dans Amber Android OK; test mobile `nip46-nostrconnect` en cours.
 
 ### Ready
+
+- `INFRA-01` Migrer le stockage runtime vers Supabase. (P0)
+  Done when: les endpoints `pack-requests` (user + admin) gardent leur comportement externe, les donnees survivent aux redeploiements, l'auth admin NIP-98 reste protegee, et les variables d'environnement Supabase sont documentees.
+  Source: retour mobile post-deploiement 2026-04-25 — SQLite `.runtime/pack-requests.sqlite` non persistant en production.
+
+- `AUTH-07` Restaurer la session Nostr apres refresh. (P0)
+  Done when: une connexion NIP-07 ou NIP-46 (mobile externe) survit a un refresh tant que l'autorisation distante reste valide; en cas d'expiration ou de refus, retour propre a l'etat deconnecte avec feedback UI.
+  Source: retour mobile post-deploiement 2026-04-25.
+
+- `AUTH-08` Stabiliser le flow mobile Amber et Primal. (P1)
+  Done when: les flows Amber et Primal sont verifies manuellement et documentes (attente, succes, refus, timeout), et le refresh ne casse pas une autorisation encore valide.
+  Depends: `AUTH-07` (la persistance bloque l'observation propre).
+
+- `UI-01` Ajouter loader + disabled sur le bouton auth extension. (P1)
+  Done when: le bouton extension affiche un indicateur pendant la tentative, est disabled, l'etat est accessible (a11y), et se reset sur succes / erreur / cancel / timeout.
+
+- `UI-02` Definir une strategie loader/disabled generique pour les boutons async. (P1)
+  Done when: apres inventaire (>= 3 cas confirmes : extension, app externe, bunker, submit request, admin approve/reject), un pattern partage existe avec gestion `loading`, `disabled`, label accessible, et anti-double-submit.
+  Depends: `UI-01` (fixer d'abord le cas extension localement).
+
+- `DOC-03` Mettre a jour `architecture.md` apres migration Supabase. (P2)
+  Done when: `architecture.md` documente Supabase comme stockage persistant, ce plan marque la migration comme complete, et les variables d'environnement requises sont listees.
+  Depends: `INFRA-01`.
 
 - `AUTH-03` Reduire les permissions demandees au login au strict necessaire.
   Done when: le flow de login ne demande que ce qui est utile au demarrage, puis les autres permissions arrivent au besoin.
