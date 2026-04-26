@@ -25,3 +25,7 @@
 - Supabase service-role key for Bun API only.
 - Deployment environment variable configuration.
 - Clear source of truth for current francophone pack membership publication/update.
+
+## Follow-Up Notes
+
+- 2026-04-26: Admin currently lists Supabase-backed pack members, but the attempted merge with the public following.space Pack FR source is not reliable in the running app. Revisit the public pack source-of-truth integration later before treating the admin table as "all Pack FR members".

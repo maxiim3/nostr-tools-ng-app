@@ -9,7 +9,7 @@ import {
   StarterPackRequestService,
   type AdminPackMemberEntry,
 } from '../../../packs/application/starter-pack-request.service';
-import { PackAdminRequestsPage } from './pack-admin-requests.page';
+import { mergePackMembers, PackAdminRequestsPage } from './pack-admin-requests.page';
 
 const FAKE_ENTRIES: AdminPackMemberEntry[] = [
   {
@@ -29,6 +29,7 @@ const FAKE_ENTRIES: AdminPackMemberEntry[] = [
     followingCount: null,
     postCount: null,
     zapCount: null,
+    canRemove: true,
   },
 ];
 
@@ -52,6 +53,7 @@ function createMocks() {
   const getUserStateMock = vi.fn().mockResolvedValue({ status: 'idle' });
   const removeMemberMock = vi.fn().mockResolvedValue(undefined);
   const isCurrentUserMemberMock = vi.fn().mockResolvedValue(false);
+  const listPublicPackMembersMock = vi.fn().mockResolvedValue([]);
 
   TestBed.configureTestingModule({
     providers: [
@@ -75,6 +77,7 @@ function createMocks() {
         provide: FrancophonePackMembershipService,
         useValue: {
           isCurrentUserMember: isCurrentUserMemberMock,
+          listPublicPackMembers: listPublicPackMembersMock,
         },
       },
     ],
@@ -86,6 +89,7 @@ function createMocks() {
     getUserState: getUserStateMock,
     removeMember: removeMemberMock,
     isCurrentUserMember: isCurrentUserMemberMock,
+    listPublicPackMembers: listPublicPackMembersMock,
   };
 }
 
@@ -100,6 +104,37 @@ describe('PackAdminRequestsPage', () => {
     expect(mocks.getUserState).toHaveBeenCalled();
     expect(page.entries()).toEqual(FAKE_ENTRIES);
     expect(page.loading()).toBe(false);
+  });
+
+  it('loads public pack members without duplicating Supabase members', async () => {
+    const mocks = createMocks();
+    mocks.listPublicPackMembers.mockResolvedValue([
+      {
+        pubkey: 'abc123',
+        username: 'Alice from pack',
+        description: null,
+        avatarUrl: null,
+      },
+      {
+        pubkey: 'def456',
+        username: 'Bob',
+        description: 'Pack-only member',
+        avatarUrl: 'bob.png',
+      },
+    ]);
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    expect(page.entries()).toHaveLength(2);
+    expect(page.entries()[0]).toEqual(FAKE_ENTRIES[0]);
+    expect(page.entries()[1]).toMatchObject({
+      pubkey: 'def456',
+      username: 'Bob',
+      requestedFromApp: false,
+      joinedAtLabel: '-',
+      canRemove: false,
+    });
   });
 
   it('skips getUserState when not authenticated', async () => {
@@ -140,5 +175,20 @@ describe('PackAdminRequestsPage', () => {
 
     expect(page.actionError()).toBe('adminRequests.errors.removeFailed');
     expect(page.actingOn()).toBeNull();
+  });
+});
+
+describe('mergePackMembers', () => {
+  it('keeps the Supabase record when a public pack member has the same pubkey', () => {
+    const result = mergePackMembers(FAKE_ENTRIES, [
+      {
+        pubkey: 'abc123',
+        username: 'Public Alice',
+        description: null,
+        avatarUrl: null,
+      },
+    ]);
+
+    expect(result).toEqual(FAKE_ENTRIES);
   });
 });

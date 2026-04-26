@@ -99,14 +99,20 @@
                 }
               </td>
               <td class="text-right">
-                <button
-                  type="button"
-                  class="btn btn-error btn-sm h-auto px-4 py-2 whitespace-normal"
-                  [disabled]="actingOn() === entry.pubkey"
-                  (click)="remove(entry)"
-                >
-                  {{ 'adminRequests.remove' | transloco }}
-                </button>
+                @if (entry.canRemove) {
+                  <button
+                    type="button"
+                    class="btn btn-error btn-sm h-auto px-4 py-2 whitespace-normal"
+                    [disabled]="actingOn() === entry.pubkey"
+                    (click)="remove(entry)"
+                  >
+                    {{ 'adminRequests.remove' | transloco }}
+                  </button>
+                } @else {
+                  <span class="text-sm text-[#0a0a0a]/40">
+                    {{ 'adminRequests.packOnly' | transloco }}
+                  </span>
+                }
               </td>
             </tr>
           }

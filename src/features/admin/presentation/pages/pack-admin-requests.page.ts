@@ -3,7 +3,10 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
-import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
+import {
+  FrancophonePackMembershipService,
+  type PublicPackMemberEntry,
+} from '../../../packs/application/francophone-pack-membership.service';
 import {
   StarterPackRequestService,
   type AdminPackMemberEntry,
@@ -73,9 +76,67 @@ export class PackAdminRequestsPage {
     this.loading.set(true);
 
     try {
-      this.entries.set(await this.requests.listAdminRequests());
+      const [storedMembers, publicPackMembers] = await Promise.all([
+        this.requests.listAdminRequests(),
+        this.packMembership.listPublicPackMembers().catch(() => []),
+      ]);
+
+      this.entries.set(mergePackMembers(storedMembers, publicPackMembers));
     } finally {
       this.loading.set(false);
     }
   }
+}
+
+export function mergePackMembers(
+  storedMembers: AdminPackMemberEntry[],
+  publicPackMembers: PublicPackMemberEntry[]
+): AdminPackMemberEntry[] {
+  const membersByPubkey = new Map<string, AdminPackMemberEntry>();
+
+  for (const member of storedMembers) {
+    membersByPubkey.set(member.pubkey, member);
+  }
+
+  for (const member of publicPackMembers) {
+    if (membersByPubkey.has(member.pubkey)) {
+      continue;
+    }
+
+    membersByPubkey.set(member.pubkey, {
+      pubkey: member.pubkey,
+      username: member.username,
+      description: member.description,
+      avatarUrl: member.avatarUrl,
+      primalUrl: `https://primal.net/p/${member.pubkey}`,
+      joinedAt: 0,
+      joinedAtLabel: '-',
+      requestedFromApp: false,
+      requestedAt: null,
+      requestedAtLabel: '-',
+      accountCreatedAt: null,
+      accountCreatedAtLabel: '-',
+      followerCount: null,
+      followingCount: null,
+      postCount: null,
+      zapCount: null,
+      canRemove: false,
+    });
+  }
+
+  return [...membersByPubkey.values()].sort((left, right) => {
+    if (left.joinedAt && right.joinedAt) {
+      return right.joinedAt - left.joinedAt;
+    }
+
+    if (left.joinedAt) {
+      return -1;
+    }
+
+    if (right.joinedAt) {
+      return 1;
+    }
+
+    return left.username.localeCompare(right.username);
+  });
 }

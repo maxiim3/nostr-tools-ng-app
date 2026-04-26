@@ -47,6 +47,7 @@ export interface AdminPackMemberEntry {
   followingCount: number | null;
   postCount: number | null;
   zapCount: number | null;
+  canRemove: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -101,6 +102,7 @@ export class StarterPackRequestService {
       followingCount: record.followingCount,
       postCount: record.postCount,
       zapCount: record.zapCount,
+      canRemove: true,
     }));
   }
 
