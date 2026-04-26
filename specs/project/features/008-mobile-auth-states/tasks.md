@@ -12,5 +12,5 @@
 
 ## Dependencies
 
-- `001-session-restore`
+- `002-session-restore`
 - Preferably `005-mobile-auth-stability`

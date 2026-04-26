@@ -7,11 +7,11 @@ This file owns milestone definitions and milestone-level acceptance criteria.
 
 ## Milestone Summary
 
-| Milestone                  | Status      | Outcome                                                                                  |
-| -------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
-| M1 - Pack francophone      | Active      | Public request flow, admin moderation, auth hardening, persistence, and UX stabilization |
-| M2 - Merge followers tool  | Not started | Admin/operator compares and merges source follow lists into the target francophone pack  |
-| M3 - Feed pack francophone | Not started | Public feed of kind 1 posts from members of the francophone pack                         |
+| Milestone                  | Status      | Outcome                                                                                 |
+| -------------------------- | ----------- | --------------------------------------------------------------------------------------- |
+| M1 - Pack francophone      | Active      | Auto-admit join flow, Supabase membership storage, admin member table, auth hardening   |
+| M2 - Merge followers tool  | Not started | Admin/operator compares and merges source follow lists into the target francophone pack |
+| M3 - Feed pack francophone | Not started | Public feed of kind 1 posts from members of the francophone pack                        |
 
 ## M1 - Pack Francophone
 
@@ -19,13 +19,15 @@ Status: active
 
 Product objective:
 
-Provide a public access request page for the francophone starter pack, with an admin backoffice to manage requests.
+Provide an immediate join flow for the francophone starter pack, with an admin backoffice to view and remove members.
 
 Target capabilities:
 
 - Public pack page: `/packs/francophone`.
-- Public request page: `/packs/francophone/request`.
-- Admin requests page: `/packs/francophone/admin/requests`.
+- Public join page: `/packs/francophone/request` or replacement route.
+- Admin members page: `/packs/francophone/admin/requests` or replacement route.
+- Auto-admission into the francophone pack after authenticated click.
+- Supabase membership database storing member profile snapshots, counters, join metadata, and removal metadata.
 - Nostr auth for web/PWA: NIP-07 desktop, NIP-46 Nostr Connect mobile, `bunker://` advanced mode.
 - Backend HTTP auth using NIP-98 for protected routes.
 - Global shell with header and footer.
@@ -35,8 +37,8 @@ Target capabilities:
 
 Current M1 feature set:
 
-- `001-session-restore`
-- `002-persistent-pack-requests`
+- `001-auto-admit-pack-members`
+- `002-session-restore`
 - `003-extension-auth-loading`
 - `004-advanced-bunker-mode`
 - `005-mobile-auth-stability`
@@ -47,16 +49,17 @@ Current M1 feature set:
 
 Current risks:
 
-- Runtime request storage is not persistent across redeployments until `002-persistent-pack-requests` is done.
-- Nostr session restore remains partially incomplete until `001-session-restore` is closed.
+- Runtime member storage is not persistent across redeployments until `001-auto-admit-pack-members` is done.
+- Nostr session restore remains partially incomplete until `002-session-restore` is closed.
 - Mobile external-app auth still needs stabilization with Amber and Primal.
 - Some auth UI states remain unclear until `006` and `008` are closed.
 
 Milestone acceptance criteria:
 
-- Users can request access to the francophone pack.
-- Admins can view, approve, and reject requests through protected admin routes.
-- Request data survives redeployments.
+- Users can join the francophone pack immediately without manual approval.
+- Admins can view all current members through a protected admin table.
+- Admins can remove members from the pack through a protected action.
+- Member data survives redeployments in Supabase.
 - Desktop extension auth works with clear loading feedback.
 - Valid mobile/desktop signer sessions can be restored after refresh where supported.
 - Mobile auth via external app can be completed and resumed clearly.

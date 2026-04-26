@@ -1,6 +1,6 @@
-# 001 Session Restore
+# 002 Session Restore
 
-Status: in progress  
+Status: ready  
 Priority: P0  
 Milestone: M1
 
@@ -24,6 +24,6 @@ A valid NIP-07 or NIP-46 authorization survives refresh. Invalid persisted auth 
 
 ## Out of Scope
 
-- Storage migration for pack requests.
+- Supabase membership migration and auto-admit pack join.
 - Backend auth model changes.
 - Bunker permission model redesign.

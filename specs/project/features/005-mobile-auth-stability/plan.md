@@ -10,7 +10,7 @@
 
 ## Strategy
 
-1. Run post-restore manual matrix after `001-session-restore`.
+1. Run post-restore manual matrix after `002-session-restore`.
 2. Capture exact Amber and Primal behavior before changing code.
 3. Apply smallest targeted fixes for observed failures.
 4. Document app-specific constraints in support docs or UI copy.

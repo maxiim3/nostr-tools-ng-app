@@ -12,5 +12,5 @@
 
 ## Dependencies
 
-- `001-session-restore`
+- `002-session-restore`
 - Real mobile testing environment.

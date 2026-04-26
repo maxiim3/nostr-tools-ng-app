@@ -6,8 +6,8 @@ Each feature folder follows:
 
 Current queue order:
 
-1. `001-session-restore`
-2. `002-persistent-pack-requests`
+1. `001-auto-admit-pack-members`
+2. `002-session-restore`
 3. `003-extension-auth-loading`
 4. `004-advanced-bunker-mode`
 5. `005-mobile-auth-stability`

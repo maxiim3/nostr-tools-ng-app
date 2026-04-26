@@ -24,8 +24,8 @@ Feature directories MUST use execution order IDs:
 
 Examples:
 
-- `001-session-restore`
-- `002-persistent-pack-requests`
+- `001-auto-admit-pack-members`
+- `002-session-restore`
 - `003-extension-auth-loading`
 
 Inside each feature:

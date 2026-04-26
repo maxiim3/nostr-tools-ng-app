@@ -7,12 +7,12 @@ This file owns product sequencing. Execution order is tracked in [queue.md](queu
 
 ## Now
 
-| Order | Feature                        | Outcome                                                               |
-| ----- | ------------------------------ | --------------------------------------------------------------------- |
-| 001   | `001-session-restore`          | Refresh restores valid NIP-07/NIP-46 sessions and purges invalid data |
-| 002   | `002-persistent-pack-requests` | Pack-request data survives redeployments                              |
-| 003   | `003-extension-auth-loading`   | Extension auth button has clear loading/disabled behavior             |
-| 004   | `004-advanced-bunker-mode`     | `bunker://` remains available as advanced mode                        |
+| Order | Feature                       | Outcome                                                                      |
+| ----- | ----------------------------- | ---------------------------------------------------------------------------- |
+| 001   | `001-auto-admit-pack-members` | Users join the pack immediately; Supabase stores members; admin sees members |
+| 002   | `002-session-restore`         | Refresh restores valid NIP-07/NIP-46 sessions and purges invalid data        |
+| 003   | `003-extension-auth-loading`  | Extension auth button has clear loading/disabled behavior                    |
+| 004   | `004-advanced-bunker-mode`    | `bunker://` remains available as advanced mode                               |
 
 ## Next
 
@@ -33,8 +33,9 @@ This file owns product sequencing. Execution order is tracked in [queue.md](queu
 
 ## Sequencing Rules
 
-- `005-mobile-auth-stability` depends on `001-session-restore`.
+- `001-auto-admit-pack-members` is the absolute priority and includes Supabase migration.
+- `005-mobile-auth-stability` depends on `002-session-restore`.
 - `006-async-button-pattern` depends on `003-extension-auth-loading`.
-- `008-mobile-auth-states` should follow `001-session-restore` and ideally `005-mobile-auth-stability`.
+- `008-mobile-auth-states` should follow `002-session-restore` and ideally `005-mobile-auth-stability`.
 - `009-bunker-permission-grants` stays blocked until a clean NDK extension point exists.
-- `002-persistent-pack-requests` includes `DOC-03` as follow-up documentation work after storage migration.
+- `001-auto-admit-pack-members` includes `DOC-03` as follow-up documentation work after storage migration.
