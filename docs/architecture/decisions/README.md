@@ -1,15 +1,15 @@
 # ADR Index
 
-Ce dossier contient les decisions structurantes du repo.
+This directory contains accepted architecture decisions for the repository.
 
-Regles simples :
+Rules:
 
-- une decision importante = un fichier
-- une decision remplacee n'est pas reecrite, elle est depassee par une nouvelle ADR
-- les documents produit et de planning peuvent evoluer souvent
-- les ADR servent a stabiliser les choix de structure, d'architecture et de doctrine
+- one significant decision = one ADR file
+- a superseded ADR is not rewritten; it is replaced by a newer ADR
+- planning and product documents can evolve more frequently than ADRs
+- ADRs stabilize structural and architectural doctrine
 
-Documents actifs :
+## Active ADRs
 
-- `0001-docs-taxonomy.md` — taxonomie documentaire par role
-- `0002-nostr-connect-local-restore.md` — restore local NIP-46 sans session backend
+- [0001-docs-taxonomy.md](0001-docs-taxonomy.md) - Documentation taxonomy by role and source-of-truth boundaries
+- [0002-nostr-connect-local-restore.md](0002-nostr-connect-local-restore.md) - Local NIP-46 restore without backend session

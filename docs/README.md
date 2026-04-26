@@ -2,33 +2,49 @@
 
 Updated: 2026-04-26
 
-Cette documentation est organisee par role documentaire.
+This repository documentation is organized by role. The goal is quick navigation, clear authority, and stable maintenance conventions.
 
-Le but :
+## Find the Right Source
 
-- simple a lire pour un humain
-- simple a maintenir pour un agent
-- claire sur la source de verite active
-- sans dossier fourre-tout
+| Need                                      | Authoritative Destination                                              |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| Understand product mission                | [product/mission.md](product/mission.md)                               |
+| Follow product direction and sequencing   | [product/roadmap.md](product/roadmap.md)                               |
+| Review active execution status            | [planning/board.md](planning/board.md)                                 |
+| Start a task handoff brief (board-backed) | [planning/execution-notes.md](planning/execution-notes.md)             |
+| Read architecture decisions               | [architecture/decisions/README.md](architecture/decisions/README.md)   |
+| Read stable rules and constraints         | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
+| Read product-facing focused specs         | [product/specs/auth-mobile-web.md](product/specs/auth-mobile-web.md)   |
+| Read Spec Kit feature artifacts           | [../specs/](../specs/)                                                 |
+| Read history/archive context              | [history/auth-refactor-journal.md](history/auth-refactor-journal.md)   |
+| Read research input                       | [research/nostr-auth-ux-pattern.md](research/nostr-auth-ux-pattern.md) |
+| Read repository guides                    | [guides/mermaid.md](guides/mermaid.md)                                 |
 
-## Lire quoi selon le besoin
+## Role Taxonomy
 
-| Besoin                                   | Document                                                               |
-| ---------------------------------------- | ---------------------------------------------------------------------- |
-| Comprendre le produit                    | [product/mission.md](product/mission.md)                               |
-| Voir la direction produit                | [product/roadmap.md](product/roadmap.md)                               |
-| Comprendre la direction artistique LP    | [product/landing-page-design.md](product/landing-page-design.md)       |
-| Comprendre l'architecture du repo        | [architecture/overview.md](architecture/overview.md)                   |
-| Lire les decisions structurantes         | [architecture/decisions/README.md](architecture/decisions/README.md)   |
-| Lire les contraintes auth stables        | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
-| Voir le travail actif                    | [planning/board.md](planning/board.md)                                 |
-| Demarrer une session agent sur une tache | [planning/execution-notes.md](planning/execution-notes.md)             |
-| Affiner une spec produit                 | [product/specs/auth-mobile-web.md](product/specs/auth-mobile-web.md)   |
-| Comprendre un chantier passe             | [history/auth-refactor-journal.md](history/auth-refactor-journal.md)   |
-| Consulter de la recherche / inspiration  | [research/nostr-auth-ux-pattern.md](research/nostr-auth-ux-pattern.md) |
-| Lire le guide Mermaid                    | [guides/mermaid.md](guides/mermaid.md)                                 |
+| Role                  | Primary Location                                      | Purpose                                                   |
+| --------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
+| Product Direction     | `docs/product/`                                       | Mission, roadmap, positioning, long-term sequencing       |
+| Active Planning       | `docs/planning/`                                      | Current work, ready work, blocked work, handoff notes     |
+| Feature Specification | `docs/product/specs/` or top-level `specs/<feature>/` | Product-facing specs vs Spec Kit implementation artifacts |
+| Architecture Decision | `docs/architecture/decisions/`                        | Accepted structural decisions and consequences            |
+| Stable Reference      | `docs/references/`                                    | Durable rules and constraints                             |
+| Research Input        | `docs/research/`                                      | Non-normative exploration and inspiration                 |
+| History or Archive    | `docs/history/` or explicit archive location          | Historical or superseded context                          |
+| Guide                 | `docs/guides/`                                        | How to read, maintain, or contribute to docs              |
 
-## Arborescence
+## Source-of-Truth Rules
+
+- `docs/planning/board.md` owns active execution status.
+- `docs/product/roadmap.md` owns product direction and sequencing, not task status detail.
+- `docs/architecture/decisions/` owns accepted architecture decisions.
+- `docs/references/` owns durable rules and constraints.
+- `docs/research/` is non-normative until promoted into a reference, decision, spec, or task.
+- Top-level `specs/` owns Spec Kit feature artifacts.
+- `docs/product/specs/` owns product-facing focused specs.
+- If board status conflicts with handoff notes or historical records, the board wins.
+
+## Structure
 
 ```mermaid
 flowchart TD
@@ -43,32 +59,22 @@ flowchart TD
   Product --> Mission[mission.md]
   Product --> Roadmap[roadmap.md]
   Product --> LandingDesign[landing-page-design.md]
-  Product --> Specs[specs/]
+  Product --> ProductSpecs[specs/]
   Planning --> Board[board.md]
   Planning --> ExecutionNotes[execution-notes.md]
   Architecture --> Overview[overview.md]
   Architecture --> Decisions[decisions/]
   References --> Rules[nostr-auth-rules.md]
   History --> Journal[auth-refactor-journal.md]
-  Research --> Inputs[inspiration notes]
+  Research --> Inputs[research inputs]
   Guides --> Mermaid[mermaid.md]
 ```
 
-## Conventions de maintenance
+## Code-Adjacent Documentation
 
-- `planning/board.md` est la source de verite active pour l'execution.
-- `product/roadmap.md` porte la direction produit, pas le detail du board.
-- `product/specs/` contient uniquement des specs ciblees.
-- `references/` contient des contraintes stables, pas des todos.
-- `history/` garde la memoire, mais n'est jamais la todo active.
-- `research/` contient des inputs non normatifs.
-- Si un document historique contredit le board actif, le board actif gagne.
+Technical workflow documentation closest to implementation remains in `src/`.
 
-## Documentation proche du code
-
-La documentation de workflow technique la plus proche du code reste dans `src/`.
-
-Entrees utiles :
+Useful entry points:
 
 - [../src/README.md](../src/README.md)
 - [../src/core/README.md](../src/core/README.md)

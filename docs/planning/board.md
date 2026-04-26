@@ -1,24 +1,24 @@
 # Delivery Board
 
 Date: 2026-04-23
-Updated: 2026-04-25
+Updated: 2026-04-26
 Status: active
 
 ## Role of this document
 
-Ce document est la source de verite active pour l'execution.
+`docs/planning/board.md` is the authoritative source of truth for active execution status.
 
-Il sert a suivre :
+It tracks:
 
-- ce qu'on fait maintenant
-- ce qui est pret
-- ce qui est bloque
-- ce qui vient d'etre termine
+- work in progress
+- work ready to start
+- work currently blocked
+- work completed recently
 
-Il ne remplace pas la roadmap produit.
-Pour la direction globale, utiliser `../product/roadmap.md`.
+This document does not replace product direction planning.
+Use `../product/roadmap.md` for product sequencing and direction.
 
-Si ce document contredit un document historique, ce document gagne.
+If this board conflicts with handoff notes or historical records, this board wins for active status.
 
 ## Board
 

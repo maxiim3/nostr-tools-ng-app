@@ -5,29 +5,34 @@ Status: accepted
 
 ## Context
 
-Le dossier `docs/` melangeait auparavant mission, architecture, board actif, journal historique, inspirations et specs sous des noms trop generiques.
+The `docs/` tree previously mixed mission, architecture, active planning, historical journal, research, and specs under overly generic names.
 
-Le cout etait double :
+This caused two recurring issues:
 
-- un humain ne savait pas vite ou lire ou ecrire
-- un agent pouvait confondre source de verite active, historique et recherche
+- maintainers could not quickly identify where to read or write
+- agents could confuse active source-of-truth documents with historical or research context
 
 ## Decision
 
-Le dossier `docs/` est organise par role documentaire :
+`docs/` is organized by explicit roles:
 
-- `product/` pour la vision, la roadmap et les specs produit
-- `planning/` pour le board d'execution actif
-- `architecture/` pour la vue d'ensemble et les ADR
-- `references/` pour les contraintes stables
-- `history/` pour les journaux historiques
-- `research/` pour les inspirations et inputs non normatifs
-- `guides/` pour les guides de lecture et de contribution
+- `product/` for Product Direction
+- `planning/` for Active Planning
+- `architecture/` for Architecture Decision and structural overview
+- `references/` for Stable Reference constraints
+- `history/` for History or Archive records
+- `research/` for Research Input that is not yet normative
+- `guides/` for documentation Guides
+
+Feature specifications are split by audience:
+
+- `docs/product/specs/` for product-facing focused specs
+- top-level `specs/<feature>/` for Spec Kit implementation artifacts
 
 ## Consequences
 
-- les documents actifs ont des noms stables, non dates, quand ils sont vivants
-- les journaux et traces historiques gardent une place separee
-- `planning/board.md` devient la source de verite active pour l'execution
-- `product/roadmap.md` porte la direction, pas le detail du board
-- `specs/` n'existe plus comme dossier fourre-tout
+- active documents keep stable non-date names while they are current
+- historical records keep a separate location and are not treated as active planning
+- `planning/board.md` owns active execution status
+- `product/roadmap.md` owns product direction and sequencing, not board status detail
+- top-level `specs/` is reserved for Spec Kit feature artifacts, not a generic docs catch-all

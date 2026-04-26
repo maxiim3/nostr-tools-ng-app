@@ -21,10 +21,10 @@ description: 'Task list for Project Management Cleanup implementation'
 
 **Purpose**: Build the working inventory and baseline needed before applying taxonomy/lifecycle cleanup.
 
-- [ ] T001 Create cleanup work log in `specs/001-project-management-cleanup/artifacts/implementation-log.md`
-- [ ] T002 Create documentation inventory snapshot from `docs/` in `specs/001-project-management-cleanup/artifacts/docs-inventory.md`
-- [ ] T003 [P] Create baseline task record snapshot from `docs/planning/board.md` and `docs/planning/execution-notes.md` in `specs/001-project-management-cleanup/artifacts/task-registry-baseline.md`
-- [ ] T004 [P] Create baseline reference map from `docs/README.md` in `specs/001-project-management-cleanup/artifacts/reference-map-baseline.md`
+- [x] T001 Create cleanup work log in `specs/001-project-management-cleanup/artifacts/implementation-log.md`
+- [x] T002 Create documentation inventory snapshot from `docs/` in `specs/001-project-management-cleanup/artifacts/docs-inventory.md`
+- [x] T003 [P] Create baseline task record snapshot from `docs/planning/board.md` and `docs/planning/execution-notes.md` in `specs/001-project-management-cleanup/artifacts/task-registry-baseline.md`
+- [x] T004 [P] Create baseline reference map from `docs/README.md` in `specs/001-project-management-cleanup/artifacts/reference-map-baseline.md`
 
 ---
 
@@ -34,12 +34,12 @@ description: 'Task list for Project Management Cleanup implementation'
 
 **CRITICAL**: User story implementation starts only after this phase is complete.
 
-- [ ] T005 Create taxonomy matrix from `docs/README.md`, `docs/planning/board.md`, and `specs/001-project-management-cleanup/contracts/documentation-governance.md` in `specs/001-project-management-cleanup/artifacts/taxonomy-matrix.md`
-- [ ] T006 Create local planning mapping registry in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
-- [ ] T007 Create cleanup action ledger template in `specs/001-project-management-cleanup/artifacts/cleanup-ledger.md`
-- [ ] T008 [P] Create cleanup summary skeleton in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
-- [ ] T009 Align taxonomy language in `docs/README.md` with `specs/001-project-management-cleanup/contracts/documentation-governance.md`
-- [ ] T010 Align ADR taxonomy wording in `docs/architecture/decisions/0001-docs-taxonomy.md` with `docs/README.md`
+- [x] T005 Create taxonomy matrix from `docs/README.md`, `docs/planning/board.md`, and `specs/001-project-management-cleanup/contracts/documentation-governance.md` in `specs/001-project-management-cleanup/artifacts/taxonomy-matrix.md`
+- [x] T006 Create local planning mapping registry in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
+- [x] T007 Create cleanup action ledger template in `specs/001-project-management-cleanup/artifacts/cleanup-ledger.md`
+- [x] T008 [P] Create cleanup summary skeleton in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
+- [x] T009 Align taxonomy language in `docs/README.md` with `specs/001-project-management-cleanup/contracts/documentation-governance.md`
+- [x] T010 Align ADR taxonomy wording in `docs/architecture/decisions/0001-docs-taxonomy.md` with `docs/README.md`
 
 **Checkpoint**: Governance scaffolding is complete and user stories can proceed.
 
@@ -53,15 +53,15 @@ description: 'Task list for Project Management Cleanup implementation'
 
 ### Validation for User Story 1
 
-- [ ] T011 [P] [US1] Create US1 validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us1.md`
+- [x] T011 [P] [US1] Create US1 validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us1.md`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Normalize active-source-of-truth statements in `docs/planning/board.md`
-- [ ] T013 [US1] Normalize board-vs-handoff authority wording in `docs/planning/execution-notes.md`
-- [ ] T014 [US1] Update navigation table and maintenance conventions in `docs/README.md`
-- [ ] T015 [US1] Update architecture decision index links in `docs/architecture/decisions/README.md`
-- [ ] T016 [US1] Record US1 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us1.md`
+- [x] T012 [US1] Normalize active-source-of-truth statements in `docs/planning/board.md`
+- [x] T013 [US1] Normalize board-vs-handoff authority wording in `docs/planning/execution-notes.md`
+- [x] T014 [US1] Update navigation table and maintenance conventions in `docs/README.md`
+- [x] T015 [US1] Update architecture decision index links in `docs/architecture/decisions/README.md`
+- [x] T016 [US1] Record US1 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us1.md`
 
 **Checkpoint**: Source-of-truth hierarchy is clear and discoverable.
 

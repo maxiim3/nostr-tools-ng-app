@@ -5,10 +5,11 @@ Status: active
 
 ## Role of this document
 
-This document turns the active board into agent-ready handoff briefs.
+This document turns board items into agent-ready handoff briefs.
 
-Use it when starting a fresh implementation session for one task. The active status still lives in
-[board.md](board.md). If this document and the board disagree, the board wins.
+Use it when starting a fresh implementation session for one task. Active execution status still
+lives in [board.md](board.md), and the board is authoritative. If this document and the board
+disagree, the board wins.
 
 This document focuses on tasks that are ready for a new session. It intentionally does not expand
 `AUTH-02`, because that task is already marked in progress on the board.
