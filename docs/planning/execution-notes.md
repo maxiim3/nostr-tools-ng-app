@@ -11,8 +11,10 @@ Use it when starting a fresh implementation session for one task. Active executi
 lives in [board.md](board.md), and the board is authoritative. If this document and the board
 disagree, the board wins.
 
-This document focuses on tasks that are ready for a new session. It intentionally does not expand
-`AUTH-02`, because that task is already marked in progress on the board.
+This document includes briefs for both `Ready` and `Backlog` work so contributors can see the next
+action for each task before starting a session. It intentionally does not expand `AUTH-02`, because
+that task is already marked in progress on the board, and does not expand blocked tasks until they
+return to a startable state.
 
 ## Orchestration Rules
 
@@ -23,19 +25,31 @@ This document focuses on tasks that are ready for a new session. It intentionall
 - Do not edit shared docs from multiple sessions at the same time.
 - Keep each session limited to its task ID unless the board explicitly says otherwise.
 
+## Lifecycle Alignment Rules
+
+- Allowed lifecycle states: `Backlog`, `Ready`, `In Progress`, `Blocked`, `Done`, `Superseded`, `Archived`.
+- A brief in this file must include `Lifecycle` and a clear next action.
+- Only `Ready` briefs are startable immediately.
+- `Backlog` briefs must state the prerequisite needed to move to `Ready`.
+- `Blocked`, `Done`, `Superseded`, and `Archived` tasks stay in `board.md`; they are expanded here
+  only if they re-enter `Ready` or `In Progress`.
+- If this file and `board.md` disagree on lifecycle, `board.md` wins and this file must be updated.
+- Legacy local file names such as `_TODO` and `_READY` are supporting context only; lifecycle
+  status is owned by `board.md`.
+
 ## Execution Order
 
-| Order | Task       | Priority | Estimate | Risk | Rationale                                            |
-| ----- | ---------- | -------- | -------- | ---- | ---------------------------------------------------- |
-| 1     | `INFRA-01` | P0       | M        | M    | Production persistence issue, independent            |
-| 2     | `AUTH-07`  | P0       | M        | H    | High user impact, higher integration risk            |
-| 3     | `AUTH-08`  | P1       | M        | H    | Depends on restore behavior from `AUTH-07`           |
-| 4     | `UI-01`    | P1       | S        | Low  | Small accessible UX fix, can be pulled earlier       |
-| 5     | `UI-02`    | P1       | M        | M    | Depends on the concrete pattern proven by `UI-01`    |
-| 6     | `DOC-03`   | P2       | S        | Low  | Must reflect the final Supabase implementation       |
-| 7     | `AUTH-03`  | P2       | M        | M    | Needs permission inventory and confirmation          |
-| 8     | `AUTH-04`  | P2       | M        | M    | Broader UX pass after auth stability work            |
-| 9     | `AUTH-05`  | P3       | S/M      | Low  | Lower-priority product cleanup for advanced `bunker` |
+| Order | Task       | Lifecycle | Priority | Estimate | Risk | Next Action                                               |
+| ----- | ---------- | --------- | -------- | -------- | ---- | --------------------------------------------------------- |
+| 1     | `INFRA-01` | Ready     | P0       | M        | M    | Start implementation with storage boundary work           |
+| 2     | `AUTH-07`  | Ready     | P0       | M        | H    | Start restore implementation and tests                    |
+| 3     | `UI-01`    | Ready     | P1       | S        | Low  | Start focused auth-button loading/accessibility update    |
+| 4     | `AUTH-05`  | Ready     | P3       | S/M      | Low  | Start low-risk UX hierarchy cleanup when capacity is free |
+| 5     | `AUTH-08`  | Backlog   | P1       | M        | H    | Wait for `AUTH-07`, then run mobile matrix                |
+| 6     | `UI-02`    | Backlog   | P1       | M        | M    | Wait for `UI-01`, then inventory at least 3 async buttons |
+| 7     | `DOC-03`   | Backlog   | P2       | S        | Low  | Wait for `INFRA-01`, then update architecture docs        |
+| 8     | `AUTH-03`  | Backlog   | P2       | M        | M    | Confirm minimum startup permission set                    |
+| 9     | `AUTH-04`  | Backlog   | P2       | M        | M    | Wait for `AUTH-07` and `AUTH-08` test matrix              |
 
 Note: `DOC-03` may be bundled into the `INFRA-01` implementation session if that session completes
 the Supabase migration and updates the related architecture docs immediately.
@@ -45,6 +59,7 @@ the Supabase migration and updates the related architecture docs immediately.
 ### `INFRA-01` Migrate runtime storage to Supabase
 
 Priority: P0
+Lifecycle: Ready
 Estimate: M
 Risk: M
 Uncertainty: M
@@ -104,6 +119,7 @@ src/features/packs/README.md. Do not change auth/session behavior.
 ### `DOC-03` Update architecture docs after Supabase
 
 Priority: P2
+Lifecycle: Backlog
 Estimate: S
 Risk: Low
 Uncertainty: Low
@@ -149,6 +165,7 @@ documentation to reflect the final Supabase storage implementation. Do not chang
 ### `AUTH-07` Restore Nostr session after refresh
 
 Priority: P0
+Lifecycle: Ready
 Estimate: M
 Risk: H
 Uncertainty: H
@@ -204,6 +221,7 @@ ndk-nip46-restore.ts, ADR 0002, and relevant tests. Do not change pack-request s
 ### `AUTH-08` Stabilize Amber and Primal mobile flow
 
 Priority: P1
+Lifecycle: Backlog
 Estimate: M
 Risk: H
 Uncertainty: M
@@ -252,6 +270,7 @@ observed failures. Do not change storage or broad auth permissions.
 ### `UI-01` Add loader and disabled state to extension auth button
 
 Priority: P1
+Lifecycle: Ready
 Estimate: S
 Risk: Low
 Uncertainty: Low
@@ -299,6 +318,7 @@ change local and accessible.
 ### `UI-02` Define generic async button strategy
 
 Priority: P1
+Lifecycle: Backlog
 Estimate: M
 Risk: M
 Uncertainty: M
@@ -346,6 +366,7 @@ Do not change auth or API behavior.
 ### `AUTH-03` Reduce login permissions
 
 Priority: P2
+Lifecycle: Backlog
 Estimate: M
 Risk: M
 Uncertainty: M
@@ -391,6 +412,7 @@ permissions and map them to features. Propose the minimum startup set before cha
 ### `AUTH-04` Review mobile auth UX
 
 Priority: P2
+Lifecycle: Backlog
 Estimate: M
 Risk: M
 Uncertainty: M
@@ -437,6 +459,7 @@ against docs/product/specs/auth-mobile-web.md. Implement only missing state clar
 ### `AUTH-05` Make `bunker://` a clearly separate advanced mode
 
 Priority: P3
+Lifecycle: Ready
 Estimate: S/M
 Risk: Low
 Uncertainty: Low

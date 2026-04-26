@@ -26,8 +26,16 @@ Excluded: `src/`, runtime behavior, production config
 | 2026-04-26 14:29 | T015    | Updated ADR index with direct active ADR links.                                    | `docs/architecture/decisions/README.md`             |
 | 2026-04-26 14:30 | T016    | Recorded US1 independent validation results with timing and evidence.              | `artifacts/validation-us1.md`                       |
 | 2026-04-26 14:31 | VAL-01  | Ran `bun run format:check`; validation passed.                                     | `format:check` output: all files matched            |
+| 2026-04-26 14:45 | T017    | Created US2 lifecycle validation checklist scaffold.                               | `artifacts/validation-us2.md`                       |
+| 2026-04-26 14:46 | T018    | Added lifecycle definitions and required task fields; normalized board lanes.      | `docs/planning/board.md`                            |
+| 2026-04-26 14:47 | T019    | Added execution-brief lifecycle alignment rules and lifecycle labels.              | `docs/planning/execution-notes.md`                  |
+| 2026-04-26 14:47 | T020    | Created reusable task-record template.                                             | `artifacts/task-record-template.md`                 |
+| 2026-04-26 14:48 | T021    | Backfilled normalized lifecycle consistency notes for current tasks.               | `artifacts/task-registry-normalized.md`             |
+| 2026-04-26 14:49 | T022    | Added lifecycle reference fields and seeded lifecycle sources in mapping registry. | `artifacts/local-planning-mapping.md`               |
+| 2026-04-26 14:49 | T023    | Recorded US2 independent validation results with evidence.                         | `artifacts/validation-us2.md`                       |
+| 2026-04-26 14:53 | VAL-02  | Ran `bun run format`, then `bun run format:check`; validation passed.              | `format:check` output: all files matched            |
 
-## Next Scope (MVP)
+## Next Scope
 
-- Completed MVP slice: `T001-T016`
-- Final validation command for this slice: `bun run format:check` (PASS)
+- Completed slices: `T001-T023` (Foundational + US1 + US2)
+- Remaining in feature plan: US3 (`T024-T029`), US4 (`T030-T035`), and polish (`T036-T039`)

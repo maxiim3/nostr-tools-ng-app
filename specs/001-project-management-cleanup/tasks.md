@@ -75,16 +75,16 @@ description: 'Task list for Project Management Cleanup implementation'
 
 ### Validation for User Story 2
 
-- [ ] T017 [P] [US2] Create lifecycle validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us2.md`
+- [x] T017 [P] [US2] Create lifecycle validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us2.md`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Add lifecycle definitions and required task fields section to `docs/planning/board.md`
-- [ ] T019 [US2] Add execution-brief lifecycle alignment rules to `docs/planning/execution-notes.md`
-- [ ] T020 [P] [US2] Create reusable task-record template in `specs/001-project-management-cleanup/artifacts/task-record-template.md`
-- [ ] T021 [US2] Backfill lifecycle consistency notes for current tasks in `specs/001-project-management-cleanup/artifacts/task-registry-normalized.md`
-- [ ] T022 [US2] Update local planning mapping registry with lifecycle references in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
-- [ ] T023 [US2] Record US2 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us2.md`
+- [x] T018 [US2] Add lifecycle definitions and required task fields section to `docs/planning/board.md`
+- [x] T019 [US2] Add execution-brief lifecycle alignment rules to `docs/planning/execution-notes.md`
+- [x] T020 [P] [US2] Create reusable task-record template in `specs/001-project-management-cleanup/artifacts/task-record-template.md`
+- [x] T021 [US2] Backfill lifecycle consistency notes for current tasks in `specs/001-project-management-cleanup/artifacts/task-registry-normalized.md`
+- [x] T022 [US2] Update local planning mapping registry with lifecycle references in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
+- [x] T023 [US2] Record US2 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us2.md`
 
 **Checkpoint**: Task lifecycle is consistent for active and ready work.
 
