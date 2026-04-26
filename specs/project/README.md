@@ -5,38 +5,42 @@ Updated: 2026-04-26
 
 This directory is the only active project-management source of truth for ToolStr.
 
-Use this directory to answer:
+## Structure
 
-- what the product is
-- which milestones exist
-- what is active now
-- what is planned next
-- which tasks are ready, blocked, done, or in backlog
-- which user stories and acceptance criteria define the work
-- which supporting docs, ADRs, references, and research inputs apply
+| Path                           | Purpose                                                             |
+| ------------------------------ | ------------------------------------------------------------------- |
+| [queue.md](queue.md)           | Ordered execution queue (`ID-NAME`) and lifecycle status            |
+| [milestones.md](milestones.md) | Milestone-level outcomes and acceptance criteria                    |
+| [roadmap.md](roadmap.md)       | Now/Next/Later sequencing                                           |
+| [features/](features/)         | Actionable feature units, one folder per feature                    |
+| [support/](support/)           | Architecture, ADRs, references, research, design, incidents, guides |
+| [archive/](archive/)           | Superseded planning formats and historical snapshots                |
 
-## Files
+## Feature Naming Contract
 
-| File                               | Purpose                                                                   |
-| ---------------------------------- | ------------------------------------------------------------------------- |
-| [spec.md](spec.md)                 | Project specification, scope, source-of-truth contract, product identity  |
-| [milestones.md](milestones.md)     | Canonical milestones and milestone-level acceptance criteria              |
-| [roadmap.md](roadmap.md)           | Now, Next, Later sequencing and priority themes                           |
-| [user-stories.md](user-stories.md) | Canonical user stories and acceptance criteria                            |
-| [features.md](features.md)         | Feature registry with status, dependencies, and linked tasks              |
-| [tasks.md](tasks.md)               | Canonical task board, lifecycle states, and implementation handoff briefs |
-| [references.md](references.md)     | Supporting docs, ADRs, research, references, and code-adjacent docs       |
-| [archive.md](archive.md)           | Extracted, deleted, demoted, or superseded planning records               |
-| [validation.md](validation.md)     | Validation checks for the single-source-of-truth cleanup                  |
+Feature directories MUST use execution order IDs:
+
+`<id>-<name>`
+
+Examples:
+
+- `001-session-restore`
+- `002-persistent-pack-requests`
+- `003-extension-auth-loading`
+
+Inside each feature:
+
+- `spec.md` defines the outcome and acceptance criteria.
+- `plan.md` defines implementation strategy and risks.
+- `tasks.md` defines executable tasks and dependencies.
 
 ## Authority Rules
 
-- `specs/project/` owns active planning, roadmap, milestones, tasks, user stories, feature status, and next actions.
-- `docs/` contains supporting documentation only. It does not own active planning status.
-- If any retained doc conflicts with this directory about project status, this directory wins.
-- New active work must be added to [tasks.md](tasks.md) and linked to a feature in [features.md](features.md).
-- New user-facing behavior should have a user story in [user-stories.md](user-stories.md) before implementation unless the task is explicitly marked as a small direct task.
+- `specs/project/features/` owns active implementation work.
+- `specs/project/queue.md` owns execution order and status.
+- `specs/project/support/` is reference-only and does not own active status.
+- If support docs conflict with queue/feature files, queue/feature files win.
 
-## Current Next Action
+## Current Entry Point
 
-Start from [tasks.md](tasks.md). The highest-priority ready task is `INFRA-01`, unless `AUTH-02` is still actively being tested in the current session.
+Start with [queue.md](queue.md), then open the first non-completed feature folder.

@@ -322,10 +322,8 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
 fi
 
-# ToolStr keeps a single active project specification source. Branches may still
-# be numbered for workflow compatibility, but specification files are written to
-# specs/project instead of a competing numbered specs/<branch> directory.
-FEATURE_DIR="$REPO_ROOT/specs/project"
+# ToolStr stores actionable specs under specs/project/features/<id-name>.
+FEATURE_DIR="$REPO_ROOT/specs/project/features/${FEATURE_NUM}-${BRANCH_SUFFIX}"
 SPEC_FILE="$FEATURE_DIR/spec.md"
 
 if [ "$DRY_RUN" != true ]; then

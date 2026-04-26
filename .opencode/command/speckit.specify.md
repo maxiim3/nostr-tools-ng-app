@@ -81,18 +81,18 @@ Given that feature description, do this:
 
    If the user explicitly provided `GIT_BRANCH_NAME`, pass it through to the hook so the branch script uses the exact value as the branch name (bypassing all prefix/suffix generation).
 
-3. **Use the project source-of-truth directory**:
+3. **Use an actionable feature directory**:
 
-   This repository uses one canonical project specification directory: `specs/project/`.
+   This repository stores actionable specs under `specs/project/features/<id-name>/`.
 
    **Resolution order for `SPECIFY_FEATURE_DIRECTORY`**:
-   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY`, use it as-is only when they intentionally override the project source-of-truth location
-   2. Otherwise, set `SPECIFY_FEATURE_DIRECTORY` to `specs/project`
+   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY`, use it as-is.
+   2. Otherwise, use the first non-completed feature from `specs/project/queue.md`.
 
-   **Create or update the project spec file**:
+   **Create or update the feature spec file**:
    - `mkdir -p SPECIFY_FEATURE_DIRECTORY`
    - If `SPECIFY_FEATURE_DIRECTORY/spec.md` is missing, copy `.specify/templates/spec-template.md` to `SPECIFY_FEATURE_DIRECTORY/spec.md` as the starting point
-   - If `SPECIFY_FEATURE_DIRECTORY/spec.md` already exists, update it instead of creating a competing numbered feature directory
+   - If `SPECIFY_FEATURE_DIRECTORY/spec.md` already exists, update it in place
    - Set `SPEC_FILE` to `SPECIFY_FEATURE_DIRECTORY/spec.md`
    - Persist the resolved path to `.specify/feature.json`:
      ```json
@@ -100,12 +100,12 @@ Given that feature description, do this:
        "feature_directory": "<resolved feature dir>"
      }
      ```
-     Write the actual resolved directory path value (normally `specs/project`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
+     Write the actual resolved directory path value (for example `specs/project/features/001-session-restore`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
      This allows downstream commands (`/speckit.plan`, `/speckit.tasks`, etc.) to locate the feature directory without relying on git branch name conventions.
 
    **IMPORTANT**:
-   - This repository does not use numbered active spec directories as sources of truth
-   - New work should be represented inside `specs/project/` as user stories, features, roadmap entries, and tasks
+   - This repository uses numbered `ID-NAME` feature directories as actionable units
+   - New work should be represented inside one `specs/project/features/<id-name>/` directory and linked from `specs/project/queue.md`
    - The spec directory name and the git branch name are independent
    - The spec directory and file are always created by this command, never by the hook
 

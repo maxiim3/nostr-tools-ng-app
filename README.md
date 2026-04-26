@@ -21,13 +21,14 @@ Pour comprendre le protocole Nostr dans le contexte exact du code :
 Source de verite projet, docs produit et architecture :
 
 1. [Source de verite projet](specs/project/README.md)
-2. [Milestones](specs/project/milestones.md)
-3. [Roadmap](specs/project/roadmap.md)
-4. [Tasks](specs/project/tasks.md)
-5. [User stories](specs/project/user-stories.md)
-6. [Documentation index](docs/README.md)
-7. [Architecture globale](docs/architecture/overview.md)
-8. [Tutoriel Mermaid](docs/guides/mermaid.md)
+2. [Execution queue](specs/project/queue.md)
+3. [Milestones](specs/project/milestones.md)
+4. [Roadmap](specs/project/roadmap.md)
+5. [Features actionnables](specs/project/features/README.md)
+6. [Feature active (session restore)](specs/project/features/001-session-restore/spec.md)
+7. [Support docs](specs/project/support/README.md)
+8. [Architecture globale](specs/project/support/architecture/overview.md)
+9. [Tutoriel Mermaid](specs/project/support/guides/mermaid.md)
 
 ## Demarrage local
 

@@ -141,17 +141,20 @@ persistence expectations, environment variables, and how protected admin
 behavior remains covered by `NIP-98`.
 
 Documentation sources have defined roles. `specs/project/` is the active
-project source of truth for milestones, roadmap, user stories, features, tasks,
-and task handoff briefs. `docs/architecture/overview.md` and
-`docs/architecture/decisions/` define structure and architectural decisions.
-`docs/references/nostr-auth-rules.md` defines stable Nostr auth constraints.
-`docs/research/`, `docs/history/`, and `docs/product/` contain supporting
-material only and do not own active planning status.
+project source of truth. `specs/project/queue.md` owns execution order and
+`specs/project/features/<id-name>/` owns actionable spec/plan/tasks units.
+`specs/project/support/architecture/overview.md` and
+`specs/project/support/decisions/` define structure and architectural
+decisions. `specs/project/support/references/nostr-auth-rules.md` defines
+stable Nostr auth constraints. `specs/project/support/research/`,
+`specs/project/support/history/`, and `specs/project/support/design/` contain
+supporting material only and do not own active planning status.
 
 ## Development Workflow
 
-Feature work MUST start from `specs/project/` and
-identify the independently testable user outcome before implementation details.
+Feature work MUST start from `specs/project/queue.md` and then the selected
+`specs/project/features/<id-name>/` directory, identifying the independently
+testable user outcome before implementation details.
 Plans MUST capture the real project structure rather than generic template
 layouts. Tasks MUST be grouped by user story or operational outcome, include
 exact file paths, identify dependencies, and include explicit verification

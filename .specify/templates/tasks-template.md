@@ -4,7 +4,7 @@ description: 'Task list template for ToolStr feature implementation'
 
 # Tasks: [FEATURE NAME]
 
-**Input**: Project source from `/specs/project/` and approved feature-specific notes
+**Input**: Feature source from `/specs/project/features/<id-name>/` and approved project context
 **Prerequisites**: plan.md (required), spec.md (required for user stories),
 research.md, data-model.md, contracts/
 
@@ -30,7 +30,7 @@ operational outcome.
 - Feature layers: `domain/`, `application/`, `infrastructure/`, `presentation/`
 - i18n: `src/assets/i18n/`
 - Bun API: `server.mjs`, `server.test.mjs`
-- Documentation: `specs/project/`, `docs/`, `src/**/README.md`
+- Documentation: `specs/project/queue.md`, `specs/project/features/<id-name>/`, `specs/project/support/`, `src/**/README.md`
 
 <!--
   The /speckit.tasks command MUST replace the sample tasks below with actual
@@ -43,7 +43,7 @@ operational outcome.
 **Purpose**: Confirm scope, files, and quality gates before implementation.
 
 - [ ] T001 Review active source documents named in plan.md and record scope in
-      specs/project/plan.md
+      specs/project/features/<id-name>/plan.md
 - [ ] T002 Identify exact Angular/service/server/docs files affected by this
       feature
 - [ ] T003 [P] Confirm repo verification scripts required for this change from
@@ -124,7 +124,7 @@ start.
 - [ ] T019 [US2] Implement behavior in [exact source file]
 - [ ] T020 [US2] Integrate with US1 components/services without breaking
       independent testability
-- [ ] T021 [US2] Update i18n/docs/contracts affected by the story
+- [ ] T021 [US2] Update i18n/support docs/contracts affected by the story
 
 **Checkpoint**: User Stories 1 and 2 both work independently.
 
@@ -157,7 +157,7 @@ start.
 
 **Purpose**: Final work that affects multiple stories.
 
-- [ ] TXXX [P] Update documentation in docs/ or src/\*\*/README.md
+- [ ] TXXX [P] Update documentation in specs/project/support/ or src/\*\*/README.md
 - [ ] TXXX [P] Run `bun run format:check`
 - [ ] TXXX [P] Run `bun run lint`
 - [ ] TXXX [P] Run `bun run lint:css`

@@ -210,7 +210,7 @@ get_feature_paths() {
     # Resolve feature directory.  Priority:
     #   1. SPECIFY_FEATURE_DIRECTORY env var (explicit override)
     #   2. .specify/feature.json "feature_directory" key (persisted by /speckit.specify)
-    #   3. specs/project project source-of-truth fallback
+    #   3. first ordered feature under specs/project/features fallback
     local feature_dir
     if [[ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
         feature_dir="$SPECIFY_FEATURE_DIRECTORY"
@@ -232,10 +232,36 @@ get_feature_paths() {
             # Normalize relative paths to absolute under repo root
             [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
         else
-            feature_dir="$repo_root/specs/project"
+            local _fallback_feature _candidate
+            _fallback_feature=""
+            for _candidate in "$repo_root"/specs/project/features/[0-9][0-9][0-9]-*; do
+                if [[ -d "$_candidate" ]]; then
+                    _fallback_feature="$_candidate"
+                    break
+                fi
+            done
+
+            if [[ -n "$_fallback_feature" ]]; then
+                feature_dir="$_fallback_feature"
+            else
+                feature_dir="$repo_root/specs/project"
+            fi
         fi
     else
-        feature_dir="$repo_root/specs/project"
+        local _fallback_feature _candidate
+        _fallback_feature=""
+        for _candidate in "$repo_root"/specs/project/features/[0-9][0-9][0-9]-*; do
+            if [[ -d "$_candidate" ]]; then
+                _fallback_feature="$_candidate"
+                break
+            fi
+        done
+
+        if [[ -n "$_fallback_feature" ]]; then
+            feature_dir="$_fallback_feature"
+        else
+            feature_dir="$repo_root/specs/project"
+        fi
     fi
 
     # Use printf '%q' to safely quote values, preventing shell injection

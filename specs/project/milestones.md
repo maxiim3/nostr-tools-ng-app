@@ -7,11 +7,11 @@ This file owns milestone definitions and milestone-level acceptance criteria.
 
 ## Milestone Summary
 
-| Milestone                  | Status      | Outcome                                                                                    |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
-| M1 - Pack francophone      | Active      | Public request flow, admin moderation, Nostr auth, NIP-98 backend, shell, zap, i18n, legal |
-| M2 - Merge followers tool  | Not started | Admin/operator compares and merges source follow lists into the target francophone pack    |
-| M3 - Feed pack francophone | Not started | Public feed of kind 1 posts from members of the francophone pack                           |
+| Milestone                  | Status      | Outcome                                                                                  |
+| -------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| M1 - Pack francophone      | Active      | Public request flow, admin moderation, auth hardening, persistence, and UX stabilization |
+| M2 - Merge followers tool  | Not started | Admin/operator compares and merges source follow lists into the target francophone pack  |
+| M3 - Feed pack francophone | Not started | Public feed of kind 1 posts from members of the francophone pack                         |
 
 ## M1 - Pack Francophone
 
@@ -33,22 +33,35 @@ Target capabilities:
 - Internationalization in French, English, and Spanish.
 - Terms/legal page.
 
+Current M1 feature set:
+
+- `001-session-restore`
+- `002-persistent-pack-requests`
+- `003-extension-auth-loading`
+- `004-advanced-bunker-mode`
+- `005-mobile-auth-stability`
+- `006-async-button-pattern`
+- `007-permission-minimization`
+- `008-mobile-auth-states`
+- `009-bunker-permission-grants`
+
 Current risks:
 
-- Runtime request storage is not persistent across redeployments.
-- Nostr session does not reliably survive refresh.
+- Runtime request storage is not persistent across redeployments until `002-persistent-pack-requests` is done.
+- Nostr session restore remains partially incomplete until `001-session-restore` is closed.
 - Mobile external-app auth still needs stabilization with Amber and Primal.
-- Some auth UI states are not explicit enough for loading, retry, read-only, or advanced mode.
+- Some auth UI states remain unclear until `006` and `008` are closed.
 
 Milestone acceptance criteria:
 
 - Users can request access to the francophone pack.
 - Admins can view, approve, and reject requests through protected admin routes.
 - Request data survives redeployments.
-- Desktop extension auth works without duplicate or stale connection state.
+- Desktop extension auth works with clear loading feedback.
+- Valid mobile/desktop signer sessions can be restored after refresh where supported.
 - Mobile auth via external app can be completed and resumed clearly.
 - The UI does not present `bunker://` as the default mainstream path.
-- Required product, architecture, and auth constraints are documented through this project source of truth and supporting references.
+- Required product, architecture, and auth constraints are documented in feature folders and support docs.
 
 ## M2 - Merge Followers Tool
 

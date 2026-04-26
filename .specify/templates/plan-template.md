@@ -1,8 +1,8 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Project source from `/specs/project/` and any approved feature-specific notes
-**Related project input**: [specs/project task, feature, user story, roadmap item, ADR, or N/A]
+**Input**: Feature source from `/specs/project/features/<id-name>/` and related project context
+**Related project input**: [specs/project/queue.md item, milestone, roadmap item, support doc, ADR, or N/A]
 
 **Note**: This template is filled in by the `/speckit.plan` command. See
 `.specify/templates/plan-template.md` for the execution workflow.
@@ -62,17 +62,17 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ```text
 specs/project/
-├── README.md            # Active project source-of-truth entry point
-├── spec.md              # Project specification and constraints
-├── plan.md              # Current implementation/migration plan
-├── milestones.md        # Canonical milestones
-├── roadmap.md           # Canonical sequencing
-├── user-stories.md      # Canonical user stories and acceptance criteria
-├── features.md          # Feature registry
-├── tasks.md             # Canonical task board and handoff briefs
-├── references.md        # Supporting ADR/reference/research index
-├── archive.md           # Extracted/superseded planning records
-└── validation.md        # Validation results
+├── README.md
+├── queue.md
+├── milestones.md
+├── roadmap.md
+├── features/
+│   └── <id-name>/
+│       ├── spec.md
+│       ├── plan.md
+│       └── tasks.md
+├── support/
+└── archive/
 ```
 
 ### Source Code (repository root)
@@ -102,7 +102,7 @@ src/
 
 server.mjs               # Bun API when backend routes are affected
 server.test.mjs          # Server/API tests when backend routes are affected
-docs/                    # Supporting architecture, reference, research, history, guide, and product-design docs
+specs/project/support/   # Supporting architecture, reference, research, history, guide, and product-design docs
 ```
 
 **Structure Decision**: [Document the selected files, why they belong in those
