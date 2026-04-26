@@ -152,7 +152,7 @@ Endpoints :
 | `/api/admin/pack-members`                | GET     | NIP-98 (admin) | Lister membres actifs |
 | `/api/admin/pack-members/:pubkey/remove` | POST    | NIP-98 (admin) | Retirer du pack       |
 
-DB : table Supabase `francophone_pack_members`. Variables serveur : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE` optionnel, `ADMIN_NPUBS`.
+DB : table Supabase `francophone_pack_members`. Variables serveur : `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE` optionnel, `ADMIN_NPUBS`. `SUPABASE_SERVICE_ROLE_KEY` reste accepte comme fallback legacy cote serveur.
 
 ## Relays
 

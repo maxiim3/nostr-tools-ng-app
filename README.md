@@ -74,9 +74,13 @@ L'API Bun utilise Supabase comme stockage persistant pour les membres du pack fr
 Variables d'environnement requises :
 
 - `SUPABASE_URL=https://<project-ref>.supabase.co`
-- `SUPABASE_SERVICE_ROLE_KEY=<service-role-key>` pour le serveur Bun uniquement
+- `SUPABASE_SECRET_KEY=<secret-key>` pour le serveur Bun uniquement
 - `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE=francophone_pack_members` optionnel
 - `ADMIN_NPUBS=npub1...,npub1...` pour les actions admin NIP-98
+
+La cle necessaire pour cette feature est `SUPABASE_SECRET_KEY`, configuree uniquement cote serveur. Angular ne parle pas directement a Supabase : Angular appelle `server.mjs`, puis `server.mjs` ecrit dans Supabase apres verification NIP-98. Ne jamais exposer `SUPABASE_SECRET_KEY` ou `SUPABASE_SERVICE_ROLE_KEY` dans Angular.
+
+Si le projet Supabase affiche encore les legacy keys, `SUPABASE_SERVICE_ROLE_KEY` reste accepte comme fallback cote serveur.
 
 Copier [.env.example](.env.example) vers `.env` en local, puis renseigner les valeurs Supabase.
 

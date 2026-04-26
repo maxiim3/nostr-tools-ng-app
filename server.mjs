@@ -418,16 +418,16 @@ function matchAdminMemberRemoveRoute(pathname) {
 
 function createFrancophonePackMemberStorage() {
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/+$/, '');
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serverKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
+  if (!supabaseUrl || !serverKey) {
+    throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY are required.');
   }
 
   const tableUrl = `${supabaseUrl}/rest/v1/${encodeURIComponent(MEMBERS_TABLE)}`;
   const baseHeaders = {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
+    apikey: serverKey,
+    Authorization: `Bearer ${serverKey}`,
   };
 
   return {

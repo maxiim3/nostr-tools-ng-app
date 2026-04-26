@@ -14,7 +14,7 @@ const ADMIN_NPUB = nip19.npubEncode(getPublicKey(ADMIN_SECRET_KEY));
 
 process.env.ADMIN_NPUBS = ADMIN_NPUB;
 process.env.DATA_DIR = TEST_DIR;
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+process.env.SUPABASE_SECRET_KEY = 'test-secret-key';
 
 let baseUrl;
 
@@ -341,7 +341,7 @@ function startSupabaseMockServer() {
 }
 
 async function handleSupabaseMockRequest(request) {
-  if (request.headers.get('apikey') !== 'test-service-role-key') {
+  if (request.headers.get('apikey') !== 'test-secret-key') {
     return Response.json({ message: 'unauthorized' }, { status: 401 });
   }
 
