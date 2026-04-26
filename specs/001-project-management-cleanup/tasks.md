@@ -138,10 +138,10 @@ description: 'Task list for Project Management Cleanup implementation'
 
 **Purpose**: Final consistency checks and close-out validation.
 
-- [ ] T036 [P] Run `bun run format:check`
-- [ ] T037 [P] Execute quickstart validation from `specs/001-project-management-cleanup/quickstart.md` and record results in `specs/001-project-management-cleanup/artifacts/quickstart-results.md`
-- [ ] T038 [P] Verify behavior-neutral scope by reviewing changed paths and record statement in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
-- [ ] T039 Consolidate residual follow-ups in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
+- [x] T036 [P] Run `bun run format:check`
+- [x] T037 [P] Execute quickstart validation from `specs/001-project-management-cleanup/quickstart.md` and record results in `specs/001-project-management-cleanup/artifacts/quickstart-results.md`
+- [x] T038 [P] Verify behavior-neutral scope by reviewing changed paths and record statement in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
+- [x] T039 Consolidate residual follow-ups in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
 
 ---
 

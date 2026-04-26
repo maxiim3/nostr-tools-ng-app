@@ -82,11 +82,25 @@ Feature: `001-project-management-cleanup`
 - No `src/` paths, runtime files, production configuration, or external tracker records were
   changed.
 - US4 independent validation is recorded in `validation-us4.md`.
+- T036 format validation passed with `bun run format:check` on 2026-04-26 18:01 CEST.
+- T037 quickstart validation passed and is recorded in `quickstart-results.md`.
 
 ## Behavior Change Statement
 
 Application runtime behavior was not changed by this cleanup.
 
+Behavior-neutral scope verification for T038:
+
+- Reviewed feature-branch runtime diff with
+  `git diff --name-status main...HEAD -- src server.mjs package.json bun.lockb angular.json tsconfig.json`;
+  no paths were returned.
+- Reviewed documentation/spec artifact diff with
+  `git diff --name-status main...HEAD -- docs specs/001-project-management-cleanup`; paths are
+  limited to documentation and Spec Kit cleanup artifacts.
+- Current T036-T039 close-out edits are limited to `specs/001-project-management-cleanup/`
+  artifacts.
+
 ## Remaining Follow-Ups
 
-- Run polish tasks `T036-T039` when ready.
+- None for `001-project-management-cleanup` close-out. Future application or runtime work remains
+  tracked separately on `docs/planning/board.md`.

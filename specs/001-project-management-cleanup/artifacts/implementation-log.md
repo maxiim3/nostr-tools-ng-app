@@ -48,8 +48,12 @@ Excluded: `src/`, runtime behavior, production config
 | 2026-04-26 16:14 | T034    | Finalized before/after cleanup summary and action audit.                             | `artifacts/cleanup-summary.md`                                                      |
 | 2026-04-26 16:14 | T035    | Recorded US4 independent validation results with PASS status.                        | `artifacts/validation-us4.md`                                                       |
 | 2026-04-26 16:15 | VAL-04  | Ran `bun run format`, then `bun run format:check`; validation passed.                | `format:check` output: all files matched                                            |
+| 2026-04-26 18:01 | T036    | Ran `bun run format:check`; validation passed.                                       | `format:check` output: all files matched                                            |
+| 2026-04-26 18:01 | T037    | Executed quickstart validation and recorded PASS results.                            | `artifacts/quickstart-results.md`                                                   |
+| 2026-04-26 18:01 | T038    | Reviewed changed paths for behavior-neutral scope and recorded statement.            | `artifacts/cleanup-summary.md`                                                      |
+| 2026-04-26 18:01 | T039    | Consolidated residual follow-ups for feature close-out.                              | `artifacts/cleanup-summary.md`                                                      |
 
 ## Next Scope
 
-- Completed slices: `T001-T035` (Foundational + US1 + US2 + US3 + US4)
-- Remaining in feature plan: polish (`T036-T039`)
+- Completed slices: `T001-T039` (Foundational + US1 + US2 + US3 + US4 + polish)
+- Remaining in feature plan: none
