@@ -11,6 +11,12 @@ Ce document decrit le comportement UX cible pour l'auth mobile de la webapp.
 Il ne remplace pas la roadmap.
 Il sert a raffiner les user stories, les flows et les criteres d'acceptation.
 
+Boundary: this file is a product-facing feature specification for auth mobile web behavior. It may
+support planning records such as `AUTH-02`, `AUTH-04`, `AUTH-05`, `AUTH-07`, and `AUTH-08`, but it
+does not own active execution status. Spec Kit artifacts under top-level `specs/` own structured
+feature planning, implementation tasks, contracts, and validation records for bounded cleanup or
+implementation efforts.
+
 ## Contexte
 
 - Le produit est une webapp.

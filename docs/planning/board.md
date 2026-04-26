@@ -42,6 +42,26 @@ For each task in `In Progress`, `Ready`, `Backlog`, or `Blocked`, include:
 - acceptance criteria (`Done when`)
 - local documentation or Spec Kit mapping
 
+## Planning Source Mapping
+
+The canonical mapping registry for this cleanup is
+`../../specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`.
+
+Mapping lines on board items identify whether the board item has supporting context, product-spec
+context, Spec Kit feature context, or no separate formal spec. The board remains authoritative for
+current lifecycle status even when a task links to a task brief, product spec, architecture doc, or
+Spec Kit artifact.
+
+Use these relationship labels consistently:
+
+- `Active Board Item`: the board owns current status and next action.
+- `Feature Spec`: a product spec or Spec Kit feature owns requirements and acceptance criteria for a
+  bounded feature.
+- `Supporting Context`: a local document explains scope, rationale, constraints, or implementation
+  handoff details without owning status.
+- `No Formal Spec Needed`: the task is small or blocked enough that direct board tracking is clearer
+  than creating a separate feature spec.
+
 ## Board
 
 ### In Progress

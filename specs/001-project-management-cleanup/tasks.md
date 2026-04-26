@@ -98,15 +98,15 @@ description: 'Task list for Project Management Cleanup implementation'
 
 ### Validation for User Story 3
 
-- [ ] T024 [P] [US3] Create mapping validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us3.md`
+- [x] T024 [P] [US3] Create mapping validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us3.md`
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Populate canonical mapping table in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
-- [ ] T026 [US3] Add mapping maintenance section to `docs/planning/execution-notes.md`
-- [ ] T027 [US3] Add mapping references for planning sources in `docs/planning/board.md`
-- [ ] T028 [P] [US3] Add product-spec vs Spec Kit boundary note in `docs/product/specs/auth-mobile-web.md`
-- [ ] T029 [US3] Record US3 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us3.md`
+- [x] T025 [US3] Populate canonical mapping table in `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md`
+- [x] T026 [US3] Add mapping maintenance section to `docs/planning/execution-notes.md`
+- [x] T027 [US3] Add mapping references for planning sources in `docs/planning/board.md`
+- [x] T028 [P] [US3] Add product-spec vs Spec Kit boundary note in `docs/product/specs/auth-mobile-web.md`
+- [x] T029 [US3] Record US3 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us3.md`
 
 **Checkpoint**: Local planning-to-documentation mapping is explicit and complete.
 

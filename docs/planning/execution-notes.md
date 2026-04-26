@@ -37,6 +37,19 @@ return to a startable state.
 - Legacy local file names such as `_TODO` and `_READY` are supporting context only; lifecycle
   status is owned by `board.md`.
 
+## Mapping Maintenance Rules
+
+- Each brief in this file must map back to a task in `board.md`; this file never owns active status.
+- Use `docs/product/specs/` for product-facing behavior specs and top-level `specs/` for Spec Kit
+  feature artifacts, plans, task lists, contracts, and validation records.
+- If a brief belongs to a larger feature, link the product spec or Spec Kit feature in the brief's
+  inspect list or supporting context.
+- If a brief is small enough for direct board tracking, mark it as `No Formal Spec Needed` on the
+  board and keep the rationale in the mapping registry.
+- When a brief duplicates or replaces another planning record, update
+  `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md` before changing the
+  task status.
+
 ## Execution Order
 
 | Order | Task       | Lifecycle | Priority | Estimate | Risk | Next Action                                               |

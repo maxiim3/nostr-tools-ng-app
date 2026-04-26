@@ -34,8 +34,15 @@ Excluded: `src/`, runtime behavior, production config
 | 2026-04-26 14:49 | T022    | Added lifecycle reference fields and seeded lifecycle sources in mapping registry. | `artifacts/local-planning-mapping.md`               |
 | 2026-04-26 14:49 | T023    | Recorded US2 independent validation results with evidence.                         | `artifacts/validation-us2.md`                       |
 | 2026-04-26 14:53 | VAL-02  | Ran `bun run format`, then `bun run format:check`; validation passed.              | `format:check` output: all files matched            |
+| 2026-04-26 15:11 | T024    | Created US3 mapping validation checklist.                                          | `artifacts/validation-us3.md`                       |
+| 2026-04-26 15:11 | T025    | Replaced seeded mapping scaffold with canonical planning-record classifications.   | `artifacts/local-planning-mapping.md`               |
+| 2026-04-26 15:11 | T026    | Added mapping maintenance rules for execution briefs and board-only tasks.         | `docs/planning/execution-notes.md`                  |
+| 2026-04-26 15:11 | T027    | Added planning-source mapping guidance and canonical registry reference.           | `docs/planning/board.md`                            |
+| 2026-04-26 15:11 | T028    | Added product-spec versus Spec Kit boundary note for auth mobile UX spec.          | `docs/product/specs/auth-mobile-web.md`             |
+| 2026-04-26 15:11 | T029    | Recorded US3 independent validation results with coverage notes and PASS status.   | `artifacts/validation-us3.md`                       |
+| 2026-04-26 15:12 | VAL-03  | Ran `bun run format`, then `bun run format:check`; validation passed.              | `format:check` output: all files matched            |
 
 ## Next Scope
 
-- Completed slices: `T001-T023` (Foundational + US1 + US2)
-- Remaining in feature plan: US3 (`T024-T029`), US4 (`T030-T035`), and polish (`T036-T039`)
+- Completed slices: `T001-T029` (Foundational + US1 + US2 + US3)
+- Remaining in feature plan: US4 (`T030-T035`) and polish (`T036-T039`)
