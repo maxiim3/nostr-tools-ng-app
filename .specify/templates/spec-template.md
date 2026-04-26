@@ -1,23 +1,17 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
+**Related Source**: [docs/planning/board.md task, docs/product/specs/*, roadmap,
+ADR, or N/A]
 
 ## User Scenarios & Testing _(mandatory)_
 
 <!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  User stories must be prioritized as independently testable user journeys.
+  Each story should be deliverable and demonstrable on its own.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
@@ -26,7 +20,8 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Describe how this can be tested independently and what
+observable user/system value it proves]
 
 **Acceptance Scenarios**:
 
@@ -67,62 +62,69 @@
 
 ### Edge Cases
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
 - What happens when [boundary condition]?
-- How does system handle [error scenario]?
+- What happens when [async operation] is already in progress?
+- What happens on timeout, cancellation, retry, refresh, or tab return?
+- What happens when required browser/mobile signer capability is unavailable?
+- What happens when backend/storage configuration is missing or invalid?
 
 ## Requirements _(mandatory)_
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001**: System MUST [specific capability]
+- **FR-002**: Users MUST be able to [key interaction]
+- **FR-003**: System MUST preserve [current behavior/contract]
+- **FR-004**: System MUST provide clear user feedback for loading, success,
+  failure, cancellation, timeout, and retry states when applicable
+- **FR-005**: System MUST handle invalid, expired, or missing data without
+  presenting a false success state
 
 _Example of marking unclear requirements:_
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-006**: System MUST restore sessions for [NEEDS CLARIFICATION: which
+  signer methods are in scope - NIP-07, NIP-46 nostrconnect, bunker?]
+- **FR-007**: System MUST persist data in [NEEDS CLARIFICATION: SQLite only,
+  Supabase, browser storage, or migration path?]
+
+### Accessibility Requirements _(include for UI changes)_
+
+- **AX-001**: Affected flows MUST satisfy WCAG AA and pass AXE checks.
+- **AX-002**: Interactive controls MUST expose keyboard access, visible focus,
+  and accessible names.
+- **AX-003**: Async controls MUST expose disabled/loading states without relying
+  on color alone.
+
+### Nostr/Auth/Security Requirements _(include for auth or protected API changes)_
+
+- **NA-001**: Desktop signer behavior MUST preserve NIP-07 as the primary path
+  unless explicitly out of scope.
+- **NA-002**: Mobile signer behavior MUST preserve NIP-46 nostrconnect as the
+  primary PWA path and keep bunker as an advanced path.
+- **NA-003**: Protected backend routes MUST remain stateless and verify NIP-98.
+- **NA-004**: Secrets, bunker tokens, auth URLs, and NIP-98 tokens MUST be
+  redacted from logs and user-visible diagnostics.
 
 ### Key Entities _(include if feature involves data)_
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **[Entity 1]**: [What it represents, key attributes, lifecycle, and source of
+  truth]
+- **[Entity 2]**: [What it represents, relationships, persistence/restore rules]
 
 ## Success Criteria _(mandatory)_
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [Measurable user or system outcome]
+- **SC-002**: [Reliability or error-handling outcome]
+- **SC-003**: [Accessibility or usability outcome for affected UI]
+- **SC-004**: [Verification outcome, e.g. targeted tests and repo checks pass]
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
-
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [Assumption about target users/devices, e.g. mobile PWA vs desktop web]
+- [Assumption about protocol scope, e.g. NIP-46 restore only where signer support
+  allows it]
+- [Assumption about storage/data migration state]
+- [Dependency on existing service, route, adapter, relay, signer, or environment
+  variable]

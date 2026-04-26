@@ -2,36 +2,59 @@
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Related product/docs input**: [docs/planning/board.md item or docs/product/specs/* link]
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Note**: This template is filled in by the `/speckit.plan` command. See
+`.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+[Extract from feature spec: primary user outcome, affected domain, and technical
+approach in this Angular/Bun/Nostr application]
 
 ## Technical Context
 
 <!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
+  ACTION REQUIRED: Replace the content in this section with concrete project
+  details for this feature. Do not leave generic examples in generated plans.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript ~5.9, Angular 21, Bun 1.2
+**Primary Dependencies**: Angular Router, Reactive Forms if forms are needed,
+Transloco, Tailwind CSS/daisyUI, NDK, nostr-tools, Bun server APIs as applicable
+**Storage**: [SQLite runtime / Supabase target / browser storage / N/A, with
+persistence expectations and env vars if applicable]
+**Testing**: `bun run test`, plus targeted Angular/service/server tests named
+below
+**Target Platform**: Web/PWA desktop and mobile; Bun API for backend routes when
+applicable
+**Project Type**: Angular SPA with Bun HTTP API
+**Performance Goals**: [User-visible target, e.g. no duplicate async submit,
+restore completes without blocking initial render, protected API remains
+responsive, or N/A]
+**Constraints**: WCAG AA/AXE, strict TypeScript, Angular signals/OnPush,
+stateless backend auth via NIP-98, NIP-46 mobile restore rules, repo scripts only
+**Scale/Scope**: [Affected feature domains, routes, services, endpoints, and
+manual device/browser coverage]
 
 ## Constitution Check
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+- **Angular/TypeScript**: Plan uses strict types, signals, `computed()`,
+  `input()`/`output()`, `inject()`, OnPush components, native control flow, and
+  avoids disallowed Angular patterns.
+- **Accessibility**: Plan names keyboard, focus, ARIA, contrast, loading,
+  disabled, timeout, cancellation, retry, and AXE/WCAG AA expectations for
+  affected UI.
+- **Feature boundaries**: Plan keeps domain/application/infrastructure/
+  presentation responsibilities separate and avoids raw Nostr or transport logic
+  in page components.
+- **Nostr auth/security**: Plan preserves NIP-07 desktop, NIP-46 mobile,
+  bunker-as-advanced, NIP-98 backend auth, secret/token redaction, and
+  fail-closed restore behavior where relevant.
+- **Verification**: Plan lists repo script checks (`bun run ...`) and targeted
+  tests. Underlying tools are not called directly.
 
 ## Project Structure
 
@@ -41,65 +64,50 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+├── data-model.md        # Phase 1 output, if data/storage is affected
+├── quickstart.md        # Phase 1 validation notes
+├── contracts/           # API/protocol contracts, if applicable
+└── tasks.md             # Phase 2 output (/speckit.tasks command)
 ```
 
 ### Source Code (repository root)
 
 <!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  ACTION REQUIRED: Replace the tree below with the concrete files/directories
+  touched by this feature. Delete unused lines in generated plans.
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+├── app/                 # Routes, config, root component
+├── core/                # Cross-cutting services and protocol adapters
+│   ├── config/
+│   ├── i18n/
+│   ├── nostr/
+│   ├── nostr-connection/
+│   └── zap/
+├── features/
+│   └── [domain]/
+│       ├── domain/
+│       ├── application/
+│       ├── infrastructure/
+│       └── presentation/
+├── shared/              # Truly generic UI/helpers only
+└── assets/i18n/
 
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+server.mjs               # Bun API when backend routes are affected
+server.test.mjs          # Server/API tests when backend routes are affected
+docs/                    # Product, architecture, planning, reference docs
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: [Document the selected files, why they belong in those
+layers, and any intentional deviations.]
 
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
+| Violation                               | Why Needed                  | Simpler Alternative Rejected Because           |
+| --------------------------------------- | --------------------------- | ---------------------------------------------- |
+| [e.g. UI reads protocol state directly] | [specific need]             | [why facade/application layer is insufficient] |
+| [e.g. new shared abstraction]           | [specific repeated problem] | [why local feature code is insufficient]       |
