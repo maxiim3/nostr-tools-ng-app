@@ -8,6 +8,7 @@ Rules:
 - a superseded ADR is not rewritten; it is replaced by a newer ADR
 - planning and product documents can evolve more frequently than ADRs
 - ADRs stabilize structural and architectural doctrine
+- task handoff briefs live in `docs/planning/execution-notes.md`, not in the ADR index
 
 ## Active ADRs
 

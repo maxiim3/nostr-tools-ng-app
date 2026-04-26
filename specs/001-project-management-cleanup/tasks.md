@@ -120,15 +120,15 @@ description: 'Task list for Project Management Cleanup implementation'
 
 ### Validation for User Story 4
 
-- [ ] T030 [P] [US4] Create cleanup-action validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us4.md`
+- [x] T030 [P] [US4] Create cleanup-action validation checklist in `specs/001-project-management-cleanup/artifacts/validation-us4.md`
 
 ### Implementation for User Story 4
 
-- [ ] T031 [US4] Classify action for each in-scope planning file in `specs/001-project-management-cleanup/artifacts/cleanup-ledger.md`
-- [ ] T032 [US4] Apply approved retain/merge/rename/archive/delete actions across `docs/planning/P0_AUTH-07_READY.md`, `docs/planning/P0_INFRA-01_READY.md`, `docs/planning/P1_AUTH-08_TODO.md`, `docs/planning/P1_UI-01_READY.md`, `docs/planning/P1_UI-02_TODO.md`, `docs/planning/P2_AUTH-03_TODO.md`, `docs/planning/P2_AUTH-04_TODO.md`, `docs/planning/P2_DOC-03_TODO.md`, and `docs/planning/P3_AUTH-05_READY.md`
-- [ ] T033 [P] [US4] Update inbound references after cleanup in `docs/README.md`, `docs/planning/board.md`, `docs/planning/execution-notes.md`, and `docs/architecture/decisions/README.md`
-- [ ] T034 [US4] Finalize before/after and action audit in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
-- [ ] T035 [US4] Record US4 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us4.md`
+- [x] T031 [US4] Classify action for each in-scope planning file in `specs/001-project-management-cleanup/artifacts/cleanup-ledger.md`
+- [x] T032 [US4] Apply approved retain/merge/rename/archive/delete actions across `docs/planning/P0_AUTH-07_READY.md`, `docs/planning/P0_INFRA-01_READY.md`, `docs/planning/P1_AUTH-08_TODO.md`, `docs/planning/P1_UI-01_READY.md`, `docs/planning/P1_UI-02_TODO.md`, `docs/planning/P2_AUTH-03_TODO.md`, `docs/planning/P2_AUTH-04_TODO.md`, `docs/planning/P2_DOC-03_TODO.md`, and `docs/planning/P3_AUTH-05_READY.md`
+- [x] T033 [P] [US4] Update inbound references after cleanup in `docs/README.md`, `docs/planning/board.md`, `docs/planning/execution-notes.md`, and `docs/architecture/decisions/README.md`
+- [x] T034 [US4] Finalize before/after and action audit in `specs/001-project-management-cleanup/artifacts/cleanup-summary.md`
+- [x] T035 [US4] Record US4 independent validation results in `specs/001-project-management-cleanup/artifacts/validation-us4.md`
 
 **Checkpoint**: Documentation noise is removed with a complete local audit trail.
 

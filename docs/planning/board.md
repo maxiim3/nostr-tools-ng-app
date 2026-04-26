@@ -78,53 +78,53 @@ Use these relationship labels consistently:
 - `INFRA-01` Migrer le stockage runtime vers Supabase. (P0)
   Dependencies: none.
   Done when: les endpoints `pack-requests` (user + admin) gardent leur comportement externe, les donnees survivent aux redeploiements, l'auth admin NIP-98 reste protegee, et les variables d'environnement Supabase sont documentees.
-  Mapping: Supporting Context -> `docs/planning/P0_INFRA-01_READY.md`; Active Board Item -> `docs/planning/board.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#infra-01-migrate-runtime-storage-to-supabase`; Active Board Item -> `docs/planning/board.md`.
   Source: retour mobile post-deploiement 2026-04-25 — SQLite `.runtime/pack-requests.sqlite` non persistant en production.
 
 - `AUTH-07` Restaurer la session Nostr apres refresh. (P0)
   Dependencies: none.
   Done when: une connexion NIP-07 ou NIP-46 (mobile externe) survit a un refresh tant que l'autorisation distante reste valide; en cas d'expiration ou de refus, retour propre a l'etat deconnecte avec feedback UI.
-  Mapping: Supporting Context -> `docs/planning/P0_AUTH-07_READY.md`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#auth-07-restore-nostr-session-after-refresh`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
   Source: retour mobile post-deploiement 2026-04-25.
 
 - `UI-01` Ajouter loader + disabled sur le bouton auth extension. (P1)
   Dependencies: none.
   Done when: le bouton extension affiche un indicateur pendant la tentative, est disabled, l'etat est accessible (a11y), et se reset sur succes / erreur / cancel / timeout.
-  Mapping: Supporting Context -> `docs/planning/P1_UI-01_READY.md`; No Formal Spec Needed -> direct board tracking.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#ui-01-add-loader-and-disabled-state-to-extension-auth-button`; No Formal Spec Needed -> direct board tracking.
 
 - `AUTH-05` Faire de `bunker://` un mode avance clairement separe. (P3)
   Dependencies: none.
   Done when: l'utilisateur grand public voit d'abord l'application externe, bunker n'apparait plus comme le chemin principal.
-  Mapping: Supporting Context -> `docs/planning/P3_AUTH-05_READY.md`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#auth-05-make-bunker-a-clearly-separate-advanced-mode`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
 
 ### Backlog
 
 - `AUTH-08` Stabiliser le flow mobile Amber et Primal. (P1)
   Dependencies: `AUTH-07`.
   Done when: les flows Amber et Primal sont verifies manuellement et documentes (attente, succes, refus, timeout), et le refresh ne casse pas une autorisation encore valide.
-  Mapping: Supporting Context -> `docs/planning/P1_AUTH-08_TODO.md`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#auth-08-stabilize-amber-and-primal-mobile-flow`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
 
 - `UI-02` Definir une strategie loader/disabled generique pour les boutons async. (P1)
   Dependencies: `UI-01`.
   Done when: apres inventaire (>= 3 cas confirmes : extension, app externe, bunker, submit request, admin approve/reject), un pattern partage existe avec gestion `loading`, `disabled`, label accessible, et anti-double-submit.
-  Mapping: Supporting Context -> `docs/planning/P1_UI-02_TODO.md`; No Formal Spec Needed -> direct board tracking.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#ui-02-define-generic-async-button-strategy`; No Formal Spec Needed -> direct board tracking.
 
 - `DOC-03` Mettre a jour `architecture.md` apres migration Supabase. (P2)
   Dependencies: `INFRA-01`.
   Done when: `architecture.md` documente Supabase comme stockage persistant, ce plan marque la migration comme complete, et les variables d'environnement requises sont listees.
-  Mapping: Supporting Context -> `docs/planning/P2_DOC-03_TODO.md`; Supporting Context -> `docs/architecture/overview.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#doc-03-update-architecture-docs-after-supabase`; Supporting Context -> `docs/architecture/overview.md`.
 
 - `AUTH-03` Reduire les permissions demandees au login au strict necessaire.
   Priority: P2.
   Dependencies: confirmation du minimum permission set de demarrage.
   Done when: le flow de login ne demande que ce qui est utile au demarrage, puis les autres permissions arrivent au besoin.
-  Mapping: Supporting Context -> `docs/planning/P2_AUTH-03_TODO.md`; No Formal Spec Needed -> direct board tracking.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#auth-03-reduce-login-permissions`; No Formal Spec Needed -> direct board tracking.
 
 - `AUTH-04` Revoir l'UX auth mobile.
   Priority: P2.
   Dependencies: `AUTH-07` et matrice de test `AUTH-08`.
   Done when: l'UI affiche clairement l'etat du signer actif, propose `Reouvrir l'application`, `Reessayer`, `Se deconnecter`, et un mode lecture seule explicite.
-  Mapping: Supporting Context -> `docs/planning/P2_AUTH-04_TODO.md`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
+  Mapping: Supporting Context -> `docs/planning/execution-notes.md#auth-04-review-mobile-auth-ux`; Supporting Context -> `docs/product/specs/auth-mobile-web.md`.
 
 ### Blocked
 

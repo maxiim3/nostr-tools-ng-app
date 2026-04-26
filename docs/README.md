@@ -25,7 +25,7 @@ This repository documentation is organized by role. The goal is quick navigation
 | Role                  | Primary Location                                      | Purpose                                                   |
 | --------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
 | Product Direction     | `docs/product/`                                       | Mission, roadmap, positioning, long-term sequencing       |
-| Active Planning       | `docs/planning/`                                      | Current work, ready work, blocked work, handoff notes     |
+| Active Planning       | `docs/planning/`                                      | Board-owned status plus consolidated handoff notes        |
 | Feature Specification | `docs/product/specs/` or top-level `specs/<feature>/` | Product-facing specs vs Spec Kit implementation artifacts |
 | Architecture Decision | `docs/architecture/decisions/`                        | Accepted structural decisions and consequences            |
 | Stable Reference      | `docs/references/`                                    | Durable rules and constraints                             |
@@ -36,6 +36,8 @@ This repository documentation is organized by role. The goal is quick navigation
 ## Source-of-Truth Rules
 
 - `docs/planning/board.md` owns active execution status.
+- `docs/planning/execution-notes.md` owns consolidated handoff briefs for active and planned local
+  tasks.
 - `docs/product/roadmap.md` owns product direction and sequencing, not task status detail.
 - `docs/architecture/decisions/` owns accepted architecture decisions.
 - `docs/references/` owns durable rules and constraints.

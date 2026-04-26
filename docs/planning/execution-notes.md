@@ -49,6 +49,8 @@ return to a startable state.
 - When a brief duplicates or replaces another planning record, update
   `specs/001-project-management-cleanup/artifacts/local-planning-mapping.md` before changing the
   task status.
+- Legacy standalone task briefs were merged into this file on 2026-04-26. Use this file for
+  agent-ready handoffs instead of `P*_*.md` planning files.
 
 ## Execution Order
 
@@ -120,13 +122,17 @@ Dependencies/blockers:
 - Supabase service-role key for the Bun server only.
 - Deployment environment variables.
 
+Validation note:
+Confirm Supabase credentials are configured in production and smoke test pack-request persistence
+after deploy and redeploy.
+
 Suggested session prompt:
 
 ```text
-Pick up task INFRA-01 from docs/planning/execution-notes.md. Implement only this task.
-Preserve existing pack-request endpoint behavior and admin NIP-98 protection. First inspect
-server.mjs, server.test.mjs, README.md, docs/architecture/overview.md, and
-src/features/packs/README.md. Do not change auth/session behavior.
+Pick up task INFRA-01 from docs/planning/execution-notes.md. Implement only this task. Preserve
+existing pack-request endpoint behavior and admin NIP-98 protection. First inspect server.mjs,
+server.test.mjs, README.md, docs/architecture/overview.md, and src/features/packs/README.md. Do not
+change auth/session behavior.
 ```
 
 ### `DOC-03` Update architecture docs after Supabase
@@ -167,6 +173,9 @@ Do not change:
 Dependencies/blockers:
 
 - Depends on `INFRA-01` being implemented.
+
+Validation note:
+Confirm docs match the deployed environment variable names.
 
 Suggested session prompt:
 
@@ -223,6 +232,10 @@ Dependencies/blockers:
 - Keep local restore storage minimal: no private keys, only the data required to restore a valid
   signer.
 
+Validation note:
+Test Amber and Primal on mobile after implementation and confirm denied, expired, and revoked signer
+behavior.
+
 Suggested session prompt:
 
 ```text
@@ -272,6 +285,10 @@ Dependencies/blockers:
 - Depends on `AUTH-07`.
 - Requires real mobile testing with Amber and Primal.
 
+Validation note:
+Run Amber and Primal on real mobile devices and verify waiting, success, refusal, timeout, refresh,
+and return-to-site states.
+
 Suggested session prompt:
 
 ```text
@@ -320,6 +337,9 @@ Dependencies/blockers:
 
 - None.
 
+Validation note:
+Optionally perform a browser visual check after tests pass.
+
 Suggested session prompt:
 
 ```text
@@ -367,6 +387,11 @@ Do not change:
 Dependencies/blockers:
 
 - Depends on `UI-01`.
+- Requires inventorying at least three async button cases before abstraction.
+
+Validation note:
+Optionally perform visual checks for migrated buttons and confirm the abstraction does not make
+simple cases harder to maintain.
 
 Suggested session prompt:
 
@@ -415,6 +440,10 @@ Dependencies/blockers:
 
 - No hard blocker, but confirm the minimum startup permission set before editing behavior.
 
+Validation note:
+Confirm product/security tradeoffs for permission prompts, then test desktop and mobile signer
+prompts after any behavior change.
+
 Suggested session prompt:
 
 ```text
@@ -462,6 +491,9 @@ Dependencies/blockers:
 
 - Should follow `AUTH-07` and ideally `AUTH-08`.
 
+Validation note:
+Check mobile UX with real signer flows and confirm copy remains understandable on small screens.
+
 Suggested session prompt:
 
 ```text
@@ -506,6 +538,9 @@ Do not change:
 Dependencies/blockers:
 
 - Best after `AUTH-04`, but can be done independently if UX scope is kept small.
+
+Validation note:
+Optionally review the UX to confirm mainstream users are not pushed toward manual bunker setup.
 
 Suggested session prompt:
 
