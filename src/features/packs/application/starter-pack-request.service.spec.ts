@@ -54,8 +54,14 @@ describe('StarterPackRequestService', () => {
       expect(httpPostMock).toHaveBeenCalledTimes(1);
       const [, body] = httpPostMock.mock.calls[0] as [string, Record<string, unknown>];
       expect(body).toEqual({
-        displayName: 'Alice',
-        imageUrl: 'img.png',
+        username: 'Alice',
+        description: null,
+        avatarUrl: 'img.png',
+        followerCount: null,
+        followingCount: null,
+        accountCreatedAt: null,
+        postCount: null,
+        zapCount: null,
       });
       expect(body).not.toHaveProperty('questionId');
       expect(body).not.toHaveProperty('choiceId');
@@ -76,12 +82,19 @@ describe('StarterPackRequestService', () => {
       httpGetMock.mockReturnValue(
         of([
           {
-            requesterPubkey: 'pk1',
-            requesterNpub: 'npub1abc',
-            displayName: 'Bob',
-            imageUrl: 'bob.png',
-            created: '2025-01-15T10:30:00Z',
-            status: 'pending',
+            pubkey: 'pk1',
+            username: 'Bob',
+            description: 'hello',
+            avatarUrl: 'bob.png',
+            joinedAt: '2025-01-15T10:30:00Z',
+            followerCount: 1,
+            followingCount: 2,
+            accountCreatedAt: '2024-01-15T10:30:00Z',
+            postCount: 3,
+            zapCount: null,
+            requestedFromApp: true,
+            requestedAt: '2025-01-15T10:30:00Z',
+            removedAt: null,
           },
         ])
       );
@@ -89,13 +102,17 @@ describe('StarterPackRequestService', () => {
       const result = await service.listAdminRequests();
 
       expect(result).toHaveLength(1);
-      expect(result[0].requesterPubkey).toBe('pk1');
-      expect(result[0].requesterNpub).toBe('npub1abc');
-      expect(result[0].displayName).toBe('Bob');
-      expect(result[0].primalUrl).toBe('https://primal.net/p/npub1abc');
-      expect(result[0].status).toBe('pending');
-      expect(typeof result[0].submittedAt).toBe('number');
-      expect(typeof result[0].submittedAtLabel).toBe('string');
+      expect(result[0].pubkey).toBe('pk1');
+      expect(result[0].username).toBe('Bob');
+      expect(result[0].description).toBe('hello');
+      expect(result[0].primalUrl).toBe('https://primal.net/p/pk1');
+      expect(result[0].requestedFromApp).toBe(true);
+      expect(typeof result[0].joinedAt).toBe('number');
+      expect(typeof result[0].joinedAtLabel).toBe('string');
+      expect(typeof result[0].requestedAt).toBe('number');
+      expect(typeof result[0].requestedAtLabel).toBe('string');
+      expect(typeof result[0].accountCreatedAt).toBe('number');
+      expect(typeof result[0].accountCreatedAtLabel).toBe('string');
     });
   });
 });

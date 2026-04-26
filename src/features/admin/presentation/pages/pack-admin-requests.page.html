@@ -1,4 +1,4 @@
-<section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-5xl p-6">
+<section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-7xl p-6">
   <div class="mb-8 space-y-2">
     <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
       {{ 'adminRequests.title' | transloco }}
@@ -12,10 +12,6 @@
       <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">
         {{ 'adminRequests.openPack' | transloco }}
       </a>
-    </div>
-  } @else if (userRequestStatus() === 'pending') {
-    <div class="alert alert-info mb-6">
-      <span>{{ 'adminRequests.yourRequestPending' | transloco }}</span>
     </div>
   }
 
@@ -36,114 +32,86 @@
       {{ 'adminRequests.empty' | transloco }}
     </div>
   } @else {
-    <div class="space-y-4">
-      @for (entry of entries(); track entry.requesterPubkey) {
-        <article class="brutal-shadow border-[3px] border-[#0a0a0a] bg-white">
-          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-            <div class="flex min-w-0 flex-1 items-start gap-4 md:items-center">
-              @if (entry.imageUrl) {
-                <img
-                  [src]="entry.imageUrl"
-                  [alt]="entry.displayName"
-                  class="h-14 w-14 border-[3px] border-[#0a0a0a] object-cover"
-                />
-              } @else {
-                <div
-                  class="flex h-14 w-14 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-lg font-bold text-[#0a0a0a]"
-                >
-                  {{ entry.displayName.slice(0, 2).toUpperCase() }}
-                </div>
-              }
-
-              <div class="min-w-0 flex-1 space-y-1">
-                <div class="flex min-w-0 flex-wrap items-center gap-2">
-                  <h2 class="max-w-full text-xl font-bold text-[#0a0a0a] [overflow-wrap:anywhere]">
-                    {{ entry.displayName }}
-                  </h2>
-                  <span class="brutal-sticker bg-[#FFE600] text-[#0a0a0a] px-2 py-0 text-xs">
-                    {{ 'adminRequests.statuses.' + entry.status | transloco }}
-                  </span>
-                </div>
-                <p class="max-w-full text-sm text-[#0a0a0a]/50 [overflow-wrap:anywhere]">
-                  {{ entry.requesterNpub }}
-                </p>
-                <p class="text-xs text-[#0a0a0a]/40">{{ entry.submittedAtLabel }}</p>
-              </div>
-            </div>
-
-            <div
-              class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end"
-            >
-              <div class="flex flex-wrap gap-2 md:justify-end">
+    <div class="brutal-shadow overflow-x-auto border-[3px] border-[#0a0a0a] bg-white">
+      <table class="table">
+        <thead>
+          <tr class="border-[#0a0a0a] text-[#0a0a0a]">
+            <th scope="col">{{ 'adminRequests.columns.avatar' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.username' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.accountCreatedAt' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.requestedFromApp' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.joinedAt' | transloco }}</th>
+            <th scope="col" class="text-right">{{ 'adminRequests.columns.action' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of entries(); track entry.pubkey) {
+            <tr class="border-[#0a0a0a]/20 align-top">
+              <td>
+                @if (entry.avatarUrl) {
+                  <img
+                    [src]="entry.avatarUrl"
+                    [alt]="entry.username"
+                    class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
+                  />
+                } @else {
+                  <div
+                    class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
+                  >
+                    {{ entry.username.slice(0, 2).toUpperCase() }}
+                  </div>
+                }
+              </td>
+              <td class="min-w-48">
                 <a
                   [href]="entry.primalUrl"
                   target="_blank"
                   rel="noreferrer"
-                  class="btn btn-ghost btn-sm h-auto w-full px-4 py-2 text-center whitespace-normal sm:w-auto sm:whitespace-nowrap"
+                  class="font-bold text-[#0a0a0a] underline decoration-2 underline-offset-4 [overflow-wrap:anywhere]"
                 >
-                  {{ 'adminRequests.primal' | transloco }}
+                  {{ entry.username }}
                 </a>
-                <a
-                  [href]="packFRUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="btn btn-ghost btn-sm h-auto w-full px-4 py-2 text-center whitespace-normal sm:w-auto sm:whitespace-nowrap"
-                >
-                  {{ 'request.followup.starterPack' | transloco }}
-                </a>
-              </div>
-
-              <div class="flex shrink-0 items-center gap-2 self-end md:self-auto">
+                <p class="mt-1 text-xs text-[#0a0a0a]/50 [overflow-wrap:anywhere]">
+                  {{ entry.pubkey }}
+                </p>
+              </td>
+              <td class="min-w-64 max-w-sm text-sm text-[#0a0a0a]/70 [overflow-wrap:anywhere]">
+                {{ entry.description || ('adminRequests.unknown' | transloco) }}
+              </td>
+              <td class="min-w-40 text-sm text-[#0a0a0a]/70">
+                {{ entry.accountCreatedAtLabel }}
+              </td>
+              <td class="min-w-36 text-sm text-[#0a0a0a]/70">
+                @if (entry.requestedFromApp) {
+                  {{ 'adminRequests.yes' | transloco }}
+                } @else {
+                  {{ 'adminRequests.no' | transloco }}
+                }
+              </td>
+              <td class="min-w-48 text-sm text-[#0a0a0a]/70">
+                <p>{{ entry.joinedAtLabel }}</p>
+                @if (entry.requestedAt) {
+                  <p class="text-xs text-[#0a0a0a]/50">
+                    {{ 'adminRequests.requestedAtPrefix' | transloco }}
+                    {{ entry.requestedAtLabel }}
+                  </p>
+                }
+              </td>
+              <td class="text-right">
                 <button
                   type="button"
-                  class="btn btn-success btn-sm btn-square"
-                  [disabled]="actingOn() === entry.requesterPubkey"
-                  [title]="'adminRequests.approve' | transloco"
-                  (click)="approve(entry)"
+                  class="btn btn-error btn-sm h-auto px-4 py-2 whitespace-normal"
+                  [disabled]="actingOn() === entry.pubkey"
+                  (click)="remove(entry)"
                 >
-                  <span class="sr-only">{{ 'adminRequests.approve' | transloco }}</span>
-                  <svg
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    class="size-4"
-                  >
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
+                  {{ 'adminRequests.remove' | transloco }}
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-error btn-sm btn-square"
-                  [disabled]="actingOn() === entry.requesterPubkey"
-                  [title]="'adminRequests.reject' | transloco"
-                  (click)="reject(entry)"
-                >
-                  <span class="sr-only">{{ 'adminRequests.reject' | transloco }}</span>
-                  <svg
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    class="size-4"
-                  >
-                    <path d="m18 6-12 12" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
-      }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 </section>

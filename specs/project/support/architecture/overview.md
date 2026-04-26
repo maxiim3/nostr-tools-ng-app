@@ -108,13 +108,13 @@ Interdit :
 
 ## Domaines produit
 
-| Domaine | Feature          | Description                                             |
-| ------- | ---------------- | ------------------------------------------------------- |
-| Packs   | `features/packs` | Starter packs Nostr (request, quiz, membership, config) |
-| Admin   | `features/admin` | Interface admin (approbation/refus des demandes)        |
-| Tools   | `features/tools` | Outils opérateur (merge followers — pas implémenté)     |
-| Legal   | `features/legal` | Pages légales (CGU)                                     |
-| Home    | `features/home`  | Landing page                                            |
+| Domaine | Feature          | Description                                          |
+| ------- | ---------------- | ---------------------------------------------------- |
+| Packs   | `features/packs` | Starter packs Nostr (auto-admit, membership, config) |
+| Admin   | `features/admin` | Interface admin des membres du pack                  |
+| Tools   | `features/tools` | Outils opérateur (merge followers — pas implémenté)  |
+| Legal   | `features/legal` | Pages légales (CGU)                                  |
+| Home    | `features/home`  | Landing page                                         |
 
 ## Config pack
 
@@ -140,20 +140,19 @@ Voir :
 
 ## Backend
 
-Serveur Bun + SQLite (`server.mjs`). Pas du Nostr-only.
+Serveur Bun + Supabase (`server.mjs`). Pas du Nostr-only.
 
 Endpoints :
 
-| Endpoint                                   | Méthode | Auth           | Description         |
-| ------------------------------------------ | ------- | -------------- | ------------------- |
-| `/api/health`                              | GET     | non            | Health check        |
-| `/api/pack-requests/me`                    | GET     | NIP-98         | Statut demande user |
-| `/api/pack-requests`                       | POST    | NIP-98         | Soumettre demande   |
-| `/api/admin/pack-requests`                 | GET     | NIP-98 (admin) | Lister demandes     |
-| `/api/admin/pack-requests/:pubkey/approve` | POST    | NIP-98 (admin) | Approuver           |
-| `/api/admin/pack-requests/:pubkey/reject`  | POST    | NIP-98 (admin) | Refuser             |
+| Endpoint                                 | Méthode | Auth           | Description           |
+| ---------------------------------------- | ------- | -------------- | --------------------- |
+| `/api/health`                            | GET     | non            | Health check          |
+| `/api/pack-members/me`                   | GET     | NIP-98         | Statut membre user    |
+| `/api/pack-members`                      | POST    | NIP-98         | Admission immediate   |
+| `/api/admin/pack-members`                | GET     | NIP-98 (admin) | Lister membres actifs |
+| `/api/admin/pack-members/:pubkey/remove` | POST    | NIP-98 (admin) | Retirer du pack       |
 
-DB : `.runtime/pack-requests.sqlite` — scripts dans `scripts/`.
+DB : table Supabase `francophone_pack_members`. Variables serveur : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE` optionnel, `ADMIN_NPUBS`.
 
 ## Relays
 

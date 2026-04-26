@@ -4,10 +4,9 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
-import { FrancophonePackNotificationService } from '../../../packs/application/francophone-pack-notification.service';
 import {
   StarterPackRequestService,
-  type AdminRequestEntry,
+  type AdminPackMemberEntry,
 } from '../../../packs/application/starter-pack-request.service';
 import { type UserRequestStatus } from '../../../packs/domain/request-status';
 
@@ -19,11 +18,10 @@ import { type UserRequestStatus } from '../../../packs/domain/request-status';
 })
 export class PackAdminRequestsPage {
   private readonly packMembership = inject(FrancophonePackMembershipService);
-  private readonly packNotification = inject(FrancophonePackNotificationService);
   private readonly requests = inject(StarterPackRequestService);
   private readonly session = inject(NostrSessionService);
 
-  protected readonly entries = signal<AdminRequestEntry[]>([]);
+  protected readonly entries = signal<AdminPackMemberEntry[]>([]);
   protected readonly loading = signal(true);
   protected readonly actingOn = signal<string | null>(null);
   protected readonly actionError = signal<string | null>(null);
@@ -49,7 +47,7 @@ export class PackAdminRequestsPage {
         isPackMember = false;
       }
 
-      this.userRequestStatus.set(state.status === 'pending' ? 'pending' : 'idle');
+      this.userRequestStatus.set(state.status === 'joined' ? 'joined' : 'idle');
       this.isPackMember.set(isPackMember);
     } catch {
       this.userRequestStatus.set(null);
@@ -57,31 +55,15 @@ export class PackAdminRequestsPage {
     }
   }
 
-  protected async approve(entry: AdminRequestEntry): Promise<void> {
+  protected async remove(entry: AdminPackMemberEntry): Promise<void> {
     this.actionError.set(null);
-    this.actingOn.set(entry.requesterPubkey);
+    this.actingOn.set(entry.pubkey);
 
     try {
-      await this.packMembership.addMember(entry.requesterPubkey);
-      await this.packNotification.sendApprovalDirectMessage(entry.requesterPubkey);
-      await this.requests.approveRequest(entry.requesterPubkey);
+      await this.requests.removeMember(entry.pubkey);
       await this.loadRequests();
     } catch {
-      this.actionError.set('adminRequests.errors.approveFailed');
-    } finally {
-      this.actingOn.set(null);
-    }
-  }
-
-  protected async reject(entry: AdminRequestEntry): Promise<void> {
-    this.actionError.set(null);
-    this.actingOn.set(entry.requesterPubkey);
-
-    try {
-      await this.requests.rejectRequest(entry.requesterPubkey);
-      await this.loadRequests();
-    } catch {
-      this.actionError.set('adminRequests.errors.rejectFailed');
+      this.actionError.set('adminRequests.errors.removeFailed');
     } finally {
       this.actingOn.set(null);
     }

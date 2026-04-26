@@ -1,17 +1,16 @@
 # Feature Packs
 
-Ce dossier contient le workflow metier principal : demande d'acces au starter pack francophone, moderation admin, puis publication Nostr (pack + notification).
+Ce dossier contient le workflow metier principal : admission immediate au pack francophone, persistance Supabase, consultation admin et retrait de membres.
 
 ## Fichiers clefs
 
 - [StarterPackRequestService](./application/starter-pack-request.service.ts)
 - [FrancophonePackMembershipService](./application/francophone-pack-membership.service.ts)
-- [FrancophonePackNotificationService](./application/francophone-pack-notification.service.ts)
 - [Pack request page](./presentation/pages/pack-request.page.ts)
-- [Admin requests page](../admin/presentation/pages/pack-admin-requests.page.ts)
+- [Admin members page](../admin/presentation/pages/pack-admin-requests.page.ts)
 - [Backend API](../../../server.mjs)
 
-## Workflow demande utilisateur
+## Workflow admission utilisateur
 
 ```mermaid
 sequenceDiagram
@@ -19,49 +18,42 @@ sequenceDiagram
   participant Service as StarterPackRequestService
   participant Auth as NostrHttpAuthService
   participant API as server.mjs
-  participant DB as SQLite pack_requests
+  participant DB as Supabase francophone_pack_members
 
   User->>Service: submitRequest()
   Service->>Auth: createAuthorizationHeader(NIP-98)
-  Service->>API: POST /api/pack-requests + Authorization
+  Service->>API: POST /api/pack-members + Authorization
   API->>API: requireNostrAuth()
-  API->>DB: upsert pending request
-  API-->>Service: 204
+  API->>DB: upsert active member
+  API-->>Service: 201 member
 ```
 
-## Workflow moderation admin
+## Workflow admin
 
 ```mermaid
 sequenceDiagram
   participant Admin as PackAdminRequestsPage
-  participant Req as StarterPackRequestService
-  participant Membership as FrancophonePackMembershipService
-  participant Notify as FrancophonePackNotificationService
-  participant Nostr as Nostr relays
+  participant Service as StarterPackRequestService
   participant API as server.mjs
+  participant DB as Supabase francophone_pack_members
 
-  Admin->>Req: listAdminRequests()
-  Req->>API: GET /api/admin/pack-requests (NIP-98)
-  API-->>Admin: pending requests
+  Admin->>Service: listAdminRequests()
+  Service->>API: GET /api/admin/pack-members (NIP-98 admin)
+  API->>DB: list rows where removed_at is null
+  API-->>Admin: current members
 
-  Admin->>Membership: addMember(pubkey)
-  Membership->>Nostr: publish kind 39089 with updated p tags
-
-  Admin->>Notify: sendApprovalDirectMessage(pubkey)
-  Notify->>Nostr: send kind 4 DM
-
-  Admin->>Req: approveRequest(pubkey)
-  Req->>API: POST /api/admin/pack-requests/:pubkey/approve
+  Admin->>Service: removeMember(pubkey)
+  Service->>API: POST /api/admin/pack-members/:pubkey/remove (NIP-98 admin)
+  API->>DB: set removed_at
   API-->>Admin: 204
 ```
 
-## Evenements Nostr concernes
+## Stockage
 
-- `kind 39089` : event pack (membres stockes dans les tags `p`)
-- `kind 4` : message prive d'approbation
+Supabase est la source persistante pour les champs `pubkey`, `username`, `description`, `avatarUrl`, `joinedAt`, compteurs visibles, metadata de demande depuis l'app et `removedAt`.
 
 ## Couplage important a connaitre
 
 - Le controle admin UI repose sur `NostrSessionService.isAdmin()` (npub dans la config pack).
 - Le backend revalide aussi le role admin via `ADMIN_NPUBS` dans [server.mjs](../../../server.mjs).
-- L'approbation supprime la demande en base apres publication/notification.
+- Le retrait admin conserve la ligne Supabase et renseigne `removedAt`.

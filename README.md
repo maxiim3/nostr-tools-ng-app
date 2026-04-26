@@ -4,8 +4,9 @@ Application Angular centree sur Nostr, orientee "starter pack francophone" :
 
 - authentification Nostr (NIP-07, NIP-46, nsec)
 - requetes API signees en NIP-98
-- gestion des demandes d'acces et moderation admin
-- publication d'evenements Nostr (follow list, pack, DM)
+- admission immediate au pack francophone avec stockage Supabase
+- interface admin protegee pour lister et retirer des membres
+- publication d'evenements Nostr (follow list, DM)
 
 ## Documentation Nostr
 
@@ -25,7 +26,7 @@ Source de verite projet, docs produit et architecture :
 3. [Milestones](specs/project/milestones.md)
 4. [Roadmap](specs/project/roadmap.md)
 5. [Features actionnables](specs/project/features/README.md)
-6. [Feature active (session restore)](specs/project/features/001-session-restore/spec.md)
+6. [Feature active (auto-admit pack members)](specs/project/features/001-auto-admit-pack-members/spec.md)
 7. [Support docs](specs/project/support/README.md)
 8. [Architecture globale](specs/project/support/architecture/overview.md)
 9. [Tutoriel Mermaid](specs/project/support/guides/mermaid.md)
@@ -46,7 +47,7 @@ bun run start
 
 Le front tourne ensuite sur `http://localhost:4200`.
 
-Lancer l'API Bun (NIP-98 + SQLite) :
+Lancer l'API Bun (NIP-98 + Supabase) :
 
 ```bash
 bun run api
@@ -62,29 +63,29 @@ bun run test
 bun run lint
 bun run typecheck
 bun run check
+bun run supabase:schema
+bun run supabase:push
 ```
 
-## Base locale SQLite
+## Supabase pack members
 
-Le projet utilise une base unique pour les demandes pack :
+L'API Bun utilise Supabase comme stockage persistant pour les membres du pack francophone.
 
-- runtime DB : `.runtime/pack-requests.sqlite`
-- schema vide : `pack-requests.schema.sql`
-- dump SQL : `pack-requests.dump.sql`
+Variables d'environnement requises :
 
-Variables d'environnement :
+- `SUPABASE_URL=https://<project-ref>.supabase.co`
+- `SUPABASE_SERVICE_ROLE_KEY=<service-role-key>` pour le serveur Bun uniquement
+- `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE=francophone_pack_members` optionnel
+- `ADMIN_NPUBS=npub1...,npub1...` pour les actions admin NIP-98
 
-- `DATABASE_PATH=/absolute/path/to/pack-requests.sqlite`
-- `DATA_DIR=/absolute/path/to/runtime-dir`
+Copier [.env.example](.env.example) vers `.env` en local, puis renseigner les valeurs Supabase.
 
-Commandes :
+Schema SQL source : [supabase/migrations/001_francophone_pack_members.sql](supabase/migrations/001_francophone_pack_members.sql).
+
+Appliquer le schema :
 
 ```bash
-bun run db:reset
-bun run db:dump
-bun run db:restore
+bun run supabase:schema
 ```
 
-- `db:reset` : recree une base vide
-- `db:dump` : exporte la table `pack_requests`
-- `db:restore` : recree la base depuis `pack-requests.dump.sql`
+Puis coller le SQL dans l'editeur SQL Supabase, ou utiliser `bun run supabase:push` si le Supabase CLI est installe et lie au projet.

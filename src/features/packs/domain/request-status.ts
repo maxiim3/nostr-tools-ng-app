@@ -1,4 +1,4 @@
-export type UserRequestStatus = 'idle' | 'pending' | 'approved';
+export type UserRequestStatus = 'idle' | 'pending' | 'approved' | 'joined';
 export type AdminRequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface RequestStamp {

@@ -6,34 +6,47 @@ import { NostrHttpAuthService } from '../../../core/nostr/application/nostr-http
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
 import { type UserRequestStatus } from '../domain/request-status';
 
-type RequestStatus = 'pending' | 'approved' | 'rejected';
-
 interface UserStateResponse {
   status: UserRequestStatus;
 }
 
-interface AdminRequestRecord {
-  requesterPubkey: string;
-  requesterNpub: string;
-  displayName: string;
-  imageUrl: string | null;
-  created: string;
-  status: RequestStatus;
+interface AdminMemberRecord {
+  pubkey: string;
+  username: string;
+  description: string | null;
+  avatarUrl: string | null;
+  joinedAt: string;
+  followerCount: number | null;
+  followingCount: number | null;
+  accountCreatedAt: string | null;
+  postCount: number | null;
+  zapCount: number | null;
+  requestedFromApp: boolean;
+  requestedAt: string | null;
+  removedAt: string | null;
 }
 
 export interface UserRequestState {
   status: UserRequestStatus;
 }
 
-export interface AdminRequestEntry {
-  requesterPubkey: string;
-  requesterNpub: string;
-  displayName: string;
-  imageUrl: string | null;
+export interface AdminPackMemberEntry {
+  pubkey: string;
+  username: string;
+  description: string | null;
+  avatarUrl: string | null;
   primalUrl: string;
-  submittedAt: number;
-  submittedAtLabel: string;
-  status: RequestStatus;
+  joinedAt: number;
+  joinedAtLabel: string;
+  requestedFromApp: boolean;
+  requestedAt: number | null;
+  requestedAtLabel: string;
+  accountCreatedAt: number | null;
+  accountCreatedAtLabel: string;
+  followerCount: number | null;
+  followingCount: number | null;
+  postCount: number | null;
+  zapCount: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,7 +56,7 @@ export class StarterPackRequestService {
   private readonly session = inject(NostrSessionService);
 
   async getUserState(): Promise<UserRequestState> {
-    return this.get<UserStateResponse>('/api/pack-requests/me');
+    return this.get<UserStateResponse>('/api/pack-members/me');
   }
 
   async submitRequest(): Promise<void> {
@@ -52,37 +65,47 @@ export class StarterPackRequestService {
       throw new Error('Authentication is required.');
     }
 
-    await this.post('/api/pack-requests', {
-      displayName: currentUser.displayName,
-      imageUrl: currentUser.imageUrl,
+    await this.post('/api/pack-members', {
+      username: currentUser.displayName,
+      description: currentUser.description ?? null,
+      avatarUrl: currentUser.imageUrl,
+      followerCount: null,
+      followingCount: null,
+      accountCreatedAt: null,
+      postCount: null,
+      zapCount: null,
     });
   }
 
-  async listAdminRequests(): Promise<AdminRequestEntry[]> {
+  async listAdminRequests(): Promise<AdminPackMemberEntry[]> {
     if (!this.session.isAdmin()) {
       return [];
     }
 
-    const records = await this.get<AdminRequestRecord[]>('/api/admin/pack-requests');
+    const records = await this.get<AdminMemberRecord[]>('/api/admin/pack-members');
 
     return records.map((record) => ({
-      requesterPubkey: record.requesterPubkey,
-      requesterNpub: record.requesterNpub,
-      displayName: record.displayName,
-      imageUrl: record.imageUrl,
-      primalUrl: `https://primal.net/p/${record.requesterNpub}`,
-      submittedAt: new Date(record.created).getTime() / 1000,
-      submittedAtLabel: formatDate(new Date(record.created)),
-      status: record.status,
+      pubkey: record.pubkey,
+      username: record.username,
+      description: record.description,
+      avatarUrl: record.avatarUrl,
+      primalUrl: `https://primal.net/p/${record.pubkey}`,
+      joinedAt: toEpochSeconds(record.joinedAt),
+      joinedAtLabel: formatOptionalDate(record.joinedAt),
+      requestedFromApp: record.requestedFromApp,
+      requestedAt: record.requestedAt ? toEpochSeconds(record.requestedAt) : null,
+      requestedAtLabel: formatOptionalDate(record.requestedAt),
+      accountCreatedAt: record.accountCreatedAt ? toEpochSeconds(record.accountCreatedAt) : null,
+      accountCreatedAtLabel: formatOptionalDate(record.accountCreatedAt),
+      followerCount: record.followerCount,
+      followingCount: record.followingCount,
+      postCount: record.postCount,
+      zapCount: record.zapCount,
     }));
   }
 
-  async approveRequest(requesterPubkey: string): Promise<void> {
-    await this.post(`/api/admin/pack-requests/${requesterPubkey}/approve`, {});
-  }
-
-  async rejectRequest(requesterPubkey: string): Promise<void> {
-    await this.post(`/api/admin/pack-requests/${requesterPubkey}/reject`, {});
+  async removeMember(pubkey: string): Promise<void> {
+    await this.post(`/api/admin/pack-members/${pubkey}/remove`, {});
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -136,4 +159,16 @@ function formatDate(date: Date): string {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date);
+}
+
+function toEpochSeconds(value: string): number {
+  return new Date(value).getTime() / 1000;
+}
+
+function formatOptionalDate(value: string | null): string {
+  if (!value) {
+    return '-';
+  }
+
+  return formatDate(new Date(value));
 }

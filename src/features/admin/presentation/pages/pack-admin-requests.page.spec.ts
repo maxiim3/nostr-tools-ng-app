@@ -5,35 +5,41 @@ import { vi } from 'vitest';
 
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
-import { FrancophonePackNotificationService } from '../../../packs/application/francophone-pack-notification.service';
 import {
   StarterPackRequestService,
-  type AdminRequestEntry,
+  type AdminPackMemberEntry,
 } from '../../../packs/application/starter-pack-request.service';
 import { PackAdminRequestsPage } from './pack-admin-requests.page';
 
-const FAKE_ENTRIES: AdminRequestEntry[] = [
+const FAKE_ENTRIES: AdminPackMemberEntry[] = [
   {
-    requesterPubkey: 'abc123',
-    requesterNpub: 'npub1abc',
-    displayName: 'Alice',
-    imageUrl: null,
-    primalUrl: 'https://primal.net/p/npub1abc',
-    submittedAt: 1000,
-    submittedAtLabel: '1 janv. 2024',
-    status: 'pending',
+    pubkey: 'abc123',
+    username: 'Alice',
+    description: 'Nostr builder',
+    avatarUrl: null,
+    primalUrl: 'https://primal.net/p/abc123',
+    joinedAt: 1000,
+    joinedAtLabel: '1 janv. 2024',
+    requestedFromApp: true,
+    requestedAt: 1000,
+    requestedAtLabel: '1 janv. 2024',
+    accountCreatedAt: null,
+    accountCreatedAtLabel: '-',
+    followerCount: null,
+    followingCount: null,
+    postCount: null,
+    zapCount: null,
   },
 ];
 
 interface PageAccess {
-  entries: () => AdminRequestEntry[];
+  entries: () => AdminPackMemberEntry[];
   loading: () => boolean;
   actingOn: () => string | null;
   actionError: () => string | null;
   userRequestStatus: () => string | null;
   isPackMember: () => boolean;
-  approve: (entry: AdminRequestEntry) => Promise<void>;
-  reject: (entry: AdminRequestEntry) => Promise<void>;
+  remove: (entry: AdminPackMemberEntry) => Promise<void>;
 }
 
 function asAccessible(page: PackAdminRequestsPage): PageAccess {
@@ -44,11 +50,8 @@ function createMocks() {
   const isAuthenticatedMock = vi.fn().mockReturnValue(true);
   const listAdminRequestsMock = vi.fn().mockResolvedValue(FAKE_ENTRIES);
   const getUserStateMock = vi.fn().mockResolvedValue({ status: 'idle' });
-  const approveRequestMock = vi.fn().mockResolvedValue(undefined);
-  const rejectRequestMock = vi.fn().mockResolvedValue(undefined);
+  const removeMemberMock = vi.fn().mockResolvedValue(undefined);
   const isCurrentUserMemberMock = vi.fn().mockResolvedValue(false);
-  const addMemberMock = vi.fn().mockResolvedValue(undefined);
-  const sendApprovalDirectMessageMock = vi.fn().mockResolvedValue(undefined);
 
   TestBed.configureTestingModule({
     providers: [
@@ -65,21 +68,13 @@ function createMocks() {
         useValue: {
           listAdminRequests: listAdminRequestsMock,
           getUserState: getUserStateMock,
-          approveRequest: approveRequestMock,
-          rejectRequest: rejectRequestMock,
+          removeMember: removeMemberMock,
         },
       },
       {
         provide: FrancophonePackMembershipService,
         useValue: {
           isCurrentUserMember: isCurrentUserMemberMock,
-          addMember: addMemberMock,
-        },
-      },
-      {
-        provide: FrancophonePackNotificationService,
-        useValue: {
-          sendApprovalDirectMessage: sendApprovalDirectMessageMock,
         },
       },
     ],
@@ -89,16 +84,13 @@ function createMocks() {
     isAuthenticated: isAuthenticatedMock,
     listAdminRequests: listAdminRequestsMock,
     getUserState: getUserStateMock,
-    approveRequest: approveRequestMock,
-    rejectRequest: rejectRequestMock,
+    removeMember: removeMemberMock,
     isCurrentUserMember: isCurrentUserMemberMock,
-    addMember: addMemberMock,
-    sendApprovalDirectMessage: sendApprovalDirectMessageMock,
   };
 }
 
 describe('PackAdminRequestsPage', () => {
-  it('loads requests and user status on init', async () => {
+  it('loads members and user status on init', async () => {
     const mocks = createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
@@ -121,65 +113,32 @@ describe('PackAdminRequestsPage', () => {
     expect(mocks.getUserState).not.toHaveBeenCalled();
   });
 
-  it('approve calls addMember, sendApprovalDirectMessage, approveRequest and reloads', async () => {
+  it('remove calls removeMember and reloads', async () => {
     const mocks = createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
     mocks.listAdminRequests.mockClear();
-    mocks.addMember.mockClear();
-    mocks.sendApprovalDirectMessage.mockClear();
-    mocks.approveRequest.mockClear();
+    mocks.removeMember.mockClear();
 
-    await page.approve(FAKE_ENTRIES[0]);
+    await page.remove(FAKE_ENTRIES[0]);
 
-    expect(mocks.addMember).toHaveBeenCalledWith('abc123');
-    expect(mocks.sendApprovalDirectMessage).toHaveBeenCalledWith('abc123');
-    expect(mocks.approveRequest).toHaveBeenCalledWith('abc123');
+    expect(mocks.removeMember).toHaveBeenCalledWith('abc123');
     expect(mocks.listAdminRequests).toHaveBeenCalled();
     expect(page.actingOn()).toBeNull();
     expect(page.actionError()).toBeNull();
   });
 
-  it('approve sets actionError on failure', async () => {
+  it('remove sets actionError on failure', async () => {
     const mocks = createMocks();
-    mocks.addMember.mockRejectedValue(new Error('fail'));
+    mocks.removeMember.mockRejectedValue(new Error('fail'));
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
 
-    await page.approve(FAKE_ENTRIES[0]);
+    await page.remove(FAKE_ENTRIES[0]);
 
-    expect(page.actionError()).toBe('adminRequests.errors.approveFailed');
-    expect(page.actingOn()).toBeNull();
-  });
-
-  it('reject calls rejectRequest and reloads', async () => {
-    const mocks = createMocks();
-    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
-
-    await vi.dynamicImportSettled();
-    mocks.listAdminRequests.mockClear();
-    mocks.rejectRequest.mockClear();
-
-    await page.reject(FAKE_ENTRIES[0]);
-
-    expect(mocks.rejectRequest).toHaveBeenCalledWith('abc123');
-    expect(mocks.listAdminRequests).toHaveBeenCalled();
-    expect(page.actingOn()).toBeNull();
-    expect(page.actionError()).toBeNull();
-  });
-
-  it('reject sets actionError on failure', async () => {
-    const mocks = createMocks();
-    mocks.rejectRequest.mockRejectedValue(new Error('fail'));
-    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
-
-    await vi.dynamicImportSettled();
-
-    await page.reject(FAKE_ENTRIES[0]);
-
-    expect(page.actionError()).toBe('adminRequests.errors.rejectFailed');
+    expect(page.actionError()).toBe('adminRequests.errors.removeFailed');
     expect(page.actingOn()).toBeNull();
   });
 });

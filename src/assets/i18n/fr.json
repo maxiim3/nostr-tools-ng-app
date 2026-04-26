@@ -54,7 +54,7 @@
   },
   "request": {
     "title": "Rejoindre le starter pack francophone",
-    "subtitle": "Connecte-toi avec Nostr pour demander l'accès au pack et suivre le statut de ta demande.",
+    "subtitle": "Connecte-toi avec Nostr pour rejoindre le pack francophone immédiatement.",
     "loading": {
       "1": "Cela peut prendre quelques secondes...",
       "2": "Connexion à la base de données...",
@@ -66,10 +66,10 @@
     "identity": "Compte connecté",
     "extensionLogin": "Se connecter avec l'extension",
     "externalLogin": "Ouvrir l'application externe",
-    "requestJoin": "Demander l'accès",
+    "requestJoin": "Rejoindre le pack",
     "status": {
-      "idle": "Tu peux envoyer une demande maintenant.",
-      "pending": "Ta demande est en attente de validation.",
+      "idle": "Tu peux rejoindre le pack maintenant.",
+      "pending": "Ton admission est en cours.",
       "approved": "Ta demande est approuvée.",
       "alreadyMember": "Vous faites deja parti du pack !"
     },
@@ -77,7 +77,7 @@
       "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
       "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
       "invalidRequest": "La demande envoyée est invalide.",
-      "generic": "Impossible d'envoyer la demande pour le moment. Réessaie dans un instant."
+      "generic": "Impossible de rejoindre le pack pour le moment. Réessaie dans un instant."
     },
     "followup": {
       "title": "En attendant",
@@ -253,18 +253,28 @@
     }
   },
   "adminRequests": {
-    "title": "Demandes d'accès",
-    "subtitle": "Demandes Nostr pour le pack francophone.",
-    "empty": "Aucune demande pour le moment.",
+    "title": "Membres du pack",
+    "subtitle": "Membres actuels du pack francophone.",
+    "empty": "Aucun membre pour le moment.",
     "primal": "Voir sur Primal",
-    "approve": "Approuver",
-    "reject": "Refuser",
-    "yourRequestPending": "Ta demande est déjà en cours de traitement. Merci de patienter.",
+    "remove": "Retirer",
+    "yes": "Oui",
+    "no": "Non",
+    "unknown": "-",
+    "requestedAtPrefix": "Demandé :",
     "youAreInPack": "Vous faites deja parti du pack !",
     "openPack": "Ouvrir",
+    "columns": {
+      "avatar": "Avatar",
+      "username": "Username",
+      "description": "Description profile",
+      "accountCreatedAt": "Creation du compte",
+      "requestedFromApp": "Depuis l'app",
+      "joinedAt": "Demande/admission",
+      "action": "Action"
+    },
     "errors": {
-      "approveFailed": "Impossible de finaliser l'approbation (pack + DM) pour le moment.",
-      "rejectFailed": "Impossible de refuser la demande pour le moment."
+      "removeFailed": "Impossible de retirer ce membre pour le moment."
     },
     "statuses": {
       "pending": "En attente",
