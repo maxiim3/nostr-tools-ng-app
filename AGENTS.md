@@ -67,7 +67,6 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 <!-- SPECKIT START -->
 
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+Current Spec Kit plan: `specs/001-project-management-cleanup/plan.md`
 
 <!-- SPECKIT END -->
