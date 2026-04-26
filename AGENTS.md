@@ -64,3 +64,10 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Never call the underlying tools directly with commands like `bunx prettier`, `prettier`, `ng lint`, `tsc`, or `ng test` unless the user explicitly asks for that exact command.
 - Preferred commands are `bun run format`, `bun run format:check`, `bun run lint`, `bun run lint:css`, `bun run typecheck`, `bun run test`, `bun run build`, `bun run fix`, and `bun run check`.
 - Before committing, use `bun run fix`, `bun run check`, or the targeted `bun run ...` scripts from `package.json`.
+
+<!-- SPECKIT START -->
+
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+
+<!-- SPECKIT END -->

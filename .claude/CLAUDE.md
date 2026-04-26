@@ -1,3 +1,6 @@
+Read and follow `../AGENTS.md` first. It is the source of truth for project
+rules. This file exists for Claude Code compatibility.
+
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
 ## TypeScript Best Practices

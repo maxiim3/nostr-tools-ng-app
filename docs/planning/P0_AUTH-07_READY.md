@@ -1,8 +1,8 @@
-# P0 AUTH-07 TODO
+# P0 AUTH-07 READY
 
 Task: `AUTH-07` Restore Nostr session after refresh
 
-Status: TODO
+Status: READY
 
 Readiness note: Needs real signer validation after implementation.
 
@@ -38,7 +38,7 @@ Do not change:
 Recommended session prompt:
 
 ```text
-Pick up task AUTH-07 from docs/planning/P0_AUTH-07_TODO.md. Implement only restore after refresh
+Pick up task AUTH-07 from docs/planning/P0_AUTH-07_READY.md. Implement only restore after refresh
 for NIP-07 and NIP-46 where valid. First inspect nostr-session.service.ts, connection-facade.ts,
 ndk-nip46-restore.ts, ADR 0002, and relevant tests. Do not change pack-request storage.
 ```

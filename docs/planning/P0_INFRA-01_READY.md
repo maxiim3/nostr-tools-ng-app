@@ -1,8 +1,8 @@
-# P0 INFRA-01 TODO
+# P0 INFRA-01 READY
 
 Task: `INFRA-01` Migrate runtime storage to Supabase
 
-Status: TODO
+Status: READY
 
 Readiness note: Needs Supabase environment access before full production validation.
 
@@ -38,7 +38,7 @@ Do not change:
 Recommended session prompt:
 
 ```text
-Pick up task INFRA-01 from docs/planning/P0_INFRA-01_TODO.md. Implement only this task. Preserve
+Pick up task INFRA-01 from docs/planning/P0_INFRA-01_READY.md. Implement only this task. Preserve
 existing pack-request endpoint behavior and admin NIP-98 protection. First inspect server.mjs,
 server.test.mjs, README.md, docs/architecture/overview.md, and src/features/packs/README.md. Do not
 change auth/session behavior.
