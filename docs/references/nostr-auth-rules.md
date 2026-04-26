@@ -15,7 +15,7 @@ Il sert a repondre a la question :
 - `Est-ce qu'une idee auth est acceptable ?`
 
 Il ne sert pas de board.
-Pour les taches en cours, utiliser [../planning/board.md](../planning/board.md).
+Pour les taches en cours, utiliser [../../specs/project/tasks.md](../../specs/project/tasks.md).
 
 ## Objectif
 

@@ -210,7 +210,7 @@ get_feature_paths() {
     # Resolve feature directory.  Priority:
     #   1. SPECIFY_FEATURE_DIRECTORY env var (explicit override)
     #   2. .specify/feature.json "feature_directory" key (persisted by /speckit.specify)
-    #   3. Branch-name-based prefix lookup (legacy fallback)
+    #   3. specs/project project source-of-truth fallback
     local feature_dir
     if [[ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
         feature_dir="$SPECIFY_FEATURE_DIRECTORY"
@@ -231,13 +231,11 @@ get_feature_paths() {
             feature_dir="$_fd"
             # Normalize relative paths to absolute under repo root
             [[ "$feature_dir" != /* ]] && feature_dir="$repo_root/$feature_dir"
-        elif ! feature_dir=$(find_feature_dir_by_prefix "$repo_root" "$current_branch"); then
-            echo "ERROR: Failed to resolve feature directory" >&2
-            return 1
+        else
+            feature_dir="$repo_root/specs/project"
         fi
-    elif ! feature_dir=$(find_feature_dir_by_prefix "$repo_root" "$current_branch"); then
-        echo "ERROR: Failed to resolve feature directory" >&2
-        return 1
+    else
+        feature_dir="$repo_root/specs/project"
     fi
 
     # Use printf '%q' to safely quote values, preventing shell injection
@@ -372,4 +370,3 @@ except Exception:
     # Callers running under set -e should use: TEMPLATE=$(resolve_template ...) || true
     return 1
 }
-

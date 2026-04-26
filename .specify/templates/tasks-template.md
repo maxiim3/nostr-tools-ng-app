@@ -4,7 +4,7 @@ description: 'Task list template for ToolStr feature implementation'
 
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents from `/specs/[###-feature-name]/`
+**Input**: Project source from `/specs/project/` and approved feature-specific notes
 **Prerequisites**: plan.md (required), spec.md (required for user stories),
 research.md, data-model.md, contracts/
 
@@ -30,7 +30,7 @@ operational outcome.
 - Feature layers: `domain/`, `application/`, `infrastructure/`, `presentation/`
 - i18n: `src/assets/i18n/`
 - Bun API: `server.mjs`, `server.test.mjs`
-- Documentation: `docs/`, `src/**/README.md`, `specs/[###-feature]/`
+- Documentation: `specs/project/`, `docs/`, `src/**/README.md`
 
 <!--
   The /speckit.tasks command MUST replace the sample tasks below with actual
@@ -43,7 +43,7 @@ operational outcome.
 **Purpose**: Confirm scope, files, and quality gates before implementation.
 
 - [ ] T001 Review active source documents named in plan.md and record scope in
-      specs/[###-feature]/plan.md
+      specs/project/plan.md
 - [ ] T002 Identify exact Angular/service/server/docs files affected by this
       feature
 - [ ] T003 [P] Confirm repo verification scripts required for this change from

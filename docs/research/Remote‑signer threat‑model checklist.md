@@ -2,8 +2,8 @@
 
 > Note de positionnement: ce document est une note de recherche non normative.
 > Il ne definit pas, a lui seul, les criteres de merge du chantier mobile PWA.
-> Pour les regles actives du projet, utiliser `docs/references/nostr-auth-rules.md`,
-> `docs/product/specs/auth-mobile-web.md` et `docs/planning/board.md`.
+> Pour les regles actives du projet, utiliser `docs/references/nostr-auth-rules.md`
+> et `specs/project/`.
 
 > Hors scope du chantier actuel: PKCE/OAuth, DPoP, mTLS, exigences natives Android/iOS,
 > revocation endpoint mandatory cote backend, et tout mecanisme qui remplace l'auth backend `NIP-98`.

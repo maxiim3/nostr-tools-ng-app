@@ -81,22 +81,18 @@ Given that feature description, do this:
 
    If the user explicitly provided `GIT_BRANCH_NAME`, pass it through to the hook so the branch script uses the exact value as the branch name (bypassing all prefix/suffix generation).
 
-3. **Create the spec feature directory**:
+3. **Use the project source-of-truth directory**:
 
-   Specs live under the default `specs/` directory unless the user explicitly provides `SPECIFY_FEATURE_DIRECTORY`.
+   This repository uses one canonical project specification directory: `specs/project/`.
 
    **Resolution order for `SPECIFY_FEATURE_DIRECTORY`**:
-   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY` (e.g., via environment variable, argument, or configuration), use it as-is
-   2. Otherwise, auto-generate it under `specs/`:
-      - Check `.specify/init-options.json` for `branch_numbering`
-      - If `"timestamp"`: prefix is `YYYYMMDD-HHMMSS` (current timestamp)
-      - If `"sequential"` or absent: prefix is `NNN` (next available 3-digit number after scanning existing directories in `specs/`)
-      - Construct the directory name: `<prefix>-<short-name>` (e.g., `003-user-auth` or `20260319-143022-user-auth`)
-      - Set `SPECIFY_FEATURE_DIRECTORY` to `specs/<directory-name>`
+   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY`, use it as-is only when they intentionally override the project source-of-truth location
+   2. Otherwise, set `SPECIFY_FEATURE_DIRECTORY` to `specs/project`
 
-   **Create the directory and spec file**:
+   **Create or update the project spec file**:
    - `mkdir -p SPECIFY_FEATURE_DIRECTORY`
-   - Copy `.specify/templates/spec-template.md` to `SPECIFY_FEATURE_DIRECTORY/spec.md` as the starting point
+   - If `SPECIFY_FEATURE_DIRECTORY/spec.md` is missing, copy `.specify/templates/spec-template.md` to `SPECIFY_FEATURE_DIRECTORY/spec.md` as the starting point
+   - If `SPECIFY_FEATURE_DIRECTORY/spec.md` already exists, update it instead of creating a competing numbered feature directory
    - Set `SPEC_FILE` to `SPECIFY_FEATURE_DIRECTORY/spec.md`
    - Persist the resolved path to `.specify/feature.json`:
      ```json
@@ -104,12 +100,13 @@ Given that feature description, do this:
        "feature_directory": "<resolved feature dir>"
      }
      ```
-     Write the actual resolved directory path value (for example, `specs/003-user-auth`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
+     Write the actual resolved directory path value (normally `specs/project`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
      This allows downstream commands (`/speckit.plan`, `/speckit.tasks`, etc.) to locate the feature directory without relying on git branch name conventions.
 
    **IMPORTANT**:
-   - You must only create one feature per `/speckit.specify` invocation
-   - The spec directory name and the git branch name are independent — they may be the same but that is the user's choice
+   - This repository does not use numbered active spec directories as sources of truth
+   - New work should be represented inside `specs/project/` as user stories, features, roadmap entries, and tasks
+   - The spec directory name and the git branch name are independent
    - The spec directory and file are always created by this command, never by the hook
 
 4. Load `.specify/templates/spec-template.md` to understand required sections.

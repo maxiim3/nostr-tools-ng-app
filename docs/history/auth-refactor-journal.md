@@ -16,15 +16,14 @@ Il sert a comprendre :
 
 Il ne sert plus de board actif.
 
-Pour le travail en cours, utiliser :
+Pour le travail en cours, utiliser la source de verite projet :
 
-- [../planning/board.md](../planning/board.md)
-- [../product/specs/auth-mobile-web.md](../product/specs/auth-mobile-web.md)
+- [../../specs/project/tasks.md](../../specs/project/tasks.md)
+- [../../specs/project/features.md](../../specs/project/features.md)
 
 ## Documentation
 
-- Mission et milestones : [../product/mission.md](../product/mission.md)
-- Roadmap produit : [../product/roadmap.md](../product/roadmap.md)
+- Mission, milestones, roadmap, tasks : [../../specs/project/](../../specs/project/)
 - Architecture : [../architecture/overview.md](../architecture/overview.md)
 - Regles agents : [../../AGENTS.md](../../AGENTS.md)
 - Regles design connexion : [../references/nostr-auth-rules.md](../references/nostr-auth-rules.md)
@@ -105,7 +104,7 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 
 - Pack landing page (`/packs/francophone`) — done. Root `/` redirects to `/packs/francophone`, same content.
 - Admin dashboard members (`/packs/francophone/admin`) — postponed.
-- Active auth/mobile follow-up is no longer tracked here. Use the active board and roadmap.
+- Active auth/mobile follow-up is no longer tracked here. Use [../../specs/project/tasks.md](../../specs/project/tasks.md).
 
 ## Known Risks
 
@@ -115,8 +114,8 @@ Migration du legacy auth vers le domaine `nostr-connection`. Les 4 methodes d'au
 
 ## Post-deployment mobile/auth triage - 2026-04-25
 
-Historical snapshot; active tracking remains in [../planning/board.md](../planning/board.md)
-and [../product/roadmap.md](../product/roadmap.md).
+Historical snapshot; active tracking is now in [../../specs/project/tasks.md](../../specs/project/tasks.md)
+and [../../specs/project/roadmap.md](../../specs/project/roadmap.md).
 
 Context:
 
@@ -279,12 +278,12 @@ Next action:
 
 Problem:
 
-- `architecture.md` currently documents the backend as Bun + SQLite with `.runtime/pack-requests.sqlite`.
+- `docs/architecture/overview.md` currently documents the backend as Bun + SQLite with `.runtime/pack-requests.sqlite`.
 - That will become inaccurate after the Supabase migration.
 
 Completion criteria:
 
-- `architecture.md` documents Supabase as the persistent data store.
+- `docs/architecture/overview.md` documents Supabase as the persistent data store.
 - This project plan marks the migration as complete.
 - Required environment variables are listed.
 
@@ -297,4 +296,4 @@ Next action:
 Cette checklist etait utile pendant le refactor initial.
 
 Ne plus l'utiliser comme source de travail courante.
-Le pilotage actif est maintenant dans [../planning/board.md](../planning/board.md).
+Le pilotage actif est maintenant dans [../../specs/project/](../../specs/project/).

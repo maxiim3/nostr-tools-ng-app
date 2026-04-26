@@ -17,22 +17,22 @@ This caused two recurring issues:
 `docs/` is organized by explicit roles:
 
 - `product/` for Product Direction
-- `planning/` for Active Planning
+- top-level `specs/project/` for active project planning
 - `architecture/` for Architecture Decision and structural overview
 - `references/` for Stable Reference constraints
 - `history/` for History or Archive records
 - `research/` for Research Input that is not yet normative
 - `guides/` for documentation Guides
 
-Feature specifications are split by audience:
+Feature specifications and active planning now live together in the project source of truth:
 
-- `docs/product/specs/` for product-facing focused specs
-- top-level `specs/<feature>/` for Spec Kit implementation artifacts
+- `specs/project/` for milestones, roadmap, user stories, features, and tasks
+- `docs/product/` only for supporting product/design references
 
 ## Consequences
 
 - active documents keep stable non-date names while they are current
 - historical records keep a separate location and are not treated as active planning
-- `planning/board.md` owns active execution status
-- `product/roadmap.md` owns product direction and sequencing, not board status detail
-- top-level `specs/` is reserved for Spec Kit feature artifacts, not a generic docs catch-all
+- `specs/project/` owns active execution status, roadmap, milestones, user stories, and tasks
+- `docs/` owns supporting architecture, references, research, history, guides, and product design notes
+- top-level `specs/project/` is the project source of truth, not a generic docs catch-all

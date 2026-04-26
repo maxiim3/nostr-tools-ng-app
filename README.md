@@ -18,14 +18,16 @@ Pour comprendre le protocole Nostr dans le contexte exact du code :
 5. [Core Zap workflow](src/core/zap/README.md)
 6. [Feature Packs workflow](src/features/packs/README.md)
 
-Docs produit et architecture :
+Source de verite projet, docs produit et architecture :
 
-- [Documentation index](docs/README.md)
-- [Mission produit](docs/product/mission.md)
-- [Roadmap produit](docs/product/roadmap.md)
-- [Architecture globale](docs/architecture/overview.md)
-- [Board actif](docs/planning/board.md)
-- [Tutoriel Mermaid](docs/guides/mermaid.md)
+1. [Source de verite projet](specs/project/README.md)
+2. [Milestones](specs/project/milestones.md)
+3. [Roadmap](specs/project/roadmap.md)
+4. [Tasks](specs/project/tasks.md)
+5. [User stories](specs/project/user-stories.md)
+6. [Documentation index](docs/README.md)
+7. [Architecture globale](docs/architecture/overview.md)
+8. [Tutoriel Mermaid](docs/guides/mermaid.md)
 
 ## Demarrage local
 

@@ -122,21 +122,21 @@ Le pack francophone est configuré dans `francophone-pack.config.ts`.
 
 Champs actuels : `slug`, `adminNpubs`, `starterPackUrl`, `followUrl`, `externalLoginUrl`, `zapHref`.
 
-À clarifier — champs manquants par rapport à la spec initiale : `title`, `description`, `ownerNpub`, `targetPackRef`, `targetPackUrl`, `requestEnabled`, `feedEnabled`, `publicEnabled`, `contact`, `zapAddress`, `credits`.
+Project-planning note: future pack-config shaping is tracked from `../../specs/project/`; this architecture overview records only the current implementation fields. Missing candidate fields from earlier planning were `title`, `description`, `ownerNpub`, `targetPackRef`, `targetPackUrl`, `requestEnabled`, `feedEnabled`, `publicEnabled`, `contact`, `zapAddress`, and `credits`.
 
-## Auth — état de la migration
+## Auth — current implementation context
 
 Etat actuel :
 
 1. `core/nostr-connection/` est integre pour `NIP-07`, `NIP-46 Nostr Connect` et `NIP-46 Bunker`
 2. `NostrSessionService` reste l'adapter principal consomme par l'UI
 3. `NostrClientService` garde le role NDK + signer + `nsec` temporaire
-4. Le follow-up actif porte maintenant sur l'UX mobile auth, la persistance locale de session NIP-46 (sans session backend) et la reduction des permissions demandees
+4. Active auth follow-up planning lives in `../../specs/project/tasks.md`; this file only records implementation context
 
 Voir :
 
 - `../references/nostr-auth-rules.md` pour les contraintes
-- `../planning/board.md` pour le travail actif
+- `../../specs/project/tasks.md` pour le travail actif
 
 ## Backend
 

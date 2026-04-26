@@ -1,5 +1,8 @@
 # Landing Page - Direction Artistique
 
+Role: supporting product design reference. Active roadmap, milestones, user stories, features, and
+tasks live in `../../specs/project/`.
+
 ## Direction copy retenue
 
 Le wording de la page est construit sur un mix **manifeste leger + produit + communaute**.
@@ -28,9 +31,12 @@ La page presente ToolStr comme une boite a outils Nostr francophone, pas uniquem
 
 Le starter pack reste le module principal et disponible aujourd'hui. Cette iteration le met aussi en avant visuellement avec la carte la plus energetique, pour aligner priorite produit et priorite de lecture. La structure permet ensuite d'ajouter d'autres modules sans changer la promesse generale de la home. C'est le point cle de scalabilite : chaque bloc represente un outil concret avec un statut clair.
 
-## Roadmap modules
+## Design Snapshot: Future Modules
 
-Prochaines briques prevues dans la home, sans survendre leur disponibilite :
+Supporting design snapshot for future home modules. Active roadmap ownership stays in
+`../../specs/project/roadmap.md`.
+
+Modules considered for future home presentation, without overselling availability:
 
 - `Fusion des listes` : en construction, pour consolider plusieurs listes Nostr.
 - `Onboarding Nostr` : en construction, module dimmed tant que le contenu n'est pas pret.

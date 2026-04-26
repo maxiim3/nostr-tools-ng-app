@@ -52,4 +52,4 @@ on feature context and requirements.
 
 - Check items off as completed: `[x]`
 - Add findings inline with file paths when possible
-- Link back to the active board, spec, plan, ADR, or reference document
+- Link back to `specs/project/`, the feature spec, plan, ADR, or reference document

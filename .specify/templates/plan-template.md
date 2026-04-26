@@ -1,8 +1,8 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-**Related product/docs input**: [docs/planning/board.md item or docs/product/specs/* link]
+**Input**: Project source from `/specs/project/` and any approved feature-specific notes
+**Related project input**: [specs/project task, feature, user story, roadmap item, ADR, or N/A]
 
 **Note**: This template is filled in by the `/speckit.plan` command. See
 `.specify/templates/plan-template.md` for the execution workflow.
@@ -61,13 +61,18 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output, if data/storage is affected
-├── quickstart.md        # Phase 1 validation notes
-├── contracts/           # API/protocol contracts, if applicable
-└── tasks.md             # Phase 2 output (/speckit.tasks command)
+specs/project/
+├── README.md            # Active project source-of-truth entry point
+├── spec.md              # Project specification and constraints
+├── plan.md              # Current implementation/migration plan
+├── milestones.md        # Canonical milestones
+├── roadmap.md           # Canonical sequencing
+├── user-stories.md      # Canonical user stories and acceptance criteria
+├── features.md          # Feature registry
+├── tasks.md             # Canonical task board and handoff briefs
+├── references.md        # Supporting ADR/reference/research index
+├── archive.md           # Extracted/superseded planning records
+└── validation.md        # Validation results
 ```
 
 ### Source Code (repository root)
@@ -97,7 +102,7 @@ src/
 
 server.mjs               # Bun API when backend routes are affected
 server.test.mjs          # Server/API tests when backend routes are affected
-docs/                    # Product, architecture, planning, reference docs
+docs/                    # Supporting architecture, reference, research, history, guide, and product-design docs
 ```
 
 **Structure Decision**: [Document the selected files, why they belong in those

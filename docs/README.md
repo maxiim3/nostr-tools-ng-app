@@ -2,68 +2,65 @@
 
 Updated: 2026-04-26
 
-This repository documentation is organized by role. The goal is quick navigation, clear authority, and stable maintenance conventions.
+This directory contains supporting documentation only. Active project management, milestones,
+roadmap, user stories, features, and task status live in [../specs/project/](../specs/project/).
 
 ## Find the Right Source
 
-| Need                                      | Authoritative Destination                                              |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| Understand product mission                | [product/mission.md](product/mission.md)                               |
-| Follow product direction and sequencing   | [product/roadmap.md](product/roadmap.md)                               |
-| Review active execution status            | [planning/board.md](planning/board.md)                                 |
-| Start a task handoff brief (board-backed) | [planning/execution-notes.md](planning/execution-notes.md)             |
-| Read architecture decisions               | [architecture/decisions/README.md](architecture/decisions/README.md)   |
-| Read stable rules and constraints         | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
-| Read product-facing focused specs         | [product/specs/auth-mobile-web.md](product/specs/auth-mobile-web.md)   |
-| Read Spec Kit feature artifacts           | [../specs/](../specs/)                                                 |
-| Read history/archive context              | [history/auth-refactor-journal.md](history/auth-refactor-journal.md)   |
-| Read research input                       | [research/nostr-auth-ux-pattern.md](research/nostr-auth-ux-pattern.md) |
-| Read repository guides                    | [guides/mermaid.md](guides/mermaid.md)                                 |
+| Need                           | Destination                                                            |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Active project source of truth | [../specs/project/README.md](../specs/project/README.md)               |
+| Milestones                     | [../specs/project/milestones.md](../specs/project/milestones.md)       |
+| Roadmap                        | [../specs/project/roadmap.md](../specs/project/roadmap.md)             |
+| Tasks and handoff briefs       | [../specs/project/tasks.md](../specs/project/tasks.md)                 |
+| User stories                   | [../specs/project/user-stories.md](../specs/project/user-stories.md)   |
+| Feature registry               | [../specs/project/features.md](../specs/project/features.md)           |
+| Architecture decisions         | [architecture/decisions/README.md](architecture/decisions/README.md)   |
+| Stable rules and constraints   | [references/nostr-auth-rules.md](references/nostr-auth-rules.md)       |
+| History/archive context        | [history/auth-refactor-journal.md](history/auth-refactor-journal.md)   |
+| Research input                 | [research/nostr-auth-ux-pattern.md](research/nostr-auth-ux-pattern.md) |
+| Product design reference       | [product/landing-page-design.md](product/landing-page-design.md)       |
+| Repository guides              | [guides/mermaid.md](guides/mermaid.md)                                 |
 
 ## Role Taxonomy
 
-| Role                  | Primary Location                                      | Purpose                                                   |
-| --------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
-| Product Direction     | `docs/product/`                                       | Mission, roadmap, positioning, long-term sequencing       |
-| Active Planning       | `docs/planning/`                                      | Board-owned status plus consolidated handoff notes        |
-| Feature Specification | `docs/product/specs/` or top-level `specs/<feature>/` | Product-facing specs vs Spec Kit implementation artifacts |
-| Architecture Decision | `docs/architecture/decisions/`                        | Accepted structural decisions and consequences            |
-| Stable Reference      | `docs/references/`                                    | Durable rules and constraints                             |
-| Research Input        | `docs/research/`                                      | Non-normative exploration and inspiration                 |
-| History or Archive    | `docs/history/` or explicit archive location          | Historical or superseded context                          |
-| Guide                 | `docs/guides/`                                        | How to read, maintain, or contribute to docs              |
+| Role                     | Primary Location               | Purpose                                                                         |
+| ------------------------ | ------------------------------ | ------------------------------------------------------------------------------- |
+| Project Source Of Truth  | `specs/project/`               | Active milestones, roadmap, user stories, features, tasks, and planning archive |
+| Architecture Decision    | `docs/architecture/decisions/` | Accepted structural decisions and consequences                                  |
+| Architecture Reference   | `docs/architecture/`           | Current architecture overview and implementation context                        |
+| Stable Reference         | `docs/references/`             | Durable rules and constraints                                                   |
+| Research Input           | `docs/research/`               | Non-normative exploration and inspiration                                       |
+| History or Archive       | `docs/history/`                | Historical or superseded context                                                |
+| Product Design Reference | `docs/product/`                | Supporting product/design material that does not own roadmap or task state      |
+| Guide                    | `docs/guides/`                 | How to read, maintain, or contribute to docs                                    |
 
 ## Source-of-Truth Rules
 
-- `docs/planning/board.md` owns active execution status.
-- `docs/planning/execution-notes.md` owns consolidated handoff briefs for active and planned local
-  tasks.
-- `docs/product/roadmap.md` owns product direction and sequencing, not task status detail.
-- `docs/architecture/decisions/` owns accepted architecture decisions.
-- `docs/references/` owns durable rules and constraints.
-- `docs/research/` is non-normative until promoted into a reference, decision, spec, or task.
-- Top-level `specs/` owns Spec Kit feature artifacts.
-- `docs/product/specs/` owns product-facing focused specs.
-- If board status conflicts with handoff notes or historical records, the board wins.
+- `specs/project/` owns active project management.
+- `docs/` must not contain active task boards, active roadmap state, or canonical user stories.
+- If a supporting doc conflicts with `specs/project/`, `specs/project/` wins.
+- Research stays non-normative until promoted into `specs/project/`, a stable reference, or an ADR.
+- Architecture decisions stay in `docs/architecture/decisions/` and are linked from `specs/project/references.md`.
 
 ## Structure
 
 ```mermaid
 flowchart TD
+  Project[specs/project/] --> Milestones[milestones.md]
+  Project --> Roadmap[roadmap.md]
+  Project --> Stories[user-stories.md]
+  Project --> Features[features.md]
+  Project --> Tasks[tasks.md]
+
   Docs[docs/] --> Product[product/]
-  Docs --> Planning[planning/]
   Docs --> Architecture[architecture/]
   Docs --> References[references/]
   Docs --> History[history/]
   Docs --> Research[research/]
   Docs --> Guides[guides/]
 
-  Product --> Mission[mission.md]
-  Product --> Roadmap[roadmap.md]
   Product --> LandingDesign[landing-page-design.md]
-  Product --> ProductSpecs[specs/]
-  Planning --> Board[board.md]
-  Planning --> ExecutionNotes[execution-notes.md]
   Architecture --> Overview[overview.md]
   Architecture --> Decisions[decisions/]
   References --> Rules[nostr-auth-rules.md]

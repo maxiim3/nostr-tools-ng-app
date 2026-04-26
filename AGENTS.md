@@ -67,6 +67,6 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 <!-- SPECKIT START -->
 
-Current Spec Kit plan: `specs/001-project-management-cleanup/plan.md`
+Current project source of truth: `specs/project/`
 
 <!-- SPECKIT END -->

@@ -140,16 +140,17 @@ touch storage MUST state the current storage mode, the migration target, data
 persistence expectations, environment variables, and how protected admin
 behavior remains covered by `NIP-98`.
 
-Documentation sources have defined roles. `docs/planning/board.md` is the
-active execution source of truth. `docs/product/roadmap.md` provides product
-direction. `docs/product/specs/` contains focused product specs.
-`docs/architecture/overview.md` and `docs/architecture/decisions/` define
-structure and architectural decisions. `docs/references/nostr-auth-rules.md`
-defines stable Nostr auth constraints.
+Documentation sources have defined roles. `specs/project/` is the active
+project source of truth for milestones, roadmap, user stories, features, tasks,
+and task handoff briefs. `docs/architecture/overview.md` and
+`docs/architecture/decisions/` define structure and architectural decisions.
+`docs/references/nostr-auth-rules.md` defines stable Nostr auth constraints.
+`docs/research/`, `docs/history/`, and `docs/product/` contain supporting
+material only and do not own active planning status.
 
 ## Development Workflow
 
-Feature work MUST start from the active board or a focused product spec and
+Feature work MUST start from `specs/project/` and
 identify the independently testable user outcome before implementation details.
 Plans MUST capture the real project structure rather than generic template
 layouts. Tasks MUST be grouped by user story or operational outcome, include
@@ -173,9 +174,9 @@ service, or component.
 ## Governance
 
 This constitution supersedes conflicting generated Spec Kit guidance for this
-repository. When project documents conflict, the active board wins over
-historical documents, architecture decisions win over implementation shortcuts,
-and this constitution wins over generic templates.
+repository. When project documents conflict, `specs/project/` wins over
+supporting or historical documents, architecture decisions win over
+implementation shortcuts, and this constitution wins over generic templates.
 
 Amendments require updating `.specify/memory/constitution.md`, adding or
 updating the Sync Impact Report, reviewing dependent Spec Kit templates, and

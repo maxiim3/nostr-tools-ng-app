@@ -4,8 +4,8 @@
 **Created**: [DATE]
 **Status**: Draft
 **Input**: User description: "$ARGUMENTS"
-**Related Source**: [docs/planning/board.md task, docs/product/specs/*, roadmap,
-ADR, or N/A]
+**Related Source**: [specs/project task, feature, user story, roadmap item, ADR,
+or N/A]
 
 ## User Scenarios & Testing _(mandatory)_
 

@@ -1,5 +1,7 @@
 # Bug API locale et generation invoice zap
 
+Role: local troubleshooting reference. Active tasks and roadmap live in `../specs/project/`.
+
 ## Symptome
 
 Le zap modal s'ouvre apres un clic sur **Soutenir**, mais affiche une erreur de generation d'invoice.
