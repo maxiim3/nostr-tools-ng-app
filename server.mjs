@@ -24,8 +24,19 @@ const __dirname = path.dirname(__filename);
 const browserDistDir = path.join(__dirname, 'dist', 'nostr-tools-ng-app', 'browser');
 const browserDistRoot = path.resolve(browserDistDir);
 const indexFilePath = path.join(browserDistDir, 'index.html');
+const PUBLIC_PACK_RELAY_URLS = [
+  'wss://relay.damus.io',
+  'wss://relay.nostr.band',
+  'wss://nostr.oxtr.dev',
+  'wss://nostr-pub.wellorder.net',
+  'wss://nos.lol',
+  'wss://relay.primal.net',
+];
+const PUBLIC_PACK_EVENT_KIND = 39089;
+const ndkModulePromise = import('@nostr-dev-kit/ndk');
 
 const memberStorage = createFrancophonePackMemberStorage();
+let publicPackNdkPromise = null;
 
 const server = Bun.serve({
   port: PORT,
@@ -99,6 +110,20 @@ async function handleRequest(request) {
         { error: 'Failed to generate invoice' },
         { status: 500, headers: corsHeaders }
       );
+    }
+  }
+
+  if (request.method === 'GET' && requestUrl.pathname === '/api/public-pack-members') {
+    try {
+      const packUrl = readOptionalString(requestUrl.searchParams.get('packUrl'));
+      if (!packUrl) {
+        throw createHttpError(400, 'Missing packUrl query parameter.');
+      }
+
+      const members = await listPublicPackMembers(packUrl);
+      return jsonResponse(members, { headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
     }
   }
 
@@ -538,6 +563,149 @@ function mapMemberToSupabaseRow(member) {
     requested_at: member.requestedAt,
     removed_at: member.removedAt,
   };
+}
+
+async function listPublicPackMembers(packUrl) {
+  const packReference = parsePackReference(packUrl);
+  const currentPackEvent = await findCurrentPackEvent(packReference);
+
+  if (!currentPackEvent) {
+    throw createHttpError(404, 'Public pack event not found.');
+  }
+
+  const pubkeys = uniquePublicMemberPubkeys(currentPackEvent.tags);
+  const members = await Promise.all(pubkeys.map((pubkey) => loadPublicPackProfile(pubkey)));
+  return members.sort((left, right) => left.username.localeCompare(right.username));
+}
+
+async function findCurrentPackEvent(packReference) {
+  const ndk = await ensurePublicPackNdk();
+  const events = await Promise.race([
+    ndk.fetchEvents([
+      {
+        kinds: [PUBLIC_PACK_EVENT_KIND],
+        authors: [packReference.authorPubkey],
+        '#d': [packReference.dTag],
+        limit: 1,
+      },
+      {
+        '#d': [packReference.dTag],
+        limit: 20,
+      },
+    ]),
+    new Promise((resolve) => setTimeout(() => resolve(new Set()), 10_000)),
+  ]);
+
+  return [...events].find((event) => {
+    if (event.kind !== PUBLIC_PACK_EVENT_KIND) {
+      return false;
+    }
+
+    if (event.pubkey !== packReference.authorPubkey) {
+      return false;
+    }
+
+    return event.tags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag);
+  });
+}
+
+async function loadPublicPackProfile(pubkey) {
+  const ndk = await ensurePublicPackNdk();
+  const { NDKUser } = await ndkModulePromise;
+  const user = new NDKUser({ pubkey });
+  user.ndk = ndk;
+
+  const profile = await withTimeout(
+    user.fetchProfile().catch(() => null),
+    2500,
+    null
+  );
+  const npub = typeof user.npub === 'string' && user.npub ? user.npub : pubkey;
+  const username =
+    profile?.displayName?.trim() || profile?.name?.trim() || `${npub.slice(0, 12)}...`;
+
+  return {
+    pubkey,
+    username,
+    description: profile?.about?.trim() || null,
+    avatarUrl: profile?.picture ?? profile?.image ?? null,
+  };
+}
+
+async function ensurePublicPackNdk() {
+  if (!publicPackNdkPromise) {
+    publicPackNdkPromise = createPublicPackNdk().catch((error) => {
+      publicPackNdkPromise = null;
+      throw error;
+    });
+  }
+
+  return publicPackNdkPromise;
+}
+
+async function createPublicPackNdk() {
+  const { default: NDK } = await ndkModulePromise;
+  const ndk = new NDK({
+    explicitRelayUrls: PUBLIC_PACK_RELAY_URLS,
+  });
+
+  await ndk.connect(4000);
+  return ndk;
+}
+
+function parsePackReference(packUrl) {
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(packUrl);
+  } catch {
+    throw createHttpError(400, 'Invalid pack URL.');
+  }
+
+  const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
+  const dTag = pathSegments[0] === 'd' ? pathSegments[1]?.trim() : '';
+  if (!dTag) {
+    throw createHttpError(400, 'Pack URL is missing the d tag reference.');
+  }
+
+  const authorPubkey = normalizeHexPubkey(parsedUrl.searchParams.get('p') ?? '');
+  if (!authorPubkey) {
+    throw createHttpError(400, 'Pack URL is missing the owner pubkey reference.');
+  }
+
+  return {
+    authorPubkey,
+    dTag,
+  };
+}
+
+function uniquePublicMemberPubkeys(tags) {
+  const pubkeys = new Set();
+
+  for (const tag of tags) {
+    if (tag[0] !== 'p') {
+      continue;
+    }
+
+    const pubkey = normalizeHexPubkey(tag[1] ?? '');
+    if (pubkey) {
+      pubkeys.add(pubkey);
+    }
+  }
+
+  return [...pubkeys];
+}
+
+function normalizeHexPubkey(pubkey) {
+  const trimmedPubkey = String(pubkey).trim().toLowerCase();
+  return /^[0-9a-f]{64}$/.test(trimmedPubkey) ? trimmedPubkey : null;
+}
+
+async function withTimeout(promise, timeoutMs, fallbackValue) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallbackValue), timeoutMs)),
+  ]);
 }
 
 async function serveClientApp(pathname) {

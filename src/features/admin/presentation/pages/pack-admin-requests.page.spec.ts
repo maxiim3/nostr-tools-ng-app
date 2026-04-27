@@ -1,9 +1,8 @@
 import '@angular/compiler';
 
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import { FrancophonePackMembershipService } from '../../../packs/application/francophone-pack-membership.service';
 import {
   StarterPackRequestService,
@@ -29,6 +28,7 @@ const FAKE_ENTRIES: AdminPackMemberEntry[] = [
     followingCount: null,
     postCount: null,
     zapCount: null,
+    isStored: true,
     canRemove: true,
   },
 ];
@@ -37,9 +37,14 @@ interface PageAccess {
   entries: () => AdminPackMemberEntry[];
   loading: () => boolean;
   actingOn: () => string | null;
+  confirmingRemovalPubkey: () => string | null;
   actionError: () => string | null;
-  userRequestStatus: () => string | null;
-  isPackMember: () => boolean;
+  loadWarnings: () => string[];
+  toggleSort: (field: 'username' | 'accountCreatedAt' | 'requestedFromApp' | 'joinedAt') => void;
+  sortIndicator: (
+    field: 'username' | 'accountCreatedAt' | 'requestedFromApp' | 'joinedAt'
+  ) => string;
+  sortedEntries: () => AdminPackMemberEntry[];
   remove: (entry: AdminPackMemberEntry) => Promise<void>;
 }
 
@@ -48,52 +53,44 @@ function asAccessible(page: PackAdminRequestsPage): PageAccess {
 }
 
 function createMocks() {
-  const isAuthenticatedMock = vi.fn().mockReturnValue(true);
   const listAdminRequestsMock = vi.fn().mockResolvedValue(FAKE_ENTRIES);
-  const getUserStateMock = vi.fn().mockResolvedValue({ status: 'idle' });
   const removeMemberMock = vi.fn().mockResolvedValue(undefined);
-  const isCurrentUserMemberMock = vi.fn().mockResolvedValue(false);
   const listPublicPackMembersMock = vi.fn().mockResolvedValue([]);
+  const removeMemberFromPackMock = vi.fn().mockResolvedValue(undefined);
 
   TestBed.configureTestingModule({
     providers: [
       PackAdminRequestsPage,
       {
-        provide: NostrSessionService,
-        useValue: {
-          isAuthenticated: isAuthenticatedMock,
-          user: vi.fn().mockReturnValue(null),
-        },
-      },
-      {
         provide: StarterPackRequestService,
         useValue: {
           listAdminRequests: listAdminRequestsMock,
-          getUserState: getUserStateMock,
           removeMember: removeMemberMock,
         },
       },
       {
         provide: FrancophonePackMembershipService,
         useValue: {
-          isCurrentUserMember: isCurrentUserMemberMock,
           listPublicPackMembers: listPublicPackMembersMock,
+          removeMemberFromPack: removeMemberFromPackMock,
         },
       },
     ],
   });
 
   return {
-    isAuthenticated: isAuthenticatedMock,
     listAdminRequests: listAdminRequestsMock,
-    getUserState: getUserStateMock,
     removeMember: removeMemberMock,
-    isCurrentUserMember: isCurrentUserMemberMock,
     listPublicPackMembers: listPublicPackMembersMock,
+    removeMemberFromPack: removeMemberFromPackMock,
   };
 }
 
 describe('PackAdminRequestsPage', () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
   it('loads members and user status on init', async () => {
     const mocks = createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
@@ -101,8 +98,8 @@ describe('PackAdminRequestsPage', () => {
     await vi.dynamicImportSettled();
 
     expect(mocks.listAdminRequests).toHaveBeenCalled();
-    expect(mocks.getUserState).toHaveBeenCalled();
     expect(page.entries()).toEqual(FAKE_ENTRIES);
+    expect(page.loadWarnings()).toEqual([]);
     expect(page.loading()).toBe(false);
   });
 
@@ -133,48 +130,167 @@ describe('PackAdminRequestsPage', () => {
       username: 'Bob',
       requestedFromApp: false,
       joinedAtLabel: '-',
-      canRemove: false,
+      isStored: false,
+      canRemove: true,
     });
   });
 
-  it('skips getUserState when not authenticated', async () => {
+  it('keeps stored members visible when public members loading fails', async () => {
     const mocks = createMocks();
-    mocks.isAuthenticated.mockReturnValue(false);
+    mocks.listPublicPackMembers.mockRejectedValue(new Error('public failed'));
 
-    asAccessible(TestBed.inject(PackAdminRequestsPage));
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
 
-    expect(mocks.getUserState).not.toHaveBeenCalled();
+    expect(page.entries()).toEqual(FAKE_ENTRIES);
+    expect(page.loadWarnings()).toEqual(['adminRequests.warnings.publicSourceUnavailable']);
   });
 
-  it('remove calls removeMember and reloads', async () => {
+  it('keeps public members visible when the admin source fails', async () => {
+    const mocks = createMocks();
+    mocks.listAdminRequests.mockRejectedValue(new Error('admin failed'));
+    mocks.listPublicPackMembers.mockResolvedValue([
+      {
+        pubkey: 'def456',
+        username: 'Bob',
+        description: 'Pack-only member',
+        avatarUrl: 'bob.png',
+      },
+    ]);
+
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    expect(page.entries()).toHaveLength(1);
+    expect(page.entries()[0]).toMatchObject({
+      pubkey: 'def456',
+      username: 'Bob',
+      canRemove: true,
+    });
+    expect(page.loadWarnings()).toEqual(['adminRequests.warnings.adminSourceUnavailable']);
+  });
+
+  it('remove asks for confirmation before executing', async () => {
+    const mocks = createMocks();
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    await page.remove(FAKE_ENTRIES[0]);
+
+    expect(page.confirmingRemovalPubkey()).toBe('abc123');
+    expect(mocks.removeMemberFromPack).not.toHaveBeenCalled();
+    expect(mocks.removeMember).not.toHaveBeenCalled();
+  });
+
+  it('clears the confirmation state after 3 seconds', async () => {
+    vi.useFakeTimers();
+    const mocks = createMocks();
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    await page.remove(FAKE_ENTRIES[0]);
+    expect(page.confirmingRemovalPubkey()).toBe('abc123');
+
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(page.confirmingRemovalPubkey()).toBeNull();
+    expect(mocks.removeMemberFromPack).not.toHaveBeenCalled();
+  });
+
+  it('remove updates the pack and then removes the DB record when confirmed', async () => {
     const mocks = createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
     mocks.listAdminRequests.mockClear();
     mocks.removeMember.mockClear();
+    mocks.removeMemberFromPack.mockClear();
 
     await page.remove(FAKE_ENTRIES[0]);
+    await page.remove(FAKE_ENTRIES[0]);
 
+    expect(mocks.removeMemberFromPack).toHaveBeenCalledWith('abc123');
     expect(mocks.removeMember).toHaveBeenCalledWith('abc123');
     expect(mocks.listAdminRequests).toHaveBeenCalled();
+    expect(page.confirmingRemovalPubkey()).toBeNull();
     expect(page.actingOn()).toBeNull();
     expect(page.actionError()).toBeNull();
   });
 
+  it('remove only updates the pack when the member is not in DB', async () => {
+    const mocks = createMocks();
+    mocks.listPublicPackMembers.mockResolvedValue([
+      {
+        pubkey: 'def456',
+        username: 'Bob',
+        description: 'Pack-only member',
+        avatarUrl: 'bob.png',
+      },
+    ]);
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+    mocks.removeMember.mockClear();
+    mocks.removeMemberFromPack.mockClear();
+
+    const packOnlyEntry = page.entries()[1];
+    await page.remove(packOnlyEntry);
+    await page.remove(packOnlyEntry);
+
+    expect(mocks.removeMemberFromPack).toHaveBeenCalledWith('def456');
+    expect(mocks.removeMember).not.toHaveBeenCalled();
+  });
+
   it('remove sets actionError on failure', async () => {
     const mocks = createMocks();
-    mocks.removeMember.mockRejectedValue(new Error('fail'));
+    mocks.removeMemberFromPack.mockRejectedValue(new Error('fail'));
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
 
     await page.remove(FAKE_ENTRIES[0]);
+    await page.remove(FAKE_ENTRIES[0]);
 
     expect(page.actionError()).toBe('adminRequests.errors.removeFailed');
     expect(page.actingOn()).toBeNull();
+  });
+
+  it('cycles username sort from current to asc to desc to current', async () => {
+    const mocks = createMocks();
+    mocks.listAdminRequests.mockResolvedValue([
+      FAKE_ENTRIES[0],
+      {
+        ...FAKE_ENTRIES[0],
+        pubkey: 'zzz999',
+        username: 'Aaron',
+        joinedAt: 1,
+        joinedAtLabel: '-',
+        requestedFromApp: false,
+        isStored: false,
+      },
+    ]);
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    expect(page.sortIndicator('username')).toBe('');
+    expect(page.sortedEntries().map((entry) => entry.username)).toEqual(['Alice', 'Aaron']);
+
+    page.toggleSort('username');
+    expect(page.sortIndicator('username')).toBe('↑');
+    expect(page.sortedEntries().map((entry) => entry.username)).toEqual(['Aaron', 'Alice']);
+
+    page.toggleSort('username');
+    expect(page.sortIndicator('username')).toBe('↓');
+    expect(page.sortedEntries().map((entry) => entry.username)).toEqual(['Alice', 'Aaron']);
+
+    page.toggleSort('username');
+    expect(page.sortIndicator('username')).toBe('');
+    expect(page.sortedEntries().map((entry) => entry.username)).toEqual(['Alice', 'Aaron']);
   });
 });
 

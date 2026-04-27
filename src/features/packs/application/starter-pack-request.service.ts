@@ -47,6 +47,7 @@ export interface AdminPackMemberEntry {
   followingCount: number | null;
   postCount: number | null;
   zapCount: number | null;
+  isStored: boolean;
   canRemove: boolean;
 }
 
@@ -102,6 +103,7 @@ export class StarterPackRequestService {
       followingCount: record.followingCount,
       postCount: record.postCount,
       zapCount: record.zapCount,
+      isStored: true,
       canRemove: true,
     }));
   }

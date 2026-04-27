@@ -1,4 +1,6 @@
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { PROJECT_INFO } from '../../../core/config/project-info';
 import {
@@ -24,6 +26,7 @@ export interface PublicPackMemberEntry {
 
 @Injectable({ providedIn: 'root' })
 export class FrancophonePackMembershipService {
+  private readonly http = inject(HttpClient);
   private readonly nostrClient = inject(NostrClientService);
   private readonly requests = inject(StarterPackRequestService);
   private readonly session = inject(NostrSessionService);
@@ -48,6 +51,47 @@ export class FrancophonePackMembershipService {
   }
 
   async listPublicPackMembers(): Promise<PublicPackMemberEntry[]> {
+    try {
+      return await this.fetchServerPublicPackMembers();
+    } catch {
+      return this.listPublicPackMembersFromNostr();
+    }
+  }
+
+  async removeMemberFromPack(pubkey: string): Promise<void> {
+    const currentUser = this.session.user();
+    if (!currentUser) {
+      throw new Error('Authentication is required before updating the pack.');
+    }
+
+    const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
+    if (currentUser.pubkey !== packReference.authorPubkey) {
+      throw new Error('Only the pack owner can update the public pack.');
+    }
+
+    const currentPackEvent = await this.findCurrentPackEvent(packReference);
+    if (!currentPackEvent) {
+      throw new Error('Unable to load the current public pack event.');
+    }
+
+    const nextTags = currentPackEvent.tags.filter(
+      (tag) => !(tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === pubkey)
+    );
+
+    if (nextTags.length === currentPackEvent.tags.length) {
+      return;
+    }
+
+    await this.nostrClient.publishEvent(PACK_EVENT_KIND, nextTags, currentPackEvent.content);
+  }
+
+  private async fetchServerPublicPackMembers(): Promise<PublicPackMemberEntry[]> {
+    const path = `/api/public-pack-members?packUrl=${encodeURIComponent(PROJECT_INFO.packFRUrl)}`;
+
+    return firstValueFrom(this.http.get<PublicPackMemberEntry[]>(buildApiUrl(path)));
+  }
+
+  private async listPublicPackMembersFromNostr(): Promise<PublicPackMemberEntry[]> {
     const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
     const currentPackEvent = await this.findCurrentPackEvent(packReference);
 
@@ -141,4 +185,16 @@ function uniquePublicMemberPubkeys(tags: string[][]): string[] {
   }
 
   return [...pubkeys];
+}
+
+function buildApiUrl(path: string): string {
+  if (typeof globalThis === 'undefined' || !globalThis.location) {
+    return path;
+  }
+
+  const isLocal =
+    globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
+  const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
+
+  return `${origin}${path}`;
 }

@@ -1,5 +1,8 @@
 import '@angular/compiler';
+import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NostrClientService } from '../../../core/nostr/application/nostr-client.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
@@ -15,13 +18,20 @@ function createMocks(status: 'idle' | 'joined' = 'idle') {
   const getUserStateMock = vi.fn().mockResolvedValue({ status });
   const fetchEventsMock = vi.fn().mockResolvedValue([]);
   const fetchProfileMock = vi.fn();
+  const publishEventMock = vi.fn().mockResolvedValue('event-id');
+  const httpGetMock = vi.fn().mockReturnValue(of([]));
 
   TestBed.configureTestingModule({
     providers: [
       FrancophonePackMembershipService,
+      { provide: HttpClient, useValue: { get: httpGetMock } },
       {
         provide: NostrClientService,
-        useValue: { fetchEvents: fetchEventsMock, fetchProfile: fetchProfileMock },
+        useValue: {
+          fetchEvents: fetchEventsMock,
+          fetchProfile: fetchProfileMock,
+          publishEvent: publishEventMock,
+        },
       },
       { provide: NostrSessionService, useValue: { user: userMock } },
       { provide: StarterPackRequestService, useValue: { getUserState: getUserStateMock } },
@@ -30,7 +40,15 @@ function createMocks(status: 'idle' | 'joined' = 'idle') {
 
   const service = TestBed.inject(FrancophonePackMembershipService);
 
-  return { service, userMock, getUserStateMock, fetchEventsMock, fetchProfileMock };
+  return {
+    service,
+    userMock,
+    getUserStateMock,
+    fetchEventsMock,
+    fetchProfileMock,
+    publishEventMock,
+    httpGetMock,
+  };
 }
 
 describe('FrancophonePackMembershipService', () => {
@@ -63,8 +81,63 @@ describe('FrancophonePackMembershipService', () => {
     expect(getUserStateMock).not.toHaveBeenCalled();
   });
 
-  it('lists unique public pack p tags with profile snapshots', async () => {
-    const { service, fetchEventsMock, fetchProfileMock } = createMocks();
+  it('uses the server-backed public pack members endpoint first', async () => {
+    const { service, httpGetMock, fetchEventsMock } = createMocks();
+    httpGetMock.mockReturnValue(
+      of([
+        {
+          pubkey: USER_PUBKEY,
+          username: 'Alice',
+          description: 'Bonjour',
+          avatarUrl: 'alice.png',
+        },
+      ])
+    );
+
+    await expect(service.listPublicPackMembers()).resolves.toEqual([
+      {
+        pubkey: USER_PUBKEY,
+        username: 'Alice',
+        description: 'Bonjour',
+        avatarUrl: 'alice.png',
+      },
+    ]);
+
+    expect(httpGetMock).toHaveBeenCalledOnce();
+    expect(fetchEventsMock).not.toHaveBeenCalled();
+  });
+
+  it('removes a member from the current public pack event', async () => {
+    const { service, fetchEventsMock, publishEventMock, userMock } = createMocks();
+    userMock.mockReturnValue({ pubkey: PACK_OWNER_PUBKEY });
+    fetchEventsMock.mockResolvedValue([
+      {
+        kind: 39089,
+        pubkey: PACK_OWNER_PUBKEY,
+        content: '',
+        tags: [
+          ['d', 'xd0520r38aua'],
+          ['p', USER_PUBKEY],
+          ['p', OTHER_PUBKEY],
+        ],
+      },
+    ]);
+
+    await service.removeMemberFromPack(USER_PUBKEY);
+
+    expect(publishEventMock).toHaveBeenCalledWith(
+      39089,
+      [
+        ['d', 'xd0520r38aua'],
+        ['p', OTHER_PUBKEY],
+      ],
+      ''
+    );
+  });
+
+  it('falls back to Nostr when the server endpoint fails', async () => {
+    const { service, fetchEventsMock, fetchProfileMock, httpGetMock } = createMocks();
+    httpGetMock.mockReturnValue(throwError(() => new Error('server down')));
     fetchEventsMock.mockResolvedValue([
       {
         kind: 39089,
@@ -89,6 +162,7 @@ describe('FrancophonePackMembershipService', () => {
 
     const result = await service.listPublicPackMembers();
 
+    expect(httpGetMock).toHaveBeenCalledOnce();
     expect(fetchEventsMock).toHaveBeenCalledWith([
       {
         kinds: [39089],
@@ -119,7 +193,8 @@ describe('FrancophonePackMembershipService', () => {
   });
 
   it('filters fallback events to the configured pack kind and owner', async () => {
-    const { service, fetchEventsMock, fetchProfileMock } = createMocks();
+    const { service, fetchEventsMock, fetchProfileMock, httpGetMock } = createMocks();
+    httpGetMock.mockReturnValue(throwError(() => new Error('server down')));
     fetchEventsMock.mockResolvedValue([
       {
         kind: 39089,
@@ -147,6 +222,7 @@ describe('FrancophonePackMembershipService', () => {
 
     await service.listPublicPackMembers();
 
+    expect(httpGetMock).toHaveBeenCalledOnce();
     expect(fetchEventsMock).toHaveBeenCalledWith([
       {
         kinds: [39089],

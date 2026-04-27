@@ -1,17 +1,29 @@
 <section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-7xl p-6">
-  <div class="mb-8 space-y-2">
-    <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
-      {{ 'adminRequests.title' | transloco }}
-    </h1>
-    <p class="text-base text-[#0a0a0a]/60">{{ 'adminRequests.subtitle' | transloco }}</p>
+  <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
+        {{ 'adminRequests.title' | transloco }}
+      </h1>
+      <p class="text-base text-[#0a0a0a]/60">{{ 'adminRequests.subtitle' | transloco }}</p>
+    </div>
+
+    <a
+      [href]="packFRUrl"
+      target="_blank"
+      rel="noreferrer"
+      class="btn btn-outline btn-sm h-auto self-start px-4 py-2 text-sm"
+    >
+      {{ 'adminRequests.openPack' | transloco }}
+    </a>
   </div>
 
-  @if (isPackMember()) {
-    <div class="alert alert-success mb-6">
-      <span class="font-bold">{{ 'adminRequests.youAreInPack' | transloco }}</span>
-      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">
-        {{ 'adminRequests.openPack' | transloco }}
-      </a>
+  @if (loadWarnings().length > 0) {
+    <div role="alert" class="alert alert-warning mb-6 items-start">
+      <div class="space-y-1">
+        @for (warning of loadWarnings(); track warning) {
+          <p>{{ warning | transloco }}</p>
+        }
+      </div>
     </div>
   }
 
@@ -37,16 +49,60 @@
         <thead>
           <tr class="border-[#0a0a0a] text-[#0a0a0a]">
             <th scope="col">{{ 'adminRequests.columns.avatar' | transloco }}</th>
-            <th scope="col">{{ 'adminRequests.columns.username' | transloco }}</th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 font-semibold"
+                (click)="toggleSort('username')"
+              >
+                <span>{{ 'adminRequests.columns.username' | transloco }}</span>
+                @if (sortIndicator('username')) {
+                  <span aria-hidden="true">{{ sortIndicator('username') }}</span>
+                }
+              </button>
+            </th>
             <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
-            <th scope="col">{{ 'adminRequests.columns.accountCreatedAt' | transloco }}</th>
-            <th scope="col">{{ 'adminRequests.columns.requestedFromApp' | transloco }}</th>
-            <th scope="col">{{ 'adminRequests.columns.joinedAt' | transloco }}</th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 font-semibold"
+                (click)="toggleSort('accountCreatedAt')"
+              >
+                <span>{{ 'adminRequests.columns.accountCreatedAt' | transloco }}</span>
+                @if (sortIndicator('accountCreatedAt')) {
+                  <span aria-hidden="true">{{ sortIndicator('accountCreatedAt') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 font-semibold"
+                (click)="toggleSort('requestedFromApp')"
+              >
+                <span>{{ 'adminRequests.columns.requestedFromApp' | transloco }}</span>
+                @if (sortIndicator('requestedFromApp')) {
+                  <span aria-hidden="true">{{ sortIndicator('requestedFromApp') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 font-semibold"
+                (click)="toggleSort('joinedAt')"
+              >
+                <span>{{ 'adminRequests.columns.joinedAt' | transloco }}</span>
+                @if (sortIndicator('joinedAt')) {
+                  <span aria-hidden="true">{{ sortIndicator('joinedAt') }}</span>
+                }
+              </button>
+            </th>
             <th scope="col" class="text-right">{{ 'adminRequests.columns.action' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
-          @for (entry of entries(); track entry.pubkey) {
+          @for (entry of sortedEntries(); track entry.pubkey) {
             <tr class="border-[#0a0a0a]/20 align-top">
               <td>
                 @if (entry.avatarUrl) {
@@ -99,20 +155,20 @@
                 }
               </td>
               <td class="text-right">
-                @if (entry.canRemove) {
-                  <button
-                    type="button"
-                    class="btn btn-error btn-sm h-auto px-4 py-2 whitespace-normal"
-                    [disabled]="actingOn() === entry.pubkey"
-                    (click)="remove(entry)"
-                  >
+                <button
+                  type="button"
+                  class="btn btn-outline btn-sm h-auto px-4 py-2 whitespace-normal border-red-600 text-red-600 hover:bg-red-50"
+                  [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
+                  [class.text-white]="confirmingRemovalPubkey() === entry.pubkey"
+                  [disabled]="actingOn() === entry.pubkey"
+                  (click)="remove(entry)"
+                >
+                  @if (confirmingRemovalPubkey() === entry.pubkey) {
+                    {{ 'adminRequests.confirmRemove' | transloco }}
+                  } @else {
                     {{ 'adminRequests.remove' | transloco }}
-                  </button>
-                } @else {
-                  <span class="text-sm text-[#0a0a0a]/40">
-                    {{ 'adminRequests.packOnly' | transloco }}
-                  </span>
-                }
+                  }
+                </button>
               </td>
             </tr>
           }

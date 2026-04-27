@@ -258,13 +258,13 @@
     "empty": "Todavía no hay miembros.",
     "primal": "Abrir en Primal",
     "remove": "Eliminar",
+    "confirmRemove": "Confirmar X",
     "packOnly": "Solo pack",
     "yes": "Sí",
     "no": "No",
     "unknown": "-",
     "requestedAtPrefix": "Solicitado:",
-    "youAreInPack": "¡Ya formas parte del pack!",
-    "openPack": "Abrir",
+    "openPack": "Abrir pack",
     "columns": {
       "avatar": "Avatar",
       "username": "Usuario",
@@ -276,6 +276,10 @@
     },
     "errors": {
       "removeFailed": "No se puede eliminar este miembro en este momento."
+    },
+    "warnings": {
+      "adminSourceUnavailable": "La fuente admin de ToolStr no está disponible temporalmente. La lista puede ser parcial.",
+      "publicSourceUnavailable": "La fuente pública del pack no está disponible temporalmente. La lista puede ser parcial."
     },
     "statuses": {
       "pending": "Pendiente",

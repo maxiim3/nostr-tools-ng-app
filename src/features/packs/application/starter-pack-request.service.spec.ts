@@ -113,6 +113,7 @@ describe('StarterPackRequestService', () => {
       expect(typeof result[0].requestedAtLabel).toBe('string');
       expect(typeof result[0].accountCreatedAt).toBe('number');
       expect(typeof result[0].accountCreatedAtLabel).toBe('string');
+      expect(result[0].isStored).toBe(true);
       expect(result[0].canRemove).toBe(true);
     });
   });
