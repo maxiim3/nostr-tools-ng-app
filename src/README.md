@@ -12,7 +12,7 @@ Cette documentation est placee au plus proche du code pour expliquer les workflo
 
 ## Contexte produit et architecture
 
-- [Documentation index](../docs/README.md)
-- [Mission](../docs/product/mission.md)
-- [Roadmap produit](../docs/product/roadmap.md)
-- [Architecture globale](../docs/architecture/overview.md)
+- [Source de verite projet](../specs/project/README.md)
+- [Execution queue](../specs/project/queue.md)
+- [Roadmap projet](../specs/project/roadmap.md)
+- [Architecture globale](../specs/project/support/architecture/overview.md)

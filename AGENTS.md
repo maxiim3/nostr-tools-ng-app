@@ -54,6 +54,22 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
+## Project Source of Truth
+
+- Current project source of truth: `specs/project/`
+- Start feature work from `specs/project/queue.md`, then the selected `specs/project/features/<id-name>/` directory.
+- `specs/project/support/architecture/overview.md` and `specs/project/support/decisions/` define architecture context and decisions.
+- `specs/project/support/references/nostr-auth-rules.md` defines stable Nostr authentication constraints.
+- Supporting research, history, incidents, and design docs inform implementation but do not override active feature specs or architecture decisions.
+
+## Nostr Auth and Security
+
+- Preserve the current Nostr protocol model unless a new architecture decision changes it.
+- Use NIP-07 as the primary desktop web signer path, NIP-46 external signer apps as the primary mobile path, and NIP-46 bunker as an advanced strategy.
+- Backend-protected HTTP routes must use stateless NIP-98 verification; do not introduce backend sessions, cookies, JWT login, OAuth replacement, or server-side identity state without an explicit product and architecture decision.
+- The signer is the cryptographic source of truth; hex public keys are identity references, while `npub` and NIP-05 are presentation attributes.
+- Redact sensitive values from logs, including NIP-46 secrets, bunker tokens, auth URLs, and NIP-98 tokens.
+
 ## Commit Conventions
 
 - Format: `feat: <short lowercase description>`
@@ -64,10 +80,3 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Never call the underlying tools directly with commands like `bunx prettier`, `prettier`, `ng lint`, `tsc`, or `ng test` unless the user explicitly asks for that exact command.
 - Preferred commands are `bun run format`, `bun run format:check`, `bun run lint`, `bun run lint:css`, `bun run typecheck`, `bun run test`, `bun run build`, `bun run fix`, and `bun run check`.
 - Before committing, use `bun run fix`, `bun run check`, or the targeted `bun run ...` scripts from `package.json`.
-
-<!-- SPECKIT START -->
-
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
-
-<!-- SPECKIT END -->

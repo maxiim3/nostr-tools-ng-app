@@ -1,4 +1,10 @@
 node_modules
 dist
+build
 .git
 .runtime
+Dockerfile*
+.dockerignore
+*.log*
+.env*
+coverage

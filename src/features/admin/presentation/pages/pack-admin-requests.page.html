@@ -1,21 +1,29 @@
-<section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-5xl p-6">
-  <div class="mb-8 space-y-2">
-    <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
-      {{ 'adminRequests.title' | transloco }}
-    </h1>
-    <p class="text-base text-[#0a0a0a]/60">{{ 'adminRequests.subtitle' | transloco }}</p>
+<section class="brutal-grid min-h-[calc(100vh-4rem)] mx-auto max-w-7xl p-6">
+  <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <h1 class="text-4xl font-extrabold text-[#0a0a0a]">
+        {{ 'adminRequests.title' | transloco }}
+      </h1>
+      <p class="text-base text-[#0a0a0a]/60">{{ 'adminRequests.subtitle' | transloco }}</p>
+    </div>
+
+    <a
+      [href]="packFRUrl"
+      target="_blank"
+      rel="noreferrer"
+      class="btn btn-outline btn-sm h-auto self-start px-4 py-2 text-sm"
+    >
+      {{ 'adminRequests.openPack' | transloco }}
+    </a>
   </div>
 
-  @if (isPackMember()) {
-    <div class="alert alert-success mb-6">
-      <span class="font-bold">{{ 'adminRequests.youAreInPack' | transloco }}</span>
-      <a [href]="packFRUrl" target="_blank" rel="noreferrer" class="btn btn-success btn-sm">
-        {{ 'adminRequests.openPack' | transloco }}
-      </a>
-    </div>
-  } @else if (userRequestStatus() === 'pending') {
-    <div class="alert alert-info mb-6">
-      <span>{{ 'adminRequests.yourRequestPending' | transloco }}</span>
+  @if (loadWarnings().length > 0) {
+    <div role="alert" class="alert alert-warning mb-6 items-start">
+      <div class="space-y-1">
+        @for (warning of loadWarnings(); track warning) {
+          <p>{{ warning | transloco }}</p>
+        }
+      </div>
     </div>
   }
 
@@ -36,114 +44,139 @@
       {{ 'adminRequests.empty' | transloco }}
     </div>
   } @else {
-    <div class="space-y-4">
-      @for (entry of entries(); track entry.requesterPubkey) {
-        <article class="brutal-shadow border-[3px] border-[#0a0a0a] bg-white">
-          <div class="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-            <div class="flex min-w-0 flex-1 items-start gap-4 md:items-center">
-              @if (entry.imageUrl) {
-                <img
-                  [src]="entry.imageUrl"
-                  [alt]="entry.displayName"
-                  class="h-14 w-14 border-[3px] border-[#0a0a0a] object-cover"
-                />
-              } @else {
-                <div
-                  class="flex h-14 w-14 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-lg font-bold text-[#0a0a0a]"
-                >
-                  {{ entry.displayName.slice(0, 2).toUpperCase() }}
-                </div>
-              }
-
-              <div class="min-w-0 flex-1 space-y-1">
-                <div class="flex min-w-0 flex-wrap items-center gap-2">
-                  <h2 class="max-w-full text-xl font-bold text-[#0a0a0a] [overflow-wrap:anywhere]">
-                    {{ entry.displayName }}
-                  </h2>
-                  <span class="brutal-sticker bg-[#FFE600] text-[#0a0a0a] px-2 py-0 text-xs">
-                    {{ 'adminRequests.statuses.' + entry.status | transloco }}
-                  </span>
-                </div>
-                <p class="max-w-full text-sm text-[#0a0a0a]/50 [overflow-wrap:anywhere]">
-                  {{ entry.requesterNpub }}
-                </p>
-                <p class="text-xs text-[#0a0a0a]/40">{{ entry.submittedAtLabel }}</p>
-              </div>
-            </div>
-
-            <div
-              class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end"
-            >
-              <div class="flex flex-wrap gap-2 md:justify-end">
+    <div class="overflow-x-auto border-[3px] border-[#0a0a0a] bg-white">
+      <table class="table">
+        <thead>
+          <tr class="border-[#0a0a0a] text-[#0a0a0a]">
+            <th scope="col">{{ 'adminRequests.columns.avatar' | transloco }}</th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
+                (click)="toggleSort('username')"
+              >
+                <span>{{ 'adminRequests.columns.username' | transloco }}</span>
+                @if (sortIndicator('username')) {
+                  <span aria-hidden="true">{{ sortIndicator('username') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
+                (click)="toggleSort('accountCreatedAt')"
+              >
+                <span>{{ 'adminRequests.columns.accountCreatedAt' | transloco }}</span>
+                @if (sortIndicator('accountCreatedAt')) {
+                  <span aria-hidden="true">{{ sortIndicator('accountCreatedAt') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
+                (click)="toggleSort('requestedFromApp')"
+              >
+                <span>{{ 'adminRequests.columns.requestedFromApp' | transloco }}</span>
+                @if (sortIndicator('requestedFromApp')) {
+                  <span aria-hidden="true">{{ sortIndicator('requestedFromApp') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
+                (click)="toggleSort('joinedAt')"
+              >
+                <span>{{ 'adminRequests.columns.joinedAt' | transloco }}</span>
+                @if (sortIndicator('joinedAt')) {
+                  <span aria-hidden="true">{{ sortIndicator('joinedAt') }}</span>
+                }
+              </button>
+            </th>
+            <th scope="col" class="text-right">{{ 'adminRequests.columns.action' | transloco }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of sortedEntries(); track entry.pubkey) {
+            <tr class="border-[#0a0a0a]/20 align-top hover:bg-transparent">
+              <td>
+                @if (entry.avatarUrl) {
+                  <img
+                    [src]="entry.avatarUrl"
+                    [alt]="entry.username"
+                    class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
+                  />
+                } @else {
+                  <div
+                    class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
+                  >
+                    {{ entry.username.slice(0, 2).toUpperCase() }}
+                  </div>
+                }
+              </td>
+              <td class="min-w-48">
                 <a
                   [href]="entry.primalUrl"
                   target="_blank"
                   rel="noreferrer"
-                  class="btn btn-ghost btn-sm h-auto w-full px-4 py-2 text-center whitespace-normal sm:w-auto sm:whitespace-nowrap"
+                  class="font-bold text-[#0a0a0a] underline decoration-2 underline-offset-4 [overflow-wrap:anywhere]"
                 >
-                  {{ 'adminRequests.primal' | transloco }}
+                  {{ entry.username }}
                 </a>
-                <a
-                  [href]="packFRUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="btn btn-ghost btn-sm h-auto w-full px-4 py-2 text-center whitespace-normal sm:w-auto sm:whitespace-nowrap"
-                >
-                  {{ 'request.followup.starterPack' | transloco }}
-                </a>
-              </div>
-
-              <div class="flex shrink-0 items-center gap-2 self-end md:self-auto">
+                <p class="mt-1 text-xs text-[#0a0a0a]/50 [overflow-wrap:anywhere]">
+                  {{ entry.pubkey }}
+                </p>
+              </td>
+              <td class="min-w-64 max-w-sm text-sm text-[#0a0a0a]/70 [overflow-wrap:anywhere]">
+                {{ entry.description || ('adminRequests.unknown' | transloco) }}
+              </td>
+              <td class="min-w-40 text-sm text-[#0a0a0a]/70">
+                {{ entry.accountCreatedAtLabel }}
+              </td>
+              <td class="min-w-36 text-sm text-[#0a0a0a]/70">
+                @if (entry.requestedFromApp) {
+                  {{ 'adminRequests.yes' | transloco }}
+                } @else {
+                  {{ 'adminRequests.no' | transloco }}
+                }
+              </td>
+              <td class="min-w-48 text-sm text-[#0a0a0a]/70">
+                <p>{{ entry.joinedAtLabel }}</p>
+                @if (entry.requestedAt) {
+                  <p class="text-xs text-[#0a0a0a]/50">
+                    {{ 'adminRequests.requestedAtPrefix' | transloco }}
+                    {{ entry.requestedAtLabel }}
+                  </p>
+                }
+              </td>
+              <td class="text-right">
                 <button
                   type="button"
-                  class="btn btn-success btn-sm btn-square"
-                  [disabled]="actingOn() === entry.requesterPubkey"
-                  [title]="'adminRequests.approve' | transloco"
-                  (click)="approve(entry)"
+                  class="btn btn-sm h-auto px-4 py-2 whitespace-nowrap border-red-600"
+                  [class.btn-outline]="confirmingRemovalPubkey() !== entry.pubkey"
+                  [class.text-red-600]="confirmingRemovalPubkey() !== entry.pubkey"
+                  [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
+                  [class.bg-red-600]="confirmingRemovalPubkey() === entry.pubkey"
+                  [class.text-white]="confirmingRemovalPubkey() === entry.pubkey"
+                  [disabled]="actingOn() === entry.pubkey"
+                  (click)="remove(entry)"
                 >
-                  <span class="sr-only">{{ 'adminRequests.approve' | transloco }}</span>
-                  <svg
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    class="size-4"
-                  >
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
+                  @if (confirmingRemovalPubkey() === entry.pubkey) {
+                    {{ 'adminRequests.confirmRemove' | transloco }}
+                  } @else {
+                    {{ 'adminRequests.remove' | transloco }}
+                  }
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-error btn-sm btn-square"
-                  [disabled]="actingOn() === entry.requesterPubkey"
-                  [title]="'adminRequests.reject' | transloco"
-                  (click)="reject(entry)"
-                >
-                  <span class="sr-only">{{ 'adminRequests.reject' | transloco }}</span>
-                  <svg
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    class="size-4"
-                  >
-                    <path d="m18 6-12 12" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
-      }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
   }
 </section>

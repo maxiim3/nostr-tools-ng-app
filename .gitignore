@@ -11,6 +11,14 @@
 npm-debug.log
 yarn-error.log
 
+# Build output
+/build
+
+# Environment and logs
+.env*
+!.env.example
+*.log
+
 # IDEs and editors
 .idea/
 .project
@@ -32,10 +40,13 @@ yarn-error.log
 # Miscellaneous
 /.angular/cache
 .runtime/
+supabase/.temp/
 .sass-cache/
 /connect.lock
 /coverage
 /libpeerconnection.log
+*.tmp
+*.swp
 testem.log
 /typings
 __screenshots__/

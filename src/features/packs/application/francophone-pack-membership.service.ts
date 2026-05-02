@@ -1,8 +1,14 @@
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { PROJECT_INFO } from '../../../core/config/project-info';
-import { NostrClientService } from '../../../core/nostr/application/nostr-client.service';
+import {
+  NostrClientService,
+  normalizeHexPubkey,
+} from '../../../core/nostr/application/nostr-client.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
+import { StarterPackRequestService } from './starter-pack-request.service';
 
 const PACK_EVENT_KIND = 39089;
 
@@ -11,9 +17,18 @@ interface PackReference {
   dTag: string;
 }
 
+export interface PublicPackMemberEntry {
+  pubkey: string;
+  username: string;
+  description: string | null;
+  avatarUrl: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FrancophonePackMembershipService {
+  private readonly http = inject(HttpClient);
   private readonly nostrClient = inject(NostrClientService);
+  private readonly requests = inject(StarterPackRequestService);
   private readonly session = inject(NostrSessionService);
 
   async isCurrentUserMember(): Promise<boolean> {
@@ -22,70 +37,110 @@ export class FrancophonePackMembershipService {
       return false;
     }
 
-    return this.isMember(currentUser.pubkey);
+    const state = await this.requests.getUserState();
+    return state.status === 'joined';
   }
 
   async isMember(pubkey: string): Promise<boolean> {
-    const normalizedPubkey = normalizeHexPubkey(pubkey);
-    if (!normalizedPubkey) {
+    const currentUser = this.session.user();
+    if (!currentUser || currentUser.pubkey !== pubkey) {
       return false;
     }
 
-    const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
-    const currentPackEvent = await this.loadPackEvent(packReference);
-
-    return hasMemberTag(currentPackEvent.tags, normalizedPubkey);
+    return this.isCurrentUserMember();
   }
 
-  async addMember(requesterPubkey: string): Promise<void> {
-    const normalizedRequesterPubkey = normalizeHexPubkey(requesterPubkey);
-    if (!normalizedRequesterPubkey) {
-      throw new Error('Invalid requester pubkey.');
+  async listPublicPackMembers(): Promise<PublicPackMemberEntry[]> {
+    try {
+      return await this.fetchServerPublicPackMembers();
+    } catch {
+      return this.listPublicPackMembersFromNostr();
+    }
+  }
+
+  async removeMemberFromPack(pubkey: string): Promise<void> {
+    const currentUser = this.session.user();
+    if (!currentUser) {
+      throw new Error('Authentication is required before updating the pack.');
     }
 
     const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
-    this.assertPublisherAccess(packReference);
+    if (currentUser.pubkey !== packReference.authorPubkey) {
+      throw new Error('Only the pack owner can update the public pack.');
+    }
 
-    const currentPackEvent = await this.loadPackEvent(packReference);
+    const currentPackEvent = await this.findCurrentPackEvent(packReference);
+    if (!currentPackEvent) {
+      throw new Error('Unable to load the current public pack event.');
+    }
 
-    if (hasMemberTag(currentPackEvent.tags, normalizedRequesterPubkey)) {
+    const nextTags = currentPackEvent.tags.filter(
+      (tag) => !(tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === pubkey)
+    );
+
+    if (nextTags.length === currentPackEvent.tags.length) {
       return;
     }
 
-    const updatedTags = addMemberTag(
-      currentPackEvent.tags,
-      normalizedRequesterPubkey,
-      packReference.dTag
-    );
-    await this.nostrClient.publishEvent(PACK_EVENT_KIND, updatedTags, currentPackEvent.content);
+    await this.nostrClient.publishEvent(PACK_EVENT_KIND, nextTags, currentPackEvent.content);
   }
 
-  private async loadPackEvent(packReference: PackReference) {
-    const [currentPackEvent] = await this.nostrClient.fetchEvents({
-      kinds: [PACK_EVENT_KIND],
-      authors: [packReference.authorPubkey],
-      '#d': [packReference.dTag],
-      limit: 1,
-    });
+  private async fetchServerPublicPackMembers(): Promise<PublicPackMemberEntry[]> {
+    const path = `/api/public-pack-members?packUrl=${encodeURIComponent(PROJECT_INFO.packFRUrl)}`;
+
+    return firstValueFrom(this.http.get<PublicPackMemberEntry[]>(buildApiUrl(path)));
+  }
+
+  private async listPublicPackMembersFromNostr(): Promise<PublicPackMemberEntry[]> {
+    const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
+    const currentPackEvent = await this.findCurrentPackEvent(packReference);
 
     if (!currentPackEvent) {
-      throw new Error('Unable to load the current pack event.');
+      return [];
     }
 
-    return currentPackEvent;
+    const pubkeys = uniquePublicMemberPubkeys(currentPackEvent.tags);
+    const profiles = await Promise.all(
+      pubkeys.map(async (pubkey) => {
+        const profile = await this.nostrClient.fetchProfile(pubkey).catch(() => null);
+
+        return {
+          pubkey,
+          username: profile?.displayName ?? `${pubkey.slice(0, 12)}...`,
+          description: profile?.description ?? null,
+          avatarUrl: profile?.imageUrl ?? null,
+        };
+      })
+    );
+
+    return profiles.sort((left, right) => left.username.localeCompare(right.username));
   }
 
-  private assertPublisherAccess(packReference: PackReference): void {
-    const currentUser = this.session.user();
+  private async findCurrentPackEvent(packReference: PackReference) {
+    const events = await this.nostrClient.fetchEvents([
+      {
+        kinds: [PACK_EVENT_KIND],
+        authors: [packReference.authorPubkey],
+        '#d': [packReference.dTag],
+        limit: 1,
+      },
+      {
+        '#d': [packReference.dTag],
+        limit: 20,
+      },
+    ]);
 
-    if (!currentUser) {
-      throw new Error('Authentication is required to publish a pack update.');
-    }
+    return events.find((event) => {
+      if (event.kind !== PACK_EVENT_KIND) {
+        return false;
+      }
 
-    const normalizedCurrentPubkey = normalizeHexPubkey(currentUser.pubkey);
-    if (!normalizedCurrentPubkey || normalizedCurrentPubkey !== packReference.authorPubkey) {
-      throw new Error('The connected account cannot publish this pack.');
-    }
+      if (event.pubkey !== packReference.authorPubkey) {
+        return false;
+      }
+
+      return event.tags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag);
+    });
   }
 }
 
@@ -104,7 +159,7 @@ function parsePackReference(packUrl: string): PackReference {
     throw new Error('Pack URL is missing the d tag reference.');
   }
 
-  const authorPubkey = normalizeHexPubkey(parsedUrl.searchParams.get('p'));
+  const authorPubkey = normalizeHexPubkey(parsedUrl.searchParams.get('p') ?? '');
   if (!authorPubkey) {
     throw new Error('Pack URL is missing the owner pubkey reference.');
   }
@@ -115,30 +170,31 @@ function parsePackReference(packUrl: string): PackReference {
   };
 }
 
-function hasMemberTag(tags: string[][], memberPubkey: string): boolean {
-  return tags.some((tag) => tag[0] === 'p' && normalizeHexPubkey(tag[1]) === memberPubkey);
-}
+function uniquePublicMemberPubkeys(tags: string[][]): string[] {
+  const pubkeys = new Set<string>();
 
-function addMemberTag(tags: string[][], memberPubkey: string, dTag: string): string[][] {
-  const nextTags = tags.map((tag) => [...tag]);
+  for (const tag of tags) {
+    if (tag[0] !== 'p') {
+      continue;
+    }
 
-  if (
-    !nextTags.some(
-      (tag) => tag[0] === 'd' && typeof tag[1] === 'string' && tag[1].trim().length > 0
-    )
-  ) {
-    nextTags.unshift(['d', dTag]);
+    const pubkey = normalizeHexPubkey(tag[1] ?? '');
+    if (pubkey) {
+      pubkeys.add(pubkey);
+    }
   }
 
-  nextTags.push(['p', memberPubkey]);
-  return nextTags;
+  return [...pubkeys];
 }
 
-function normalizeHexPubkey(value: string | null | undefined): string | null {
-  if (!value) {
-    return null;
+function buildApiUrl(path: string): string {
+  if (typeof globalThis === 'undefined' || !globalThis.location) {
+    return path;
   }
 
-  const trimmedValue = value.trim().toLowerCase();
-  return /^[0-9a-f]{64}$/.test(trimmedValue) ? trimmedValue : null;
+  const isLocal =
+    globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
+  const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
+
+  return `${origin}${path}`;
 }

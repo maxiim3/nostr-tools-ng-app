@@ -54,7 +54,7 @@
   },
   "request": {
     "title": "Unirse al starter pack francófono",
-    "subtitle": "Conéctate con Nostr para solicitar acceso y seguir el estado de tu solicitud.",
+    "subtitle": "Conéctate con Nostr para unirte al pack francófono inmediatamente.",
     "loading": {
       "1": "Esto puede tardar unos segundos...",
       "2": "Consultando la base de datos...",
@@ -66,10 +66,10 @@
     "identity": "Cuenta conectada",
     "extensionLogin": "Conéctate con la extensión",
     "externalLogin": "Abrir la app externa",
-    "requestJoin": "Solicitar acceso",
+    "requestJoin": "Unirse al pack",
     "status": {
-      "idle": "Ya puedes enviar tu solicitud.",
-      "pending": "Tu solicitud está pendiente de revisión.",
+      "idle": "Ya puedes unirte al pack.",
+      "pending": "Tu admisión está en curso.",
       "approved": "Tu solicitud ha sido aprobada.",
       "alreadyMember": "¡Ya formas parte del pack!"
     },
@@ -77,7 +77,7 @@
       "authError": "La firma de la solicitud fue rechazada. Vuelve a conectarte e inténtalo de nuevo.",
       "forbidden": "No tienes permiso para realizar esta acción.",
       "invalidRequest": "La solicitud enviada no es válida.",
-      "generic": "No se puede enviar la solicitud ahora mismo. Vuelve a intentarlo en breve."
+      "generic": "No se puede unir al pack ahora mismo. Vuelve a intentarlo en breve."
     },
     "followup": {
       "title": "Mientras esperas",
@@ -253,18 +253,33 @@
     }
   },
   "adminRequests": {
-    "title": "Solicitudes de acceso",
-    "subtitle": "Solicitudes Nostr para el pack francófono.",
-    "empty": "Todavía no hay solicitudes.",
+    "title": "Miembros del pack",
+    "subtitle": "Miembros actuales del pack francófono.",
+    "empty": "Todavía no hay miembros.",
     "primal": "Abrir en Primal",
-    "approve": "Aprobar",
-    "reject": "Rechazar",
-    "yourRequestPending": "Tu solicitud ya se está procesando. Por favor, espera.",
-    "youAreInPack": "¡Ya formas parte del pack!",
-    "openPack": "Abrir",
+    "remove": "Eliminar",
+    "confirmRemove": "Confirmar X",
+    "packOnly": "Solo pack",
+    "yes": "Sí",
+    "no": "No",
+    "unknown": "-",
+    "requestedAtPrefix": "Solicitado:",
+    "openPack": "Abrir pack",
+    "columns": {
+      "avatar": "Avatar",
+      "username": "Usuario",
+      "description": "Descripción perfil",
+      "accountCreatedAt": "Creación de cuenta",
+      "requestedFromApp": "Desde la app",
+      "joinedAt": "Solicitud/admisión",
+      "action": "Acción"
+    },
     "errors": {
-      "approveFailed": "No se puede completar la aprobación ahora mismo (pack + DM).",
-      "rejectFailed": "No se puede rechazar la solicitud en este momento."
+      "removeFailed": "No se puede eliminar este miembro en este momento."
+    },
+    "warnings": {
+      "adminSourceUnavailable": "La fuente admin de ToolStr no está disponible temporalmente. La lista puede ser parcial.",
+      "publicSourceUnavailable": "La fuente pública del pack no está disponible temporalmente. La lista puede ser parcial."
     },
     "statuses": {
       "pending": "Pendiente",
