@@ -1,23 +1,28 @@
 # PRD Progress
 
-Date: 2026-04-30
+Date: 2026-05-02
 
-Status: PRD workflow complete and paused before validation.
+Status: BMAD planning complete and ready for story creation.
 
-Completed artifact:
+Completed artifacts:
 
 - `_bmad-output/planning-artifacts/prd.md`
+- `_bmad-output/planning-artifacts/ux-design-specification.md`
+- `_bmad-output/planning-artifacts/architecture.md`
+- `_bmad-output/planning-artifacts/epics.md`
+- `_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-02.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ## BMad Planning Sequence
 
 - `[done]` `bmad-generate-project-context` for brownfield project context
-- `[done]` `bmad-distillator` on `specs/` to preserve useful Speckit-era knowledge
+- `[done]` `bmad-distillator` on `specs/` to preserve useful legacy planning knowledge
 - `[done]` `bmad-create-prd` for the lean MVP PRD
 - `[done]` `bmad-create-ux-design` only for minimal route/nav/copy cleanup
 - `[done]` `bmad-create-architecture` focused on Supabase/auth/schema decisions
-- `[pending]` `bmad-create-epics-and-stories`
-- `[pending]` `bmad-check-implementation-readiness`
-- `[pending]` `bmad-sprint-planning`
+- `[done]` `bmad-create-epics-and-stories`
+- `[done]` `bmad-check-implementation-readiness`
+- `[done]` `bmad-sprint-planning`
 
 Completed workflow steps:
 
@@ -42,7 +47,7 @@ Current product scope:
 - Required auth methods: bunker, external signer app, browser extension.
 - Pack registration must auto-add eligible authenticated users and show clear already-in-pack messaging.
 - Admin can view Toolstr-added users and remove users from the pack.
-- Critical Speckit-era support knowledge must be preserved before Speckit artifacts are removed.
+- Critical legacy planning support knowledge has been preserved in active BMAD/project artifacts.
 
 Explicit future scope:
 
@@ -55,7 +60,6 @@ Explicit future scope:
 - Installable PWA
 - SEO/public discoverability
 
-Recommended next step later:
+Recommended next step:
 
-- Run `bmad-distillator` on `specs/` to preserve useful Speckit-era knowledge before Speckit removal.
-- Then validate the PRD with `bmad-validate-prd` against `_bmad-output/planning-artifacts/prd.md` if desired before UX/architecture work.
+- Run `bmad-create-story` for Epic 1 Story 1.1 using `_bmad-output/implementation-artifacts/sprint-status.yaml`.
