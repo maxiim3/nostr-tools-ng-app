@@ -194,7 +194,9 @@ export const test = base.extend<DebugFixture>({
       const artifactDir = path.join(testInfo.outputDir, 'debug-artifacts');
       fs.mkdirSync(artifactDir, { recursive: true });
 
-      const consoleLogs = (await page.consoleMessages()).map((msg) => `[${msg.type()} @ ${msg.timestamp().toISOString()}] ${msg.text()}`);
+      const consoleLogs = (await page.consoleMessages()).map(
+        (msg) => `[${msg.type()} @ ${msg.timestamp().toISOString()}] ${msg.text()}`
+      );
       const pageErrors = (await page.pageErrors()).map((error) => ({
         name: error.name,
         message: error.message,
@@ -208,17 +210,25 @@ export const test = base.extend<DebugFixture>({
             method: request.method(),
             status: response?.status() ?? 0,
           };
-        }),
+        })
       );
 
       // Save console logs
       fs.writeFileSync(path.join(artifactDir, 'console.log'), consoleLogs.join('\n'), 'utf-8');
 
       // Save page errors
-      fs.writeFileSync(path.join(artifactDir, 'page-errors.json'), JSON.stringify(pageErrors, null, 2), 'utf-8');
+      fs.writeFileSync(
+        path.join(artifactDir, 'page-errors.json'),
+        JSON.stringify(pageErrors, null, 2),
+        'utf-8'
+      );
 
       // Save network summary
-      fs.writeFileSync(path.join(artifactDir, 'network.json'), JSON.stringify(networkRequests, null, 2), 'utf-8');
+      fs.writeFileSync(
+        path.join(artifactDir, 'network.json'),
+        JSON.stringify(networkRequests, null, 2),
+        'utf-8'
+      );
 
       console.log(`Debug artifacts saved to: ${artifactDir}`);
     }
@@ -232,7 +242,10 @@ export const test = base.extend<DebugFixture>({
 // tests/e2e/payment-with-debug.spec.ts
 import { test, expect } from '../support/fixtures/debug-fixture';
 
-test('payment flow captures debug artifacts on failure', async ({ page, captureDebugArtifacts }) => {
+test('payment flow captures debug artifacts on failure', async ({
+  page,
+  captureDebugArtifacts,
+}) => {
   await page.goto('/checkout');
 
   // Test will automatically capture console + network on failure

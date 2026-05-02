@@ -93,7 +93,10 @@ const highRatingTemplate = webhookTemplate<{
   data: { id: number; rating: number };
 }>('movie.created.high-rating')
   .matchField('event', 'movie.created')
-  .matchPredicate(`data.id is ${movieId} and data.rating >= 9`, (p) => p.data.id === movieId && p.data.rating >= 9)
+  .matchPredicate(
+    `data.id is ${movieId} and data.rating >= 9`,
+    (p) => p.data.id === movieId && p.data.rating >= 9
+  )
   .withTimeout(10_000)
   .withInterval(500)
   .build();

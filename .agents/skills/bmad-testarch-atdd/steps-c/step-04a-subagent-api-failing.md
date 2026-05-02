@@ -176,7 +176,10 @@ test.skip('[P0] should generate consumer contract for user registration', async 
       }),
     })
     .executeTest(async (mockServer) => {
-      const result = await registerUser({ email: 'newuser@example.com', password: 'SecurePass123!' }, { baseUrl: mockServer.url });
+      const result = await registerUser(
+        { email: 'newuser@example.com', password: 'SecurePass123!' },
+        { baseUrl: mockServer.url }
+      );
       expect(result.id).toEqual(expect.any(Number));
     });
 });

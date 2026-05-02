@@ -224,7 +224,12 @@ describe('Transaction Statistics - Count Endpoint', () => {
       })
       .executeTest(async (mockServer: V3MockServer) => {
         const context = createTestContext(mockServer.url);
-        const result = await makeApiRequestWithContext<CountStatistics>(context, '/transactions/statistics/count', 'POST', statsRequest);
+        const result = await makeApiRequestWithContext<CountStatistics>(
+          context,
+          '/transactions/statistics/count',
+          'POST',
+          statsRequest
+        );
         expect(result.count).toBeDefined();
       });
   });

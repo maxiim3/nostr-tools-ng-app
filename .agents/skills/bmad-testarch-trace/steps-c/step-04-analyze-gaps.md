@@ -68,7 +68,12 @@ const normalizeUserExecutionMode = (mode) => {
 
   if (normalized === 'auto') return 'auto';
   if (normalized === 'sequential') return 'sequential';
-  if (normalized === 'subagent' || normalized === 'sub agent' || normalized === 'subagents' || normalized === 'sub agents') {
+  if (
+    normalized === 'subagent' ||
+    normalized === 'sub agent' ||
+    normalized === 'subagents' ||
+    normalized === 'sub agents'
+  ) {
     return 'subagent';
   }
   if (normalized === 'agent team' || normalized === 'agent teams' || normalized === 'agentteam') {
@@ -87,9 +92,14 @@ const normalizeConfigExecutionMode = (mode) => {
 };
 
 // Explicit user instruction in the active run takes priority over config.
-const explicitModeFromUser = normalizeUserExecutionMode(runtime.getExplicitExecutionModeHint?.() || null);
+const explicitModeFromUser = normalizeUserExecutionMode(
+  runtime.getExplicitExecutionModeHint?.() || null
+);
 
-const requestedMode = explicitModeFromUser || normalizeConfigExecutionMode(orchestrationContext.config.execution_mode) || 'auto';
+const requestedMode =
+  explicitModeFromUser ||
+  normalizeConfigExecutionMode(orchestrationContext.config.execution_mode) ||
+  'auto';
 const probeEnabled = orchestrationContext.config.capability_probe;
 
 const supports = { subagent: false, agentTeam: false };
@@ -170,7 +180,8 @@ const progressDoc = fs.existsSync('{outputFile}') ? fs.readFileSync('{outputFile
 const progressFrontmatterMatch = progressDoc.match(/^---\n([\s\S]*?)\n---/);
 const progressFrontmatter = progressFrontmatterMatch ? yaml.parse(progressFrontmatterMatch[1]) : {};
 
-const isUnresolved = (value) => typeof value === 'string' && value.startsWith('{') && value.endsWith('}');
+const isUnresolved = (value) =>
+  typeof value === 'string' && value.startsWith('{') && value.endsWith('}');
 const normalizeResolvedToken = (value) => {
   if (value === undefined || value === null) return null;
   const normalized = String(value).trim().toLowerCase();
@@ -186,7 +197,10 @@ const firstResolvedToken = (...values) => {
 };
 
 const oracleResolutionMode =
-  firstResolvedToken(runtime.getOracleResolutionMode?.(), progressFrontmatter.oracleResolutionMode) || 'formal_requirements';
+  firstResolvedToken(
+    runtime.getOracleResolutionMode?.(),
+    progressFrontmatter.oracleResolutionMode
+  ) || 'formal_requirements';
 const resolvedCoverageBasis =
   firstResolvedToken(runtime.getResolvedCoverageBasis?.(), progressFrontmatter.coverageBasis) ||
   {
@@ -197,7 +211,10 @@ const resolvedCoverageBasis =
   }[oracleResolutionMode] ||
   'acceptance_criteria';
 const resolvedOracleConfidence =
-  firstResolvedToken(runtime.getResolvedOracleConfidence?.(), progressFrontmatter.oracleConfidence) ||
+  firstResolvedToken(
+    runtime.getResolvedOracleConfidence?.(),
+    progressFrontmatter.oracleConfidence
+  ) ||
   {
     formal_requirements: 'high',
     spec_artifact: 'high',
@@ -207,7 +224,10 @@ const resolvedOracleConfidence =
   'medium';
 const oracleSources = runtime.getOracleSources?.() || progressFrontmatter.oracleSources || [];
 const externalPointerStatus =
-  firstResolvedToken(runtime.getExternalPointerStatus?.(), progressFrontmatter.externalPointerStatus) || 'not_used';
+  firstResolvedToken(
+    runtime.getExternalPointerStatus?.(),
+    progressFrontmatter.externalPointerStatus
+  ) || 'not_used';
 const recommendations = [];
 
 // Critical gaps (P0)
@@ -287,7 +307,8 @@ recommendations.push({
 if (oracleResolutionMode === 'synthetic_source') {
   recommendations.push({
     priority: 'MEDIUM',
-    action: 'Promote inferred journeys into formal acceptance criteria when the team confirms they reflect intended behavior',
+    action:
+      'Promote inferred journeys into formal acceptance criteria when the team confirms they reflect intended behavior',
     requirements: traceabilityMatrix.map((r) => r.id),
   });
 }
@@ -299,7 +320,9 @@ if (oracleResolutionMode === 'synthetic_source') {
 
 ```javascript
 const totalRequirements = traceabilityMatrix.length;
-const coveredRequirements = traceabilityMatrix.filter((r) => r.coverage === 'FULL' || r.coverage === 'PARTIAL').length;
+const coveredRequirements = traceabilityMatrix.filter(
+  (r) => r.coverage === 'FULL' || r.coverage === 'PARTIAL'
+).length;
 const fullyCovered = traceabilityMatrix.filter((r) => r.coverage === 'FULL').length;
 
 const safePct = (covered, total) => (total > 0 ? Math.round((covered / total) * 100) : 100);
@@ -307,13 +330,21 @@ const coveragePercentage = safePct(fullyCovered, totalRequirements);
 
 // Priority-specific coverage
 const p0Total = traceabilityMatrix.filter((r) => r.priority === 'P0').length;
-const p0Covered = traceabilityMatrix.filter((r) => r.priority === 'P0' && r.coverage === 'FULL').length;
+const p0Covered = traceabilityMatrix.filter(
+  (r) => r.priority === 'P0' && r.coverage === 'FULL'
+).length;
 const p1Total = traceabilityMatrix.filter((r) => r.priority === 'P1').length;
-const p1Covered = traceabilityMatrix.filter((r) => r.priority === 'P1' && r.coverage === 'FULL').length;
+const p1Covered = traceabilityMatrix.filter(
+  (r) => r.priority === 'P1' && r.coverage === 'FULL'
+).length;
 const p2Total = traceabilityMatrix.filter((r) => r.priority === 'P2').length;
-const p2Covered = traceabilityMatrix.filter((r) => r.priority === 'P2' && r.coverage === 'FULL').length;
+const p2Covered = traceabilityMatrix.filter(
+  (r) => r.priority === 'P2' && r.coverage === 'FULL'
+).length;
 const p3Total = traceabilityMatrix.filter((r) => r.priority === 'P3').length;
-const p3Covered = traceabilityMatrix.filter((r) => r.priority === 'P3' && r.coverage === 'FULL').length;
+const p3Covered = traceabilityMatrix.filter(
+  (r) => r.priority === 'P3' && r.coverage === 'FULL'
+).length;
 
 const p0CoveragePercentage = safePct(p0Covered, p0Total);
 const p1CoveragePercentage = safePct(p1Covered, p1Total);
@@ -356,7 +387,9 @@ const uniqueTests = new Map();
     // Use only stable, test-intrinsic fields; omit line when unavailable.
     const stableId =
       test.id ||
-      [test.file, test.title || test.name, test.line].filter((value) => value !== undefined && value !== null && value !== '').join(':') ||
+      [test.file, test.title || test.name, test.line]
+        .filter((value) => value !== undefined && value !== null && value !== '')
+        .join(':') ||
       null; // unresolvable — skip rather than manufacture a key
 
     if (stableId === null || uniqueTests.has(stableId)) return;
@@ -373,7 +406,8 @@ const uniqueTests = new Map();
       skipped: status === 'skipped',
       fixme: status === 'fixme',
       pending: status === 'pending',
-      blocker_reason: test.skip_reason || test.blocker_reason || test.fixme_reason || test.pending_reason || '',
+      blocker_reason:
+        test.skip_reason || test.blocker_reason || test.fixme_reason || test.pending_reason || '',
     });
   });
 });
@@ -381,7 +415,9 @@ const uniqueTests = new Map();
 [...uniqueTests.values()].forEach((test) => {
   const bucket = byLevel[test.level] ? test.level : 'other';
   if (bucket === 'other' && test.level) {
-    console.warn(`[trace] unknown test level "${test.level}" for test "${test.id}" — counted in "other"`);
+    console.warn(
+      `[trace] unknown test level "${test.level}" for test "${test.id}" — counted in "other"`
+    );
   }
   byLevel[bucket].tests += 1;
 });
@@ -394,7 +430,7 @@ const uniqueTests = new Map();
         .trim()
         .toLowerCase();
       return byLevel[level] ? level : 'other';
-    }),
+    })
   );
   requirementLevels.forEach((level) => {
     byLevel[level].criteria_covered += 1;

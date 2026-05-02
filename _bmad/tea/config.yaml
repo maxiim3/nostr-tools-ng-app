@@ -3,7 +3,7 @@
 # Version: 6.6.0
 # Date: 2026-04-30T13:47:53.040Z
 
-test_artifacts: "{project-root}/_bmad-output/test-artifacts"
+test_artifacts: '{project-root}/_bmad-output/test-artifacts'
 tea_use_playwright_utils: true
 tea_use_pactjs_utils: false
 tea_pact_mcp: none
@@ -23,4 +23,4 @@ user_name: Maxime
 project_name: nostr-tools-ng-app
 communication_language: English
 document_output_language: English
-output_folder: "{project-root}/_bmad-output"
+output_folder: '{project-root}/_bmad-output'

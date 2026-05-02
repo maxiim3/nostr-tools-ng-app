@@ -75,7 +75,12 @@ const normalizeUserExecutionMode = (mode) => {
 
   if (normalized === 'auto') return 'auto';
   if (normalized === 'sequential') return 'sequential';
-  if (normalized === 'subagent' || normalized === 'sub agent' || normalized === 'subagents' || normalized === 'sub agents') {
+  if (
+    normalized === 'subagent' ||
+    normalized === 'sub agent' ||
+    normalized === 'subagents' ||
+    normalized === 'sub agents'
+  ) {
     return 'subagent';
   }
   if (normalized === 'agent team' || normalized === 'agent teams' || normalized === 'agentteam') {
@@ -94,9 +99,14 @@ const normalizeConfigExecutionMode = (mode) => {
 };
 
 // Explicit user instruction in the active run takes priority over config.
-const explicitModeFromUser = normalizeUserExecutionMode(runtime.getExplicitExecutionModeHint?.() || null);
+const explicitModeFromUser = normalizeUserExecutionMode(
+  runtime.getExplicitExecutionModeHint?.() || null
+);
 
-const requestedMode = explicitModeFromUser || normalizeConfigExecutionMode(subagentContext.config.execution_mode) || 'auto';
+const requestedMode =
+  explicitModeFromUser ||
+  normalizeConfigExecutionMode(subagentContext.config.execution_mode) ||
+  'auto';
 const probeEnabled = subagentContext.config.capability_probe;
 
 const supports = {
@@ -199,7 +209,9 @@ In `agent-team` and `subagent` modes, runtime decides worker scheduling and conc
 ### 5. Verify All Outputs Exist
 
 ```javascript
-const outputs = ['security', 'performance', 'reliability', 'scalability'].map((domain) => `/tmp/tea-nfr-${domain}-${timestamp}.json`);
+const outputs = ['security', 'performance', 'reliability', 'scalability'].map(
+  (domain) => `/tmp/tea-nfr-${domain}-${timestamp}.json`
+);
 
 outputs.forEach((output) => {
   if (!fs.existsSync(output)) {

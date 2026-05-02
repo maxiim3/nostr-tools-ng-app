@@ -125,7 +125,7 @@ const allPriorityActions = domains.flatMap((domain) =>
     domain,
     action,
     urgency: assessments[domain].risk_level === 'HIGH' ? 'URGENT' : 'NORMAL',
-  })),
+  }))
 );
 
 // Sort by urgency
@@ -178,7 +178,11 @@ const executiveSummary = {
 };
 
 // Save for Step 5 (report generation)
-fs.writeFileSync('/tmp/tea-nfr-summary-{{timestamp}}.json', JSON.stringify(executiveSummary, null, 2), 'utf8');
+fs.writeFileSync(
+  '/tmp/tea-nfr-summary-{{timestamp}}.json',
+  JSON.stringify(executiveSummary, null, 2),
+  'utf8'
+);
 ```
 
 ---

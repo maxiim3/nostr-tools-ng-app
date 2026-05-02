@@ -52,13 +52,13 @@ Load `references/convert-process.md` to begin.
 
 ## Skill Intent Routing Reference
 
-| Intent                      | Trigger Phrases                                       | Route                                           |
-| --------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
-| **Build new**               | "build/create/design a workflow/skill/tool"           | Load `references/build-process.md`               |
-| **Convert**                 | `--convert path-or-url`                               | Load `references/convert-process.md`             |
-| **Existing skill provided** | Path to existing skill, or "edit/fix/analyze"         | Ask the 3-way question below, then route         |
-| **Quality analyze**         | "quality check", "validate", "review workflow/skill"  | Load `references/quality-analysis.md`            |
-| **Unclear**                 | —                                                     | Present options and ask                          |
+| Intent                      | Trigger Phrases                                      | Route                                    |
+| --------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| **Build new**               | "build/create/design a workflow/skill/tool"          | Load `references/build-process.md`       |
+| **Convert**                 | `--convert path-or-url`                              | Load `references/convert-process.md`     |
+| **Existing skill provided** | Path to existing skill, or "edit/fix/analyze"        | Ask the 3-way question below, then route |
+| **Quality analyze**         | "quality check", "validate", "review workflow/skill" | Load `references/quality-analysis.md`    |
+| **Unclear**                 | —                                                    | Present options and ask                  |
 
 ### When given an existing skill, ask:
 

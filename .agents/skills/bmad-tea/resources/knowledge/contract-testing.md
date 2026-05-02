@@ -83,7 +83,7 @@ describe('User API Contract', () => {
               name: 'John Doe',
               email: 'john@example.com',
               role: 'user',
-            }),
+            })
           );
         });
     });
@@ -107,7 +107,9 @@ describe('User API Contract', () => {
         })
         .executeTest(async (mockServer) => {
           // Act & Assert: Consumer handles 404 gracefully
-          await expect(getUserById(999, { baseURL: mockServer.url })).rejects.toThrow('User not found');
+          await expect(getUserById(999, { baseURL: mockServer.url })).rejects.toThrow(
+            'User not found'
+          );
         });
     });
   });
@@ -154,7 +156,7 @@ describe('User API Contract', () => {
               name: 'Jane Smith',
               email: 'jane@example.com',
               role: 'admin',
-            }),
+            })
           );
         });
     });
@@ -633,7 +635,7 @@ export class ApiError extends Error {
     message: string,
     public code: string,
     public retryable: boolean = false,
-    public retryAfter?: number,
+    public retryAfter?: number
   ) {
     super(message);
   }
@@ -644,7 +646,11 @@ export class ApiError extends Error {
  */
 export async function getUserById(
   id: number,
-  config?: AxiosRequestConfig & { retries?: number; retryDelay?: number; respectRateLimit?: boolean },
+  config?: AxiosRequestConfig & {
+    retries?: number;
+    retryDelay?: number;
+    respectRateLimit?: boolean;
+  }
 ): Promise<User> {
   const { retries = 3, retryDelay = 1000, respectRateLimit = true, ...axiosConfig } = config || {};
 
@@ -739,7 +745,7 @@ function tagRelease(version: string, environment: 'staging' | 'production') {
       '--broker-token',
       PACT_BROKER_TOKEN,
     ],
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 }
 
@@ -764,7 +770,7 @@ function recordDeployment(version: string, environment: 'staging' | 'production'
       '--broker-token',
       PACT_BROKER_TOKEN,
     ],
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 }
 
@@ -790,7 +796,7 @@ function cleanupOldPacts() {
       '--keep-min-age',
       '30',
     ],
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 }
 
@@ -820,7 +826,7 @@ function canIDeploy(version: string, toEnvironment: string): boolean {
         '--retry-interval',
         '30',
       ],
-      { stdio: 'inherit' },
+      { stdio: 'inherit' }
     );
     return true;
   } catch (error) {
@@ -855,7 +861,9 @@ async function main() {
       break;
 
     default:
-      console.error('Unknown command. Use: tag-release | record-deployment | can-i-deploy | cleanup');
+      console.error(
+        'Unknown command. Use: tag-release | record-deployment | can-i-deploy | cleanup'
+      );
       process.exit(1);
   }
 }

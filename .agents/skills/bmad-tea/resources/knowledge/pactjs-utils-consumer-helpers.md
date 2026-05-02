@@ -168,14 +168,14 @@ await pact
     setJsonContent({
       query: { name: 'Inception' },
       headers: { Accept: 'application/json' },
-    }),
+    })
   )
   .willRespondWith(
     200,
     setJsonBody({
       status: 200,
       data: { id: integer(1), name: string('Inception') },
-    }),
+    })
   );
 ```
 
@@ -307,7 +307,7 @@ provider.given(
   ...createProviderState({
     name: 'user exists',
     params: { id: 1, createdAt: new Date(), metadata: { role: 'admin' } },
-  }),
+  })
 );
 ```
 
@@ -353,8 +353,16 @@ provider.given(...createProviderState({ name: STATES.USER_EXISTS, params: { id: 
 ```typescript
 // ❌ PactV4 FFI non-deterministically drops one of these interactions ~1/N runs
 it('handles both success and empty list', async () => {
-  await pact.addInteraction().uponReceiving('get movie').withRequest(/* ... */).executeTest(/* ... */);
-  await pact.addInteraction().uponReceiving('empty list').withRequest(/* ... */).executeTest(/* ... */);
+  await pact
+    .addInteraction()
+    .uponReceiving('get movie')
+    .withRequest(/* ... */)
+    .executeTest(/* ... */);
+  await pact
+    .addInteraction()
+    .uponReceiving('empty list')
+    .withRequest(/* ... */)
+    .executeTest(/* ... */);
 });
 ```
 
