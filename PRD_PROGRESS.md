@@ -11,10 +11,10 @@ Completed artifact:
 ## BMad Planning Sequence
 
 - `[done]` `bmad-generate-project-context` for brownfield project context
-- `[next]` `bmad-distillator` on `specs/` to preserve useful Speckit-era knowledge
+- `[done]` `bmad-distillator` on `specs/` to preserve useful Speckit-era knowledge
 - `[done]` `bmad-create-prd` for the lean MVP PRD
-- `[pending]` `bmad-create-ux-design` only for minimal route/nav/copy cleanup
-- `[pending]` `bmad-create-architecture` focused on Supabase/auth/schema decisions
+- `[done]` `bmad-create-ux-design` only for minimal route/nav/copy cleanup
+- `[done]` `bmad-create-architecture` focused on Supabase/auth/schema decisions
 - `[pending]` `bmad-create-epics-and-stories`
 - `[pending]` `bmad-check-implementation-readiness`
 - `[pending]` `bmad-sprint-planning`
