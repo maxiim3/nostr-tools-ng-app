@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Toolstr UX Design Directions</title>
+    <style>
+      :root {
+        --base-100: oklch(98.5% 0.003 80);
+        --base-200: oklch(96% 0.005 80);
+        --base-300: oklch(92% 0.008 80);
+        --content: oklch(10% 0 0);
+        --primary: oklch(68% 0.23 45);
+        --secondary: oklch(93% 0.19 100);
+        --accent: oklch(10% 0 0);
+        --success: oklch(65% 0.2 155);
+        --warning: oklch(93% 0.19 100);
+        --error: oklch(60% 0.22 25);
+        --border: 3px solid var(--content);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--base-100);
+        color: var(--content);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        line-height: 1.5;
+      }
+
+      header,
+      section {
+        padding: 32px;
+      }
+
+      header {
+        border-bottom: var(--border);
+        background: var(--secondary);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        min-height: 360px;
+        border: var(--border);
+        background: var(--base-100);
+        padding: 24px;
+      }
+
+      .mock {
+        display: grid;
+        gap: 12px;
+        border: var(--border);
+        background: var(--base-200);
+        padding: 16px;
+      }
+
+      .button {
+        display: inline-block;
+        border: var(--border);
+        background: var(--primary);
+        color: white;
+        padding: 10px 14px;
+        font-weight: 800;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+
+      .button.secondary {
+        background: var(--base-100);
+        color: var(--content);
+      }
+
+      .status {
+        border: var(--border);
+        padding: 10px 12px;
+        font-weight: 700;
+      }
+
+      .success {
+        background: var(--success);
+        color: white;
+      }
+
+      .warning {
+        background: var(--warning);
+      }
+
+      .error {
+        background: var(--error);
+        color: white;
+      }
+
+      .neutral {
+        background: var(--base-300);
+      }
+
+      .profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: var(--border);
+        background: white;
+        padding: 12px;
+      }
+
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border: var(--border);
+        background: var(--accent);
+      }
+
+      .small {
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Toolstr UX Design Directions</h1>
+      <p>
+        Visual redesign is intentionally out of scope. These directions compare MVP state and flow
+        patterns within the locked DaisyUI brutal theme.
+      </p>
+    </header>
+
+    <section>
+      <div class="grid">
+        <article class="card">
+          <h2>1. Current Validated Flow</h2>
+          <p>Preserve the existing page structure and clarify state labels only.</p>
+          <div class="mock">
+            <div class="status neutral">Connect first to join the French-speaking Nostr pack.</div>
+            <a class="button" href="#">Connect</a>
+            <a class="button secondary" href="#" aria-disabled="true">Join pack</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>2. Identity-First Flow</h2>
+          <p>After connection, make the signed-in identity the proof that auth worked.</p>
+          <div class="mock">
+            <div class="profile">
+              <div class="avatar"></div>
+              <div><strong>Connected</strong><br /><span class="small">Maxime.nostr</span></div>
+            </div>
+            <a class="button" href="#">Join pack</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>3. Minimal Pending State</h2>
+          <p>Signer approval uses one concise pending message and no protocol details.</p>
+          <div class="mock">
+            <div class="status warning">Approve the connection in your signer app.</div>
+            <a class="button secondary" href="#">Cancel</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>4. Success + Redirect</h2>
+          <p>Confirm membership, then redirect to the pack on following.space.</p>
+          <div class="mock">
+            <div class="status success">You're in the pack.</div>
+            <p class="small">Redirecting to following.space...</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>5. Already-In-Pack</h2>
+          <p>Make idempotent membership clear and non-alarming.</p>
+          <div class="mock">
+            <div class="status success">You're already in this pack.</div>
+            <a class="button" href="#">Open pack</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>6. Minimal Recovery</h2>
+          <p>Failed auth or expired permission gives one message and one next action.</p>
+          <div class="mock">
+            <div class="status error">Connection expired. Try again.</div>
+            <a class="button" href="#">Reconnect</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </body>
+</html>
