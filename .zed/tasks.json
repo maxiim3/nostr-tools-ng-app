@@ -13,6 +13,19 @@
     "save": "none"
   },
   {
+    "label": "Start Frontend -- open to network",
+    "command": "ng serve --host 0.0.0.0 --port 4200",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "never",
+    "shell": "system",
+    "show_summary": true,
+    "show_command": true,
+    "save": "none"
+  },
+  {
     "label": "Start Frontend",
     "command": "bun start",
     "use_new_terminal": false,
