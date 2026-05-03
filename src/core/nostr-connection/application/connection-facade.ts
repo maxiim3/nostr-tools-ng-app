@@ -37,6 +37,8 @@ export class ConnectionFacade {
   private readonly _restoringMethodId = signal<ConnectionMethodId | null>(null);
   private readonly restoreStore = new Nip07RestoreContextStore();
   private readonly RESTORE_TIMEOUT_MS = 8000;
+  private readonly RESTORE_PROVIDER_RETRY_MS = 100;
+  private readonly RESTORE_PROVIDER_MAX_ATTEMPTS = 20;
   readonly authSessionState = computed<AuthSessionState>(() => {
     const session = this.currentSession();
     if (session) {
@@ -361,7 +363,22 @@ export class ConnectionFacade {
       throw new ConnectionDomainError('method_unavailable', 'NIP-07 method is not registered.');
     }
 
-    return method.restoreActiveConnection(restoreContext.pubkeyHex);
+    for (let attemptIndex = 0; attemptIndex < this.RESTORE_PROVIDER_MAX_ATTEMPTS; attemptIndex++) {
+      try {
+        return await method.restoreActiveConnection(restoreContext.pubkeyHex);
+      } catch (error) {
+        if (
+          !isConnectionDomainError(error, 'method_unavailable') ||
+          attemptIndex === this.RESTORE_PROVIDER_MAX_ATTEMPTS - 1
+        ) {
+          throw error;
+        }
+
+        await delay(this.RESTORE_PROVIDER_RETRY_MS);
+      }
+    }
+
+    throw new ConnectionDomainError('method_unavailable', 'NIP-07 provider is not available.');
   }
 
   private persistNip07RestoreContext(session: ConnectionSession): void {
@@ -440,6 +457,17 @@ function resolveRestoreTerminalStatus(error: unknown): AttemptTerminalStatus {
   }
 
   return { kind: 'failed', reasonCode };
+}
+
+function isConnectionDomainError(
+  error: unknown,
+  code: ConnectionDomainError['code']
+): error is ConnectionDomainError {
+  return error instanceof ConnectionDomainError && error.code === code;
+}
+
+async function delay(ms: number): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
 async function withConnectionTimeout(

@@ -270,6 +270,7 @@ describe('ConnectionFacade', () => {
   });
 
   it('maps missing provider during restore to reconnect-required state', async () => {
+    vi.useFakeTimers();
     const storage = createStorage();
     vi.stubGlobal('localStorage', storage);
     storage.setItem(
@@ -283,7 +284,10 @@ describe('ConnectionFacade', () => {
     );
     const facade = createFacade([new Nip07ConnectionMethod({ resolveProvider: () => null })]);
 
-    const restored = await facade.restoreSessionFromStoredContext();
+    const restore = facade.restoreSessionFromStoredContext();
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(2000);
+    const restored = await restore;
 
     expect(restored).toBeNull();
     expect(facade.currentSession()).toBeNull();
@@ -292,6 +296,34 @@ describe('ConnectionFacade', () => {
       status: 'revokedOrUnavailable',
       reasonCode: 'authorization_revoked_or_unavailable',
     });
+  });
+
+  it('waits for delayed nip07 provider injection before restoring', async () => {
+    vi.useFakeTimers();
+    const storage = createStorage();
+    const signer = new FakeConnectionSigner();
+    let provider: FakeNip07Provider | null = null;
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: signer.publicKeyHex,
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([new Nip07ConnectionMethod({ resolveProvider: () => provider })]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    await Promise.resolve();
+    provider = new FakeNip07Provider({ signers: [signer] });
+    await vi.advanceTimersByTimeAsync(100);
+    const restored = await restore;
+
+    expect(restored?.pubkeyHex).toBe(signer.publicKeyHex);
+    expect(facade.authSessionState().status).toBe('connected');
+    expect(storage.removeItem).not.toHaveBeenCalledWith('nostr.connect.restore.v1');
   });
 
   it('maps provider rejection during restore to a safe retry state', async () => {
