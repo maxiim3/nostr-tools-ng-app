@@ -19,14 +19,12 @@ Pour comprendre le protocole Nostr dans le contexte exact du code :
 5. [Core Zap workflow](src/core/zap/README.md)
 6. [Feature Packs workflow](src/features/packs/README.md)
 
-Source de verite projet, docs produit et architecture :
+Documentation protocole et integration :
 
-1. [Documentation projet](docs/README.md)
-2. [Roadmap et milestones](docs/product/roadmap.md)
-3. [Features actionnables](docs/features/README.md)
-4. [Architecture globale](docs/architecture/overview.md)
-5. [Regles auth Nostr](docs/auth/nostr-auth-rules.md)
-6. [Tutoriel Mermaid](docs/contributing/mermaid.md)
+1. [Regles auth Nostr](docs/auth/nostr-auth-rules.md)
+2. [Notes auth mobile](docs/auth/mobile-auth-notes.md)
+3. [Integration zaps Nostr + Lightning](docs/zaps/technical-integration.md)
+4. [Checkout LNURL + NWC](docs/zaps/lnurl-nwc-checkout.md)
 
 ## Demarrage local
 

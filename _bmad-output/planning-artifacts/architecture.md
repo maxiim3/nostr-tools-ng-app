@@ -962,9 +962,8 @@ User Feedback and Recovery:
 Documentation and Knowledge Preservation:
 
 - Maintained docs: `docs/`
-- Product roadmap and feature briefs: `docs/product/roadmap.md`, `docs/features/README.md`
+- Protocol context: `docs/auth/`, `docs/zaps/`
 - Project context: `_bmad-output/project-context.md`
-- Architecture decisions: `docs/architecture/decisions/`
 
 **Cross-Cutting Concerns:**
 

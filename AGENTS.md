@@ -56,11 +56,9 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ## Project Documentation and Planning
 
-- Maintained project documentation lives in `docs/`.
-- Start product/context review from `docs/product/roadmap.md`, then `docs/features/README.md` for feature briefs.
-- `docs/architecture/overview.md` and `docs/architecture/decisions/` define architecture context and decisions.
-- `docs/auth/nostr-auth-rules.md` defines stable Nostr authentication constraints.
-- BMAD artifacts in `_bmad-output/` can inform planning and story execution, but generated planning output does not override current implementation facts, architecture decisions, or maintained docs.
+- Maintained Nostr and Lightning protocol/architecture documentation lives in `docs/`.
+- Use `docs/` for auth, signer, zap, LNURL, NWC, and Lightning integration context before changing those areas.
+- BMAD artifacts in `_bmad-output/` can inform planning and story execution, but generated planning output does not override current implementation facts or maintained protocol documentation.
 
 ## Nostr Auth and Security
 

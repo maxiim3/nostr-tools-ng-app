@@ -83,10 +83,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Development Workflow Rules
 
-- Maintained project documentation lives in `docs/`; start with `docs/product/roadmap.md`, then `docs/features/README.md`.
-- Architecture context lives in `docs/architecture/overview.md` and `docs/architecture/decisions/`.
-- Stable Nostr auth constraints live in `docs/auth/nostr-auth-rules.md`.
-- BMAD artifacts in `_bmad-output/` can inform planning, but generated output does not override current implementation facts, architecture decisions, or maintained docs.
+- Maintained Nostr and Lightning protocol/architecture documentation lives in `docs/`.
+- Use `docs/` for auth, signer, zap, LNURL, NWC, and Lightning integration context before changing those areas.
+- BMAD artifacts in `_bmad-output/` can inform planning, but generated output does not override current implementation facts or maintained protocol documentation.
 - Use repo scripts from `package.json`: `bun run format`, `bun run lint`, `bun run lint:css`, `bun run typecheck`, `bun run test`, `bun run build`, `bun run fix`, `bun run check`.
 - Do not invoke underlying tools directly (`ng lint`, `tsc`, `vitest`, `prettier`) unless explicitly requested.
 - Commit format is `feat: <short lowercase description>` with no scope/body unless necessary.

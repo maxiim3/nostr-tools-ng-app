@@ -10,13 +10,10 @@ inputDocuments:
   - _bmad-output/planning-artifacts/architecture.md
   - _bmad-output/planning-artifacts/ux-design-specification.md
   - _bmad-output/project-context.md
-  - docs/README.md
-  - docs/product/roadmap.md
-  - docs/features/README.md
-  - docs/architecture/overview.md
-  - docs/architecture/decisions/README.md
   - docs/auth/nostr-auth-rules.md
   - docs/auth/mobile-auth-notes.md
+  - docs/zaps/technical-integration.md
+  - docs/zaps/lnurl-nwc-checkout.md
 ---
 
 # nostr-tools-ng-app - Epic Breakdown
@@ -219,9 +216,9 @@ AR22: Use repository scripts for verification, especially `bun run test`, `bun r
 
 AR23: Translation/copy changes must update the relevant `src/assets/i18n/fr.json`, `en.json`, and `es.json` files.
 
-AR24: Maintained project documentation lives in `docs/`; `docs/product/roadmap.md` owns sequencing and `docs/features/README.md` owns feature briefs.
+AR24: Maintained protocol documentation lives in `docs/`; use it for Nostr auth, signer, zap, LNURL, NWC, and Lightning integration context.
 
-AR25: Preserve useful legacy planning knowledge in maintained docs; surviving principles reinforce Angular discipline, accessibility, feature boundaries, Nostr auth/security, and repo-script verification.
+AR25: Preserve useful protocol and integration knowledge in maintained docs; surviving principles reinforce Angular discipline, accessibility, feature boundaries, Nostr auth/security, Lightning/NWC safety, and repo-script verification.
 
 AR26: Exclude obsolete planning templates, commands, extensions, and generated scaffolding from future product planning after preserved knowledge is migrated.
 

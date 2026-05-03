@@ -10,10 +10,9 @@ Cette documentation est placee au plus proche du code pour expliquer les workflo
 - [Zap workflow](./core/zap/README.md)
 - [Packs workflow](./features/packs/README.md)
 
-## Contexte produit et architecture
+## Documentation protocole
 
-- [Documentation projet](../docs/README.md)
-- [Roadmap projet](../docs/product/roadmap.md)
-- [Features actionnables](../docs/features/README.md)
-- [Architecture globale](../docs/architecture/overview.md)
 - [Regles auth Nostr](../docs/auth/nostr-auth-rules.md)
+- [Notes auth mobile](../docs/auth/mobile-auth-notes.md)
+- [Integration zaps Nostr + Lightning](../docs/zaps/technical-integration.md)
+- [Checkout LNURL + NWC](../docs/zaps/lnurl-nwc-checkout.md)
