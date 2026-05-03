@@ -14,16 +14,19 @@
     "subtitle": "Choose your login method.",
     "extension": {
       "title": "Browser extension",
-      "body": "Use NIP-07 when your Nostr extension is available in the browser.",
-      "cta": "Use extension"
+      "body": "Best on desktop. Connect with your browser extension.",
+      "cta": "Use extension",
+      "recommendedDesktop": "Recommended on desktop"
     },
     "external": {
       "title": "External app",
-      "body": "On mobile, open a Nostr Connect compatible app and approve the connection there.",
+      "body": "Best on mobile. Open your signer app and approve the request.",
       "cta": "Generate link",
       "open": "Open app",
       "copy": "Copy link",
       "copied": "Link copied",
+      "recommendedMobile": "Recommended on mobile",
+      "qrAlt": "Scan to open your signer app",
       "waiting": "Waiting for approval in your app...",
       "cancel": "Cancel",
       "timeout": "The connection timed out. Please try again.",
@@ -32,7 +35,8 @@
     },
     "bunker": {
       "title": "Bunker (NIP-46)",
-      "body": "Connect with a Nostr bunker by pasting the provided connection token.",
+      "body": "Advanced remote signer: paste your bunker:// token.",
+      "inputLabel": "Bunker connection token",
       "cta": "Connect",
       "waiting": "Waiting for bunker approval...",
       "cancel": "Cancel",
@@ -41,7 +45,14 @@
     },
     "privateKey": {
       "title": "Private key",
-      "warning": "Discouraged. Use only if you know exactly what you are doing."
+      "inputLabel": "Nostr private key",
+      "cta": "Continue",
+      "warning": "Not recommended. Use only if you fully understand the risks."
+    },
+    "advanced": {
+      "show": "Show advanced methods",
+      "hide": "Hide advanced methods",
+      "description": "Advanced options for bunker and private-key fallback."
     }
   },
   "header": {
@@ -202,7 +213,8 @@
         "methods": {
           "extension": "NIP-07 compatible browser extension (recommended).",
           "external": "External application compatible with Nostr Connect.",
-          "privateKey": "Nostr private key (not recommended; use only if you fully understand the risks)."
+          "privateKey": "Nostr private key (not recommended; use only if you fully understand the risks).",
+          "bunker": "Bunker remote signer token (advanced)."
         },
         "request": "To submit an access request for the starter pack, you must be authenticated via Nostr. This mechanism is designed to verify that you belong to the Nostr community and to limit automated requests.",
         "free": "The Service is free of charge. No fee is required for using the basic features."

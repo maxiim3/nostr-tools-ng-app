@@ -14,16 +14,19 @@
     "subtitle": "Elige tu método de conexión.",
     "extension": {
       "title": "Extensión del navegador",
-      "body": "Usa NIP-07 cuando tu extensión de Nostr esté disponible en el navegador.",
-      "cta": "Usar extensión"
+      "body": "Recomendado en escritorio. Conéctate con la extensión del navegador.",
+      "cta": "Usar extensión",
+      "recommendedDesktop": "Recomendado en escritorio"
     },
     "external": {
       "title": "Aplicación externa",
-      "body": "En móvil, abre una aplicación compatible con Nostr Connect y aprueba la conexión allí.",
+      "body": "Recomendado en móvil. Abre tu app firmante y aprueba la solicitud.",
       "cta": "Generar enlace",
       "open": "Abrir app",
       "copy": "Copiar enlace",
       "copied": "Enlace copiado",
+      "recommendedMobile": "Recomendado en móvil",
+      "qrAlt": "Escanea para abrir tu app firmante",
       "waiting": "Esperando aprobación en tu app...",
       "cancel": "Cancelar",
       "timeout": "La conexión expiró. Inténtalo de nuevo.",
@@ -32,7 +35,8 @@
     },
     "bunker": {
       "title": "Bunker (NIP-46)",
-      "body": "Conéctate con un bunker de Nostr pegando el token de conexión proporcionado.",
+      "body": "Firmante remoto avanzado: pega tu token bunker://.",
+      "inputLabel": "Token de conexión bunker",
       "cta": "Conectarse",
       "waiting": "Esperando aprobación del bunker...",
       "cancel": "Cancelar",
@@ -41,7 +45,14 @@
     },
     "privateKey": {
       "title": "Clave privada",
-      "warning": "Desaconsejado. Úsalo solo si sabes exactamente lo que haces."
+      "inputLabel": "Clave privada de Nostr",
+      "cta": "Continuar",
+      "warning": "No recomendado. Úsalo solo si entiendes bien los riesgos."
+    },
+    "advanced": {
+      "show": "Mostrar métodos avanzados",
+      "hide": "Ocultar métodos avanzados",
+      "description": "Opciones avanzadas para bunker y respaldo con clave privada."
     }
   },
   "header": {
@@ -202,7 +213,8 @@
         "methods": {
           "extension": "Extensión de navegador compatible con NIP-07 (recomendada).",
           "external": "Aplicación externa compatible con Nostr Connect.",
-          "privateKey": "Clave privada de Nostr (no recomendada; utilízala solo si comprendes plenamente los riesgos)."
+          "privateKey": "Clave privada de Nostr (no recomendada; utilízala solo si comprendes plenamente los riesgos).",
+          "bunker": "Token bunker de firmante remoto (avanzado)."
         },
         "request": "Para enviar una solicitud de acceso al starter pack, debes autenticarte a través de Nostr. Este mecanismo tiene como objetivo verificar que perteneces a la comunidad Nostr y limitar las solicitudes automatizadas.",
         "free": "El Servicio es gratuito. No se exige ningún canon por el uso de las funcionalidades básicas."

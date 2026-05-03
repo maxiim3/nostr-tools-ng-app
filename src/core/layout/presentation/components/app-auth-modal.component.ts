@@ -11,16 +11,22 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (session.authModalOpen()) {
-      <dialog class="modal modal-open">
+      <dialog
+        class="modal modal-open"
+        aria-labelledby="auth-modal-title"
+        aria-describedby="auth-modal-description"
+      >
         <div
           class="modal-box max-w-lg bg-white px-5 pt-8 pb-6 sm:px-8 sm:pt-10 md:px-12 md:pt-12 md:pb-8"
         >
           <div class="space-y-6">
             <div class="space-y-2">
-              <h2 class="text-2xl font-extrabold text-[#0a0a0a] sm:text-3xl">
+              <h2 id="auth-modal-title" class="text-2xl font-extrabold text-[#0a0a0a] sm:text-3xl">
                 {{ 'authModal.title' | transloco }}
               </h2>
-              <p class="text-sm text-[#0a0a0a]/60">{{ 'authModal.subtitle' | transloco }}</p>
+              <p id="auth-modal-description" class="text-sm text-[#0a0a0a]/60">
+                {{ 'authModal.subtitle' | transloco }}
+              </p>
             </div>
 
             @if (session.error()) {
@@ -32,12 +38,15 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
             }
 
             <div class="space-y-6">
-              <section class="space-y-3">
+              <section class="space-y-3 rounded-box border-[3px] border-[#0a0a0a] p-3">
                 <h3 class="font-bold text-[#0a0a0a]">
                   {{ 'authModal.extension.title' | transloco }}
                 </h3>
                 <p class="text-sm text-[#0a0a0a]/60">
                   {{ 'authModal.extension.body' | transloco }}
+                </p>
+                <p class="hidden text-xs font-bold text-[#0a0a0a]/70 sm:block">
+                  {{ 'authModal.extension.recommendedDesktop' | transloco }}
                 </p>
                 <button
                   type="button"
@@ -51,7 +60,10 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
 
               <hr class="border-[#0a0a0a]" style="border-width: 3px" />
 
-              <section class="space-y-3">
+              <section class="space-y-3 rounded-box border-[3px] border-[#0a0a0a] p-3">
+                <p class="text-xs font-bold text-[#0a0a0a]/70 sm:hidden">
+                  {{ 'authModal.external.recommendedMobile' | transloco }}
+                </p>
                 <h3 class="font-bold text-[#0a0a0a]">
                   {{ 'authModal.external.title' | transloco }}
                 </h3>
@@ -65,7 +77,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                       <a
                         [href]="session.externalAuthUri()!"
                         class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                       >
                         {{ 'authModal.external.open' | transloco }}
                       </a>
@@ -83,7 +95,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                         <div class="flex justify-center">
                           <img
                             [src]="externalAuthQr()!"
-                            alt="Nostr Connect QR code"
+                            [attr.alt]="'authModal.external.qrAlt' | transloco"
                             class="border-[3px] border-[#0a0a0a] size-40"
                           />
                         </div>
@@ -131,81 +143,106 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
               <hr class="border-[#0a0a0a]" style="border-width: 3px" />
 
               <section class="space-y-3">
-                <h3 class="font-bold text-[#0a0a0a]">
-                  {{ 'authModal.bunker.title' | transloco }}
-                </h3>
-                <p class="text-sm text-[#0a0a0a]/60">
-                  {{ 'authModal.bunker.body' | transloco }}
+                <button
+                  type="button"
+                  class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-left sm:text-base"
+                  [attr.aria-expanded]="advancedVisible()"
+                  aria-controls="auth-modal-advanced-options"
+                  (click)="toggleAdvancedOptions()"
+                >
+                  {{
+                    (advancedVisible() ? 'authModal.advanced.hide' : 'authModal.advanced.show')
+                      | transloco
+                  }}
+                </button>
+                <p class="text-xs font-bold text-[#0a0a0a]/60">
+                  {{ 'authModal.advanced.description' | transloco }}
                 </p>
 
-                @if (session.waitingForBunkerAuth() || session.bunkerAuthTimedOut()) {
-                  @if (session.waitingForBunkerAuth()) {
-                    <p class="text-xs font-bold text-[#0a0a0a]/50">
-                      {{ 'authModal.bunker.waiting' | transloco }}
+                <div
+                  id="auth-modal-advanced-options"
+                  class="space-y-6 rounded-box border-[3px] border-[#0a0a0a] p-3"
+                  [hidden]="!advancedVisible()"
+                >
+                  <section class="space-y-3">
+                    <h3 class="font-bold text-[#0a0a0a]">
+                      {{ 'authModal.bunker.title' | transloco }}
+                    </h3>
+                    <p class="text-sm text-[#0a0a0a]/60">
+                      {{ 'authModal.bunker.body' | transloco }}
                     </p>
-                  }
-                  @if (session.bunkerAuthTimedOut()) {
-                    <button
-                      type="button"
-                      class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                      (click)="cancelBunker(); submitBunker()"
-                    >
-                      {{ 'authModal.bunker.retry' | transloco }}
-                    </button>
-                  }
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-sm h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                    (click)="cancelBunker()"
-                  >
-                    {{ 'authModal.bunker.cancel' | transloco }}
-                  </button>
-                } @else {
-                  <div class="flex gap-2">
-                    <input
-                      class="input flex-1"
-                      [formControl]="bunkerTokenControl"
-                      type="text"
-                      placeholder="bunker://..."
-                      [attr.aria-label]="'authModal.bunker.title' | transloco"
-                    />
-                    <button
-                      type="button"
-                      class="btn btn-outline flex-shrink-0 text-sm sm:text-base"
-                      [disabled]="session.connecting() || bunkerTokenControl.invalid"
-                      (click)="submitBunker()"
-                    >
-                      {{ 'authModal.bunker.cta' | transloco }}
-                    </button>
-                  </div>
-                }
-              </section>
 
-              <hr class="border-[#0a0a0a]" style="border-width: 3px" />
+                    @if (session.waitingForBunkerAuth() || session.bunkerAuthTimedOut()) {
+                      @if (session.waitingForBunkerAuth()) {
+                        <p class="text-xs font-bold text-[#0a0a0a]/50">
+                          {{ 'authModal.bunker.waiting' | transloco }}
+                        </p>
+                      }
+                      @if (session.bunkerAuthTimedOut()) {
+                        <button
+                          type="button"
+                          class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                          (click)="cancelBunker(); submitBunker()"
+                        >
+                          {{ 'authModal.bunker.retry' | transloco }}
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                        (click)="cancelBunker()"
+                      >
+                        {{ 'authModal.bunker.cancel' | transloco }}
+                      </button>
+                    } @else {
+                      <div class="flex gap-2">
+                        <input
+                          class="input flex-1"
+                          [formControl]="bunkerTokenControl"
+                          type="text"
+                          placeholder="bunker://..."
+                          [attr.aria-label]="'authModal.bunker.inputLabel' | transloco"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-outline flex-shrink-0 text-sm sm:text-base"
+                          [disabled]="session.connecting() || bunkerTokenControl.invalid"
+                          (click)="submitBunker()"
+                        >
+                          {{ 'authModal.bunker.cta' | transloco }}
+                        </button>
+                      </div>
+                    }
+                  </section>
 
-              <section class="space-y-3">
-                <h3 class="font-bold text-[#0a0a0a]">
-                  {{ 'authModal.privateKey.title' | transloco }}
-                </h3>
-                <div class="flex gap-2">
-                  <input
-                    class="input flex-1"
-                    [formControl]="privateKeyControl"
-                    type="password"
-                    placeholder="nsec / hex"
-                  />
-                  <button
-                    type="button"
-                    class="btn btn-primary flex-shrink-0 text-sm sm:text-base"
-                    [disabled]="session.connecting() || privateKeyControl.invalid"
-                    (click)="loginWithPrivateKey()"
-                  >
-                    Go
-                  </button>
+                  <hr class="border-[#0a0a0a]" style="border-width: 3px" />
+
+                  <section class="space-y-3">
+                    <h3 class="font-bold text-[#0a0a0a]">
+                      {{ 'authModal.privateKey.title' | transloco }}
+                    </h3>
+                    <div class="flex gap-2">
+                      <input
+                        class="input flex-1"
+                        [formControl]="privateKeyControl"
+                        type="password"
+                        placeholder="nsec / hex"
+                        [attr.aria-label]="'authModal.privateKey.inputLabel' | transloco"
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-primary flex-shrink-0 text-sm sm:text-base"
+                        [disabled]="session.connecting() || privateKeyControl.invalid"
+                        (click)="loginWithPrivateKey()"
+                      >
+                        {{ 'authModal.privateKey.cta' | transloco }}
+                      </button>
+                    </div>
+                    <p class="text-xs font-bold text-warning">
+                      {{ 'authModal.privateKey.warning' | transloco }}
+                    </p>
+                  </section>
                 </div>
-                <p class="text-xs font-bold text-warning">
-                  {{ 'authModal.privateKey.warning' | transloco }}
-                </p>
               </section>
             </div>
           </div>
@@ -235,6 +272,7 @@ export class AppAuthModalComponent {
   });
   protected readonly copied = signal(false);
   protected readonly externalAuthQr = signal<string | null>(null);
+  protected readonly advancedOptionsOpen = signal(false);
   private externalAuthQrRequestId = 0;
 
   constructor() {
@@ -245,9 +283,12 @@ export class AppAuthModalComponent {
 
   protected close(): void {
     this.privateKeyControl.setValue('');
+    this.privateKeyControl.markAsPristine();
     this.bunkerTokenControl.setValue('');
+    this.bunkerTokenControl.markAsPristine();
     this.copied.set(false);
     this.externalAuthQr.set(null);
+    this.advancedOptionsOpen.set(false);
 
     if (this.session.externalAuthUri() || this.session.waitingForExternalAuth()) {
       this.session.cancelExternalAppLogin();
@@ -260,14 +301,28 @@ export class AppAuthModalComponent {
     this.session.closeAuthModal();
   }
 
+  protected toggleAdvancedOptions(): void {
+    this.advancedOptionsOpen.update((open) => !open);
+  }
+
+  protected advancedVisible(): boolean {
+    return (
+      this.advancedOptionsOpen() ||
+      this.session.waitingForBunkerAuth() ||
+      this.session.bunkerAuthTimedOut()
+    );
+  }
+
   protected async loginWithExtension(): Promise<void> {
     await this.session.connectWithExtension();
     this.privateKeyControl.setValue('');
+    this.privateKeyControl.markAsPristine();
   }
 
   protected async loginWithPrivateKey(): Promise<void> {
     await this.session.connectWithPrivateKey(this.privateKeyControl.getRawValue());
     this.privateKeyControl.setValue('');
+    this.privateKeyControl.markAsPristine();
   }
 
   protected async startExternalApp(): Promise<void> {
@@ -290,11 +345,13 @@ export class AppAuthModalComponent {
   protected async submitBunker(): Promise<void> {
     const token = this.bunkerTokenControl.getRawValue();
     this.bunkerTokenControl.setValue('');
+    this.bunkerTokenControl.markAsPristine();
     await this.session.beginBunkerLogin(token);
   }
 
   protected cancelBunker(): void {
     this.bunkerTokenControl.setValue('');
+    this.bunkerTokenControl.markAsPristine();
     this.session.cancelBunkerLogin();
   }
 

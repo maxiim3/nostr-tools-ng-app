@@ -91,10 +91,12 @@ describe('AppAuthModalComponent', () => {
   it('submits the provided private key and clears the field', async () => {
     fixture.detectChanges();
 
+    clickButton(fixture, 'authModal.advanced.show');
+
     component['privateKeyControl'].setValue('nsec1componenttest');
     fixture.detectChanges();
 
-    clickButton(fixture, 'Go');
+    clickButton(fixture, 'authModal.privateKey.cta');
     await fixture.whenStable();
 
     expect(session.connectWithPrivateKey).toHaveBeenCalledWith('nsec1componenttest');
@@ -128,7 +130,71 @@ describe('AppAuthModalComponent', () => {
     ) as HTMLAnchorElement | null;
 
     expect(link).not.toBeNull();
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
     expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
+  });
+
+  it('shows primary extension and external actions while advanced methods are hidden by default', () => {
+    fixture.detectChanges();
+
+    const sections = fixture.nativeElement.querySelectorAll('section') as NodeListOf<HTMLElement>;
+    const extensionSection = sections[0];
+    const externalSection = sections[1];
+    const advancedPanel = fixture.nativeElement.querySelector(
+      '#auth-modal-advanced-options'
+    ) as HTMLElement | null;
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.extension.cta');
+    expect(fixture.nativeElement.textContent).toContain('authModal.external.cta');
+    expect(extensionSection.textContent).toContain('authModal.extension.recommendedDesktop');
+    expect(extensionSection.textContent).not.toContain('authModal.external.recommendedMobile');
+    expect(externalSection.textContent).toContain('authModal.external.recommendedMobile');
+    expect(fixture.nativeElement.textContent).toContain('authModal.advanced.show');
+    expect(advancedPanel?.hidden).toBe(true);
+  });
+
+  it('toggles advanced options and exposes accessibility attributes', () => {
+    fixture.detectChanges();
+
+    const toggleButton = [...fixture.nativeElement.querySelectorAll('button')].find((element) =>
+      element.textContent?.includes('authModal.advanced.show')
+    ) as HTMLButtonElement;
+
+    expect(toggleButton.getAttribute('aria-controls')).toBe('auth-modal-advanced-options');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.cta');
+    expect(fixture.nativeElement.textContent).toContain('authModal.privateKey.cta');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.querySelector('#auth-modal-advanced-options')?.hidden).toBe(false);
+  });
+
+  it('resets advanced visibility after private-key input and modal close', () => {
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.advanced.show');
+    component['privateKeyControl'].setValue('nsec1dirty');
+    component['privateKeyControl'].markAsDirty();
+
+    component['close']();
+    session.authModalOpen.set(true);
+    fixture.detectChanges();
+
+    expect(component['privateKeyControl'].pristine).toBe(true);
+    expect(component['advancedVisible']()).toBe(false);
+    expect(fixture.nativeElement.querySelector('#auth-modal-advanced-options')?.hidden).toBe(true);
+  });
+
+  it('keeps advanced options visible when bunker flow is pending', () => {
+    session.waitingForBunkerAuth.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.waiting');
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.cancel');
+    expect(fixture.nativeElement.textContent).toContain('authModal.advanced.hide');
   });
 
   it('copies the external auth URI and resets the copied state after a delay', async () => {
@@ -215,7 +281,9 @@ describe('AppAuthModalComponent', () => {
     component['close']();
 
     expect(component['privateKeyControl'].value).toBe('');
+    expect(component['privateKeyControl'].pristine).toBe(true);
     expect(component['bunkerTokenControl'].value).toBe('');
+    expect(component['bunkerTokenControl'].pristine).toBe(true);
     expect(component['copied']()).toBe(false);
     expect(component['externalAuthQr']()).toBeNull();
     expect(session.cancelExternalAppLogin).not.toHaveBeenCalled();
@@ -248,6 +316,7 @@ describe('AppAuthModalComponent', () => {
 
   it('submits bunker token and clears the field', async () => {
     fixture.detectChanges();
+    clickButton(fixture, 'authModal.advanced.show');
 
     component['bunkerTokenControl'].setValue('bunker://abc?relay=wss://relay.example.com');
     fixture.detectChanges();
@@ -298,6 +367,41 @@ describe('AppAuthModalComponent', () => {
 
     expect(session.cancelBunkerLogin).toHaveBeenCalledTimes(1);
     expect(session.beginBunkerLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders translated private-key action and input label', () => {
+    fixture.detectChanges();
+    clickButton(fixture, 'authModal.advanced.show');
+
+    const privateKeyInput = fixture.nativeElement.querySelector(
+      'input[type="password"]'
+    ) as HTMLInputElement | null;
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.privateKey.cta');
+    expect(privateKeyInput?.getAttribute('aria-label')).toBe('authModal.privateKey.inputLabel');
+  });
+
+  it('uses accessible labels for dialog and external signer QR', async () => {
+    const openExternalUriSpy = vi
+      .spyOn(
+        AppAuthModalComponent.prototype as unknown as { openExternalUri: (uri: string) => void },
+        'openExternalUri'
+      )
+      .mockImplementation(() => undefined);
+
+    fixture.detectChanges();
+    await component['startExternalApp']();
+    await flushAsync();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement | null;
+    const qrImage = fixture.nativeElement.querySelector('img') as HTMLImageElement | null;
+
+    expect(dialog?.getAttribute('aria-labelledby')).toBe('auth-modal-title');
+    expect(dialog?.getAttribute('aria-describedby')).toBe('auth-modal-description');
+    expect(qrImage?.getAttribute('alt')).toBe('authModal.external.qrAlt');
+    expect(openExternalUriSpy).toHaveBeenCalledTimes(1);
   });
 });
 
