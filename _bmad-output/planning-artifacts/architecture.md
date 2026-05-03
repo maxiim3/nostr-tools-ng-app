@@ -38,7 +38,7 @@ The PRD defines 46 functional requirements across seven major areas:
 - Pack Registration: authenticated users can request pack access, eligible users are auto-added, already-in-pack cases are handled idempotently, unauthenticated users are blocked, and all protected actions require valid Nostr authorization.
 - Admin Pack Management: admins can view members, identify Toolstr-added users, remove users, verify auto-registration, and access admin capabilities only through enforced authorization.
 - User Feedback and Recovery: users must see clear states for pending, success, failure, timeout, cancellation, expired authorization, retry, and recovery without indefinite loading.
-- Migration and Knowledge Preservation: critical Speckit-era Nostr auth knowledge must be preserved before Speckit artifacts are removed.
+- Documentation Knowledge Preservation: critical Nostr auth knowledge is preserved in maintained docs.
 - Scope Control: the current release explicitly excludes account creation, broad onboarding, developer tools, reusable Angular module extraction, PWA support, SEO, and polished public wiki delivery.
 
 Architecturally, the core requirement is not simply "add login." The system needs an explicit authentication model that can represent signer availability, permission, active authorization, restoration, expiry, revocation, cancellation, timeout, and recovery across three signer contexts. Pack registration then depends on that model and must remain protected by signed authorization rather than UI state.
@@ -108,7 +108,7 @@ The following concerns will affect multiple architectural components:
 - Clear UI state projection from auth/application state without embedding protocol logic in components.
 - Accessibility of pending, success, failure, recovery, and redirect states.
 - Preservation of existing visual design and pack flow while improving reliability.
-- Knowledge preservation before removing Speckit-era artifacts.
+- Knowledge preservation in maintained docs before deleting obsolete planning trees.
 
 ## Starter Template Evaluation
 
@@ -815,24 +815,19 @@ nostr-tools-ng-app/
 │   ├── README.md
 │   └── migrations/
 │       └── 001_francophone_pack_members.sql
-├── specs/
-│   └── project/
-│       ├── queue.md
-│       ├── roadmap.md
-│       ├── milestones.md
-│       ├── features/
-│       │   ├── 001-auto-admit-pack-members/
-│       │   ├── 002-session-restore/
-│       │   ├── 003-extension-auth-loading/
-│       │   ├── 004-advanced-bunker-mode/
-│       │   ├── 005-mobile-auth-stability/
-│       │   ├── 006-async-button-pattern/
-│       │   ├── 007-permission-minimization/
-│       │   ├── 008-mobile-auth-states/
-│       │   ├── 009-bunker-permission-grants/
-│       │   ├── 010-follower-merge/
-│       │   └── 011-francophone-pack-feed/
-│       └── support/
+├── docs/
+│   ├── README.md
+│   ├── product/roadmap.md
+│   ├── features/README.md
+│   ├── architecture/
+│   │   ├── overview.md
+│   │   └── decisions/
+│   ├── auth/
+│   │   ├── nostr-auth-rules.md
+│   │   └── mobile-auth-notes.md
+│   ├── design/
+│   ├── operations/
+│   └── contributing/
 ├── _bmad-output/
 │   ├── project-context.md
 │   └── planning-artifacts/
@@ -964,12 +959,12 @@ User Feedback and Recovery:
 - State model: `src/core/nostr-connection/domain/`
 - Error mapping: application services and `server.mjs`
 
-Migration and Knowledge Preservation:
+Documentation and Knowledge Preservation:
 
-- Active project source of truth: `specs/project/`
-- BMAD planning output: `_bmad-output/planning-artifacts/`
+- Maintained docs: `docs/`
+- Product roadmap and feature briefs: `docs/product/roadmap.md`, `docs/features/README.md`
 - Project context: `_bmad-output/project-context.md`
-- Architecture decisions: `_bmad-output/planning-artifacts/architecture.md`
+- Architecture decisions: `docs/architecture/decisions/`
 
 **Cross-Cutting Concerns:**
 
@@ -1174,7 +1169,7 @@ All FR categories from the PRD are architecturally supported:
 - Pack Registration: covered by pack application services, NIP-98 protected backend requests, backend authorization, and Supabase persistence.
 - Admin Pack Management: covered by admin presentation, frontend affordance checks, backend authorization, and server-side persistence.
 - User Feedback and Recovery: covered by stable error codes, explicit pending states, and recovery-oriented UI state mapping.
-- Migration and Knowledge Preservation: covered by `specs/project/`, `_bmad-output/`, and architecture/project context outputs.
+- Documentation Knowledge Preservation: covered by `docs/`, `_bmad-output/`, and architecture/project context outputs.
 - Scope Control: deferred decisions explicitly exclude PWA, SEO, reusable module extraction, account creation, broad onboarding, and public wiki polish.
 
 **Non-Functional Requirements Coverage:**
@@ -1267,7 +1262,7 @@ No missing architectural decision currently blocks implementation.
 - A future E2E test framework could validate real browser/mobile signer flows.
 - A future ADR could document final NIP-46 restoration behavior after implementation.
 - A future observability/logging guide could standardize production diagnostics.
-- A future public wiki can build from preserved `specs/project/support/` materials.
+- A future public wiki can build from preserved `docs/` materials.
 
 ### Validation Issues Addressed
 

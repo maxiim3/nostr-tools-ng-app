@@ -83,10 +83,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Development Workflow Rules
 
-- `specs/project/` is the active project-management source of truth; start with `specs/project/queue.md`, then the first non-completed feature folder.
-- Feature directories must use ordered IDs: `<id>-<name>` such as `001-auto-admit-pack-members`.
-- Inside each feature, `spec.md` owns outcome/acceptance criteria, `plan.md` owns strategy/risks, and `tasks.md` owns executable work.
-- If support docs conflict with queue or feature files, queue and feature files win.
+- Maintained project documentation lives in `docs/`; start with `docs/product/roadmap.md`, then `docs/features/README.md`.
+- Architecture context lives in `docs/architecture/overview.md` and `docs/architecture/decisions/`.
+- Stable Nostr auth constraints live in `docs/auth/nostr-auth-rules.md`.
+- BMAD artifacts in `_bmad-output/` can inform planning, but generated output does not override current implementation facts, architecture decisions, or maintained docs.
 - Use repo scripts from `package.json`: `bun run format`, `bun run lint`, `bun run lint:css`, `bun run typecheck`, `bun run test`, `bun run build`, `bun run fix`, `bun run check`.
 - Do not invoke underlying tools directly (`ng lint`, `tsc`, `vitest`, `prettier`) unless explicitly requested.
 - Commit format is `feat: <short lowercase description>` with no scope/body unless necessary.

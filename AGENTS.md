@@ -54,13 +54,13 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
-## Project Source of Truth
+## Project Documentation and Planning
 
-- Current project source of truth: `specs/project/`
-- Start feature work from `specs/project/queue.md`, then the selected `specs/project/features/<id-name>/` directory.
-- `specs/project/support/architecture/overview.md` and `specs/project/support/decisions/` define architecture context and decisions.
-- `specs/project/support/references/nostr-auth-rules.md` defines stable Nostr authentication constraints.
-- Supporting research, history, incidents, and design docs inform implementation but do not override active feature specs or architecture decisions.
+- Maintained project documentation lives in `docs/`.
+- Start product/context review from `docs/product/roadmap.md`, then `docs/features/README.md` for feature briefs.
+- `docs/architecture/overview.md` and `docs/architecture/decisions/` define architecture context and decisions.
+- `docs/auth/nostr-auth-rules.md` defines stable Nostr authentication constraints.
+- BMAD artifacts in `_bmad-output/` can inform planning and story execution, but generated planning output does not override current implementation facts, architecture decisions, or maintained docs.
 
 ## Nostr Auth and Security
 

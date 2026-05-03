@@ -40,6 +40,8 @@ sequenceDiagram
 
 ## Notes techniques
 
+- Maintained technical integration guidance: [Nostr + Lightning zaps integration](../../../docs/zaps/technical-integration.md)
+- Checkout-oriented LNURL/NWC guidance: [LNURL + NWC checkout](../../../docs/zaps/lnurl-nwc-checkout.md)
 - Le zap exige une session Nostr active (`ndk.signer` present).
 - Le QR facture est un `lightning:<invoice>` genere localement.
 - La publication utilise `generateZapRequest` de `@nostr-dev-kit/ndk`.

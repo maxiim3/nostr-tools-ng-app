@@ -10,58 +10,13 @@ inputDocuments:
   - _bmad-output/planning-artifacts/architecture.md
   - _bmad-output/planning-artifacts/ux-design-specification.md
   - _bmad-output/project-context.md
-  - specs/project/README.md
-  - specs/project/queue.md
-  - specs/project/roadmap.md
-  - specs/project/milestones.md
-  - specs/project/features/README.md
-  - specs/project/features/001-auto-admit-pack-members/spec.md
-  - specs/project/features/001-auto-admit-pack-members/plan.md
-  - specs/project/features/001-auto-admit-pack-members/tasks.md
-  - specs/project/features/002-session-restore/spec.md
-  - specs/project/features/002-session-restore/plan.md
-  - specs/project/features/002-session-restore/tasks.md
-  - specs/project/features/003-extension-auth-loading/spec.md
-  - specs/project/features/003-extension-auth-loading/plan.md
-  - specs/project/features/003-extension-auth-loading/tasks.md
-  - specs/project/features/004-advanced-bunker-mode/spec.md
-  - specs/project/features/004-advanced-bunker-mode/plan.md
-  - specs/project/features/004-advanced-bunker-mode/tasks.md
-  - specs/project/features/005-mobile-auth-stability/spec.md
-  - specs/project/features/005-mobile-auth-stability/plan.md
-  - specs/project/features/005-mobile-auth-stability/tasks.md
-  - specs/project/features/006-async-button-pattern/spec.md
-  - specs/project/features/006-async-button-pattern/plan.md
-  - specs/project/features/006-async-button-pattern/tasks.md
-  - specs/project/features/007-permission-minimization/spec.md
-  - specs/project/features/007-permission-minimization/plan.md
-  - specs/project/features/007-permission-minimization/tasks.md
-  - specs/project/features/008-mobile-auth-states/spec.md
-  - specs/project/features/008-mobile-auth-states/plan.md
-  - specs/project/features/008-mobile-auth-states/tasks.md
-  - specs/project/features/009-bunker-permission-grants/spec.md
-  - specs/project/features/009-bunker-permission-grants/plan.md
-  - specs/project/features/009-bunker-permission-grants/tasks.md
-  - specs/project/features/010-follower-merge/spec.md
-  - specs/project/features/010-follower-merge/plan.md
-  - specs/project/features/010-follower-merge/tasks.md
-  - specs/project/features/011-francophone-pack-feed/spec.md
-  - specs/project/features/011-francophone-pack-feed/plan.md
-  - specs/project/features/011-francophone-pack-feed/tasks.md
-  - specs/project/support/README.md
-  - specs/project/support/architecture/overview.md
-  - specs/project/support/decisions/README.md
-  - specs/project/support/decisions/0001-docs-taxonomy.md
-  - specs/project/support/decisions/0002-nostr-connect-local-restore.md
-  - specs/project/support/references/nostr-auth-rules.md
-  - specs/project/support/research/remote-signer-threat-model-checklist.md
-  - specs/project/support/research/nostr-auth-ux-pattern.md
-  - specs/project/support/research/better-zap-pattern.md
-  - specs/project/support/history/auth-refactor-journal.md
-  - specs/project/support/incidents/local-zap-api-port-conflict.md
-  - specs/project/support/design/landing-page.md
-  - specs/project/support/guides/mermaid.md
-  - .specify/memory/constitution.md
+  - docs/README.md
+  - docs/product/roadmap.md
+  - docs/features/README.md
+  - docs/architecture/overview.md
+  - docs/architecture/decisions/README.md
+  - docs/auth/nostr-auth-rules.md
+  - docs/auth/mobile-auth-notes.md
 ---
 
 # nostr-tools-ng-app - Epic Breakdown
@@ -146,7 +101,7 @@ FR35: Users can understand when no further action is needed because they are alr
 
 FR36: The system can avoid indefinite loading states by reaching a clear success, failure, pending, timeout, or recovery state.
 
-FR37: The project can preserve critical Speckit-era support knowledge before Speckit artifacts are removed.
+FR37: The project can preserve critical support knowledge in maintained docs.
 
 FR38: The project can retain Nostr authentication patterns, architecture decisions, research, guides, and incident knowledge needed for BMAD migration.
 
@@ -264,11 +219,11 @@ AR22: Use repository scripts for verification, especially `bun run test`, `bun r
 
 AR23: Translation/copy changes must update the relevant `src/assets/i18n/fr.json`, `en.json`, and `es.json` files.
 
-AR24: `specs/project/` is the active project source of truth; `queue.md` owns execution order and `features/<id-name>/` owns active specs, plans, and tasks.
+AR24: Maintained project documentation lives in `docs/`; `docs/product/roadmap.md` owns sequencing and `docs/features/README.md` owns feature briefs.
 
-AR25: Preserve useful Specify-era knowledge before removing Specify artifacts; surviving principles from `.specify/memory/constitution.md` duplicate and reinforce Angular discipline, accessibility, feature boundaries, Nostr auth/security, and repo-script verification.
+AR25: Preserve useful legacy planning knowledge in maintained docs; surviving principles reinforce Angular discipline, accessibility, feature boundaries, Nostr auth/security, and repo-script verification.
 
-AR26: Exclude Specify templates, commands, extensions, and generated scaffolding from future product planning after preserved knowledge is migrated.
+AR26: Exclude obsolete planning templates, commands, extensions, and generated scaffolding from future product planning after preserved knowledge is migrated.
 
 AR27: M1 execution order starts with `001-auto-admit-pack-members`, then `002-session-restore`, `003-extension-auth-loading`, `004-advanced-bunker-mode`, followed by mobile auth, async-button, permission, mobile state, and bunker permission work according to `queue.md`.
 
@@ -426,7 +381,7 @@ FR35: Epic 2 - Communicate that no further action is needed when already registe
 
 FR36: Epic 1 and Epic 2 - Avoid indefinite loading states by reaching explicit terminal or recovery states.
 
-FR37: Epic 3 - Preserve critical Speckit-era support knowledge before artifact removal.
+FR37: Epic 3 - Preserve critical support knowledge in maintained docs.
 
 FR38: Epic 3 - Retain Nostr authentication patterns, architecture decisions, research, guides, and incident knowledge for BMAD migration.
 
@@ -462,7 +417,7 @@ Authenticated users can join the francophone pack immediately, understand succes
 
 ### Epic 3: BMAD Knowledge Preservation and Scope Control
 
-The project preserves useful Speckit-era knowledge, removes failed Specify scaffolding from active planning, and keeps the current release focused on the MVP.
+The project preserves useful legacy planning knowledge, removes obsolete scaffolding from active planning, and keeps the current release focused on the MVP.
 
 **FRs covered:** FR37-FR46
 
@@ -1083,21 +1038,21 @@ sequenceDiagram
 
 ## Epic 3: BMAD Knowledge Preservation and Scope Control
 
-The project preserves useful Speckit-era knowledge, removes failed Specify scaffolding from active planning, and keeps the current release focused on the MVP.
+The project preserves useful legacy planning knowledge, removes obsolete scaffolding from active planning, and keeps the current release focused on the MVP.
 
-### Story 3.1: Preserve Useful Specify-Era Knowledge Before Removal
+### Story 3.1: Preserve Useful Legacy Planning Knowledge
 
 **Requirements covered:** FR37, FR38
 
 As a maintainer,
-I want useful Specify-era knowledge retained in the active BMAD/project docs,
-So that deleting failed Specify scaffolding does not lose important Nostr auth or process constraints.
+I want useful legacy planning knowledge retained in the active BMAD/project docs,
+So that deleting obsolete scaffolding does not lose important Nostr auth or process constraints.
 
 **Acceptance Criteria:**
 
-**Given** Specify-era artifacts still exist
-**When** the project prepares to remove Specify scaffolding
-**Then** useful surviving knowledge from `.specify/memory/constitution.md` is reviewed
+**Given** legacy planning artifacts still exist
+**When** the project prepares to remove obsolete scaffolding
+**Then** useful surviving knowledge is reviewed
 **And** any still-relevant principles are preserved in BMAD/project docs before deletion.
 
 **Given** preserved knowledge overlaps with current project rules
@@ -1105,44 +1060,44 @@ So that deleting failed Specify scaffolding does not lose important Nostr auth o
 **Then** Angular discipline, accessibility, feature boundaries, Nostr auth/security, and repo-script verification remain represented in active docs
 **And** duplicate failed-tooling instructions are not carried forward unnecessarily.
 
-**Given** Speckit-era support knowledge includes auth patterns, architecture decisions, research, guides, history, and incidents
+**Given** legacy support knowledge includes auth patterns, architecture decisions, research, guides, history, and incidents
 **When** preservation is complete
-**Then** the active source of truth can still answer implementation questions without relying on `.specify/`.
+**Then** the active source of truth can still answer implementation questions without relying on obsolete tooling.
 
 ```mermaid
 sequenceDiagram
   participant Maintainer
-  participant Specify as Specify Artifacts
+  participant Legacy as Legacy Artifacts
   participant Docs as Active BMAD/Project Docs
-  Maintainer->>Specify: review surviving principles
-  Specify-->>Maintainer: useful constraints and failed scaffolding
+  Maintainer->>Legacy: review surviving principles
+  Legacy-->>Maintainer: useful constraints and obsolete scaffolding
   Maintainer->>Docs: preserve relevant knowledge
-  Docs-->>Maintainer: active guidance no longer depends on Specify
+  Docs-->>Maintainer: active guidance no longer depends on obsolete tooling
 ```
 
-### Story 3.2: Remove Specify Scaffolding From Active Planning
+### Story 3.2: Remove Obsolete Scaffolding From Active Planning
 
 **Requirements covered:** FR37, FR38
 
 As a maintainer,
-I want failed Specify tooling removed from active planning,
+I want obsolete tooling removed from active planning,
 So that agents and contributors stop following counterproductive workflows.
 
 **Acceptance Criteria:**
 
-**Given** Specify scaffolding has been reviewed for surviving knowledge
+**Given** obsolete scaffolding has been reviewed for surviving knowledge
 **When** removal work is performed
-**Then** `.specify/templates`, `.specify/extensions`, generated command scaffolding, and other failed Specify workflow artifacts are removed or excluded from active use
+**Then** generated command scaffolding and obsolete workflow artifacts are removed or excluded from active use
 **And** only explicitly preserved knowledge remains in active documentation.
 
 **Given** agents search the repository for planning instructions
-**When** Specify scaffolding has been removed or excluded
-**Then** active guidance points to `specs/project/`, `_bmad-output/`, and BMAD artifacts
-**And** no active instruction tells agents to use Specify as the project workflow.
+**When** obsolete scaffolding has been removed or excluded
+**Then** active guidance points to `docs/`, `_bmad-output/`, and BMAD artifacts
+**And** no active instruction tells agents to use obsolete tooling as the project workflow.
 
 **Given** removed tooling might have left references in docs
 **When** cleanup is complete
-**Then** stale Specify references are deleted or clearly marked historical
+**Then** stale workflow-tool references are deleted or clearly marked historical
 **And** the project source-of-truth hierarchy remains unambiguous.
 
 ```mermaid
@@ -1150,10 +1105,10 @@ sequenceDiagram
   participant Maintainer
   participant Repo
   participant Agent
-  Maintainer->>Repo: remove or exclude Specify scaffolding
+  Maintainer->>Repo: remove or exclude obsolete scaffolding
   Agent->>Repo: search planning workflow
-  Repo-->>Agent: specs/project and BMAD sources
-  Agent-->>Maintainer: no Specify workflow dependency
+  Repo-->>Agent: docs and BMAD sources
+  Agent-->>Maintainer: no obsolete workflow dependency
 ```
 
 ### Story 3.3: Reaffirm MVP Scope Boundaries

@@ -1,5 +1,5 @@
 # generated: 2026-05-02T17:47:47Z
-# last_updated: 2026-05-02T17:47:47Z
+# last_updated: 2026-05-02T20:12:58Z
 # project: nostr-tools-ng-app
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,15 +35,15 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02T17:47:47Z
-last_updated: 2026-05-02T17:47:47Z
+last_updated: 2026-05-02T20:12:58Z
 project: nostr-tools-ng-app
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: backlog
-  1-1-define-shared-auth-session-state-model: backlog
+  epic-1: in-progress
+  1-1-define-shared-auth-session-state-model: ready-for-dev
   1-2-restore-valid-browser-extension-sessions-after-refresh: backlog
   1-3-restore-valid-nip-46-external-signer-sessions-after-refresh: backlog
   1-4-make-auth-method-selection-and-advanced-bunker-mode-clear: backlog
@@ -63,8 +63,8 @@ development_status:
   2-7-document-supabase-membership-configuration-and-runtime-boundaries: backlog
   epic-2-retrospective: optional
   epic-3: backlog
-  3-1-preserve-useful-specify-era-knowledge-before-removal: backlog
-  3-2-remove-specify-scaffolding-from-active-planning: backlog
+  3-1-preserve-useful-legacy-planning-knowledge: done
+  3-2-remove-legacy-scaffolding-from-active-planning: done
   3-3-reaffirm-mvp-scope-boundaries: backlog
   3-4-prepare-future-knowledge-base-without-delivering-public-wiki: backlog
   epic-3-retrospective: optional

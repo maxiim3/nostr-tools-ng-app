@@ -148,7 +148,7 @@ FR35: Users can understand when no further action is needed because they are alr
 
 FR36: The system can avoid indefinite loading states by reaching a clear success, failure, pending, timeout, or recovery state.
 
-FR37: The project can preserve critical Speckit-era support knowledge before Speckit artifacts are removed.
+FR37: The project can preserve critical support knowledge in maintained docs.
 
 FR38: The project can retain Nostr authentication patterns, architecture decisions, research, guides, and incident knowledge needed for BMAD migration.
 
@@ -225,7 +225,7 @@ Total NFRs: 24
 ### Additional Requirements
 
 - Project context: Brownfield web application in the Nostr protocol/decentralized identity domain with high complexity.
-- MVP scope is limited to authentication reliability, pack registration stability, and preservation of critical support knowledge before Speckit removal.
+- MVP scope is limited to authentication reliability, pack registration stability, and preservation of critical support knowledge.
 - Growth/future scope includes broader Toolstr capabilities, potential future auth module extraction, and a future Nostr development knowledge base/wiki, but these are not MVP deliverables.
 - The product must respect Nostr's security model: private keys remain outside the application, and signing authority comes only from the selected signer method.
 - Authentication state must distinguish identity discovery, signer availability, signer permission, active session, expired session, and revoked/removed signer authorization.
@@ -240,7 +240,7 @@ Total NFRs: 24
 
 ### PRD Completeness Assessment
 
-The PRD is complete enough for traceability validation. It provides explicit FRs, NFRs, success criteria, user journeys, domain constraints, integration requirements, risk mitigations, scope exclusions, and MVP/post-MVP boundaries. The main validation focus for later steps is whether epics and stories fully preserve the auth reliability emphasis while still covering pack registration, admin oversight, and Speckit/BMAD knowledge migration.
+The PRD is complete enough for traceability validation. It provides explicit FRs, NFRs, success criteria, user journeys, domain constraints, integration requirements, risk mitigations, scope exclusions, and MVP/post-MVP boundaries. The main validation focus for later steps is whether epics and stories fully preserve the auth reliability emphasis while still covering pack registration, admin oversight, and BMAD knowledge preservation.
 
 ## Epic Coverage Validation
 
@@ -380,7 +380,7 @@ Total FRs in epics: 46
 | FR34      | Users can retry pack registration after a recoverable failure.                                                                                    | Epic 2 Story 2.4                               | Covered |
 | FR35      | Users can understand when no further action is needed because they are already registered.                                                        | Epic 2 Stories 2.3, 2.4                        | Covered |
 | FR36      | The system can avoid indefinite loading states by reaching a clear success, failure, pending, timeout, or recovery state.                         | Epic 1 Stories 1.1, 1.5, 1.8; Epic 2 Story 2.4 | Covered |
-| FR37      | The project can preserve critical Speckit-era support knowledge before Speckit artifacts are removed.                                             | Epic 2 Story 2.7; Epic 3 Stories 3.1, 3.2      | Covered |
+| FR37      | The project can preserve critical support knowledge in maintained docs.                                                                           | Epic 2 Story 2.7; Epic 3 Stories 3.1, 3.2      | Covered |
 | FR38      | The project can retain Nostr authentication patterns, architecture decisions, research, guides, and incident knowledge needed for BMAD migration. | Epic 2 Story 2.7; Epic 3 Stories 3.1, 3.2, 3.4 | Covered |
 | FR39      | The preserved knowledge can support future wiki creation without making the polished wiki part of the current release.                            | Epic 3 Story 3.4                               | Covered |
 | FR40      | The current release excludes Nostr account creation tooling.                                                                                      | Epic 3 Story 3.3                               | Covered |
@@ -453,7 +453,7 @@ Epic 1 delivers direct user value: users can sign in with supported Nostr method
 
 Epic 2 delivers direct user/admin value: authenticated users can join the francophone pack immediately, while admins can oversee and remove members. It can function using Epic 1 authentication output and does not require Epic 3.
 
-Epic 3 delivers maintainer/product-owner value: useful knowledge is preserved, failed Specify scaffolding is removed from active planning, and MVP scope remains controlled. Although it is process-oriented, it maps directly to PRD migration/scope-control requirements and has a clear maintainer user outcome.
+Epic 3 delivers maintainer/product-owner value: useful knowledge is preserved, obsolete planning scaffolding is removed from active planning, and MVP scope remains controlled. Although it is process-oriented, it maps directly to PRD migration/scope-control requirements and has a clear maintainer user outcome.
 
 ### Dependency Analysis
 
@@ -469,7 +469,7 @@ Within-epic dependency check:
 
 - Epic 1 stories progress from shared state model to restore, method selection, pending/recovery states, mobile validation, permissions, loading behavior, and sign-out cleanup. No story requires a later story to function.
 - Epic 2 stories progress from join operation to persistence, idempotency, user feedback, admin list, removal, and documentation. Database persistence is introduced where first needed, not as upfront unrelated setup.
-- Epic 3 stories progress from preserving knowledge to removing Specify scaffolding, reaffirming scope boundaries, and preparing future wiki source material. No forward dependency found.
+- Epic 3 stories progress from preserving knowledge to removing obsolete planning scaffolding, reaffirming scope boundaries, and preparing future wiki source material. No forward dependency found.
 
 ### Database/Entity Creation Timing
 
@@ -491,15 +491,15 @@ None found.
 
 1. Story 1.8 includes both immediate extension-auth loading behavior and a conditional shared async-button pattern. This is acceptable because the abstraction is explicitly conditional, but implementation should keep the first change local unless at least three real current usages justify sharing.
 
-2. Story 2.7 and Epic 3 both touch documentation/knowledge preservation. The overlap is acceptable because Story 2.7 is Supabase membership/runtime-boundary documentation, while Epic 3 owns Specify cleanup and scope-control documentation. Implementation should preserve that boundary to avoid duplicate doc churn.
+2. Story 2.7 and Epic 3 both touch documentation/knowledge preservation. The overlap is acceptable because Story 2.7 is Supabase membership/runtime-boundary documentation, while Epic 3 owns workflow cleanup and scope-control documentation. Implementation should preserve that boundary to avoid duplicate doc churn.
 
-3. Epic 3 is process/maintainer-value rather than end-user product value. It is acceptable because the PRD explicitly requires Speckit-era knowledge preservation and scope exclusions, but sprint planning should keep it separate from runtime product delivery stories.
+3. Epic 3 is process/maintainer-value rather than end-user product value. It is acceptable because the PRD explicitly requires knowledge preservation and scope exclusions, but sprint planning should keep it separate from runtime product delivery stories.
 
 ### Recommendations
 
 - Keep Story 1.8 scoped to accessible extension-auth loading first; extract shared async-button behavior only if the inventory proves repeated current usage.
-- Keep Story 2.7 focused on Supabase, NIP-98, admin, and runtime-boundary docs; leave Specify cleanup to Epic 3.
-- During sprint planning, keep Epic 3 stories sequenced so knowledge preservation happens before any destructive `.specify/` removal.
+- Keep Story 2.7 focused on Supabase, NIP-98, admin, and runtime-boundary docs; leave workflow cleanup to Epic 3.
+- During sprint planning, keep Epic 3 stories sequenced so knowledge preservation happens before obsolete planning files are removed.
 
 ## Summary and Recommendations
 
@@ -517,14 +517,14 @@ None.
 
 1. Finalize and document the mobile signer validation matrix during implementation/QA. Current planning mentions Amber/Alby in UX and Amber/Primal in active story planning; this is not blocking, but the tested target set must become explicit.
 2. Keep Story 1.8 local unless current implementation reveals at least three real async-button usages worth abstracting.
-3. Keep documentation boundaries clear: Story 2.7 owns Supabase/runtime-boundary docs, while Epic 3 owns Specify cleanup and scope-control docs.
+3. Keep documentation boundaries clear: Story 2.7 owns Supabase/runtime-boundary docs, while Epic 3 owns workflow cleanup and scope-control docs.
 4. Treat Epic 3 as maintainer/process work during sprint planning so it does not interrupt runtime auth and pack membership delivery.
 
 ### Recommended Next Steps
 
 1. Run `bmad-sprint-planning` to convert the validated epics and stories into an implementation sequence.
 2. Start implementation with Epic 1 Story 1.1 because architecture identifies the shared auth/session state model as the first implementation priority.
-3. Preserve Specify-era knowledge before deleting `.specify/` scaffolding; do not remove legacy artifacts until Story 3.1 is complete.
+3. Preserve useful knowledge before deleting obsolete planning scaffolding; do not remove legacy artifacts until Story 3.1 is complete.
 4. During sprint planning, keep Story 1.8 scoped as local auth loading unless the async-button inventory proves a shared abstraction is warranted.
 5. During QA planning, explicitly name the mobile signer/browser-extension matrix and preserve manual validation notes.
 

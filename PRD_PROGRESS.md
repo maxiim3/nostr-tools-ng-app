@@ -16,7 +16,7 @@ Completed artifacts:
 ## BMad Planning Sequence
 
 - `[done]` `bmad-generate-project-context` for brownfield project context
-- `[done]` `bmad-distillator` on `specs/` to preserve useful legacy planning knowledge
+- `[done]` `bmad-distillator` on legacy planning docs to preserve useful knowledge
 - `[done]` `bmad-create-prd` for the lean MVP PRD
 - `[done]` `bmad-create-ux-design` only for minimal route/nav/copy cleanup
 - `[done]` `bmad-create-architecture` focused on Supabase/auth/schema decisions

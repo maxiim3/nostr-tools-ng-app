@@ -41,7 +41,7 @@ completedAt: 2026-04-30
 
 This PRD defines the next product direction for `nostr-tools-ng-app`, an existing Nostr web application whose immediate priority is reliable authentication across desktop and mobile. The product must make bunker, external signer, and browser extension authentication predictable under real usage conditions, including permission prompts, app/window focus transitions, long-lived authorization, refreshes, and session restoration. Pack registration remains important but secondary because it appears functionally viable; authentication reliability is the blocking foundation for user trust and future development.
 
-The project is also a process reset. Previous Speckit-driven work created useful artifacts for authentication and redesign, but execution became disordered. The project will move fully to BMAD and preserve critical support knowledge before Speckit artifacts are removed. That preserved knowledge should later support a Karpathy-style wiki and practical Nostr development reference.
+The project is also a process reset. Earlier planning created useful artifacts for authentication and redesign, but execution became disordered. The project now uses BMAD for planning and keeps critical support knowledge in maintained docs. That preserved knowledge should later support a Karpathy-style wiki and practical Nostr development reference.
 
 ### What Makes This Special
 
@@ -78,7 +78,7 @@ The authentication implementation should separate core business logic from prese
 
 Pack registration must remain functional and stable after authentication changes. Authentication fixes must not regress the existing rebrand/redesign or the current pack registration behavior.
 
-The current Speckit-era support knowledge must be preserved before Speckit is removed. The project should extract and retain useful Nostr authentication patterns, architecture decisions, research, guides, and incidents so they are not lost during the BMAD migration.
+Useful support knowledge must stay preserved in maintained docs. The project should retain Nostr authentication patterns, architecture decisions, research distillates, guides, and incidents so they are not lost during workflow cleanup.
 
 ### Measurable Outcomes
 
@@ -88,16 +88,16 @@ The current Speckit-era support knowledge must be preserved before Speckit is re
 - External signer flows preserve state through permission prompts, mobile app switching, browser focus changes, and return-to-app behavior.
 - Sign-in does not introduce avoidable waiting for nonessential data loading.
 - Pack registration remains usable after authentication refactoring or fixes.
-- Speckit-era support knowledge relevant to Nostr auth patterns is preserved before Speckit removal.
+- Support knowledge relevant to Nostr auth patterns is preserved in maintained docs.
 - The app can resume planned feature development without authentication being the primary blocker.
 
 ## Product Scope
 
 ### MVP - Minimum Viable Product
 
-The MVP scope is limited to authentication reliability, pack registration stability, and preservation of critical support knowledge before Speckit removal. Authentication must support bunker, external signer app, and browser extension flows with predictable session persistence, refresh behavior, permission handling, and recovery paths. Pack registration must continue to work and be validated against the improved authentication model.
+The MVP scope is limited to authentication reliability, pack registration stability, and preservation of critical support knowledge. Authentication must support bunker, external signer app, and browser extension flows with predictable session persistence, refresh behavior, permission handling, and recovery paths. Pack registration must continue to work and be validated against the improved authentication model.
 
-Knowledge preservation is included only as migration support: extract and preserve relevant Speckit-era support materials, especially Nostr authentication patterns, architecture decisions, research, guides, and incidents. A polished developer-facing wiki is not part of the MVP.
+Knowledge preservation is included only as migration support: preserve relevant Nostr authentication patterns, architecture decisions, research distillates, guides, and incidents. A polished developer-facing wiki is not part of the MVP.
 
 ### Growth Features (Post-MVP)
 
@@ -285,7 +285,7 @@ The release should avoid expanding into broader Toolstr capabilities, onboarding
 - Show admins which users came from Toolstr.
 - Allow admins to remove users from the pack.
 - Preserve the accepted redesign/rebrand during auth and pack changes.
-- Preserve critical Speckit-era support knowledge needed for BMAD migration before Speckit artifacts are removed.
+- Preserve critical support knowledge needed for BMAD migration in maintained docs.
 
 **Nice-to-Have Capabilities:**
 
@@ -306,7 +306,7 @@ The release should avoid expanding into broader Toolstr capabilities, onboarding
 
 **Market Risks:** the current risk is not lack of demand; demand for pack access already exists. The risk is user/admin trust erosion if auto-registration is unreliable. Mitigation is to keep scope narrow and validate the pack registration journey end to end before adding broader Toolstr features.
 
-**Resource Risks:** if implementation capacity is constrained, the release should not reduce the three required auth methods without explicit decision. Instead, reduce polish and future-facing work first. The absolute minimum release remains reliable authentication, auto pack registration, already-in-pack handling, admin removal, and preservation of critical support knowledge before Speckit removal.
+**Resource Risks:** if implementation capacity is constrained, the release should not reduce the three required auth methods without explicit decision. Instead, reduce polish and future-facing work first. The absolute minimum release remains reliable authentication, auto pack registration, already-in-pack handling, admin removal, and preservation of critical support knowledge.
 
 ## Functional Requirements
 
@@ -363,7 +363,7 @@ The release should avoid expanding into broader Toolstr capabilities, onboarding
 
 ### Migration and Knowledge Preservation
 
-- FR37: The project can preserve critical Speckit-era support knowledge before Speckit artifacts are removed.
+- FR37: The project can preserve critical support knowledge in maintained docs.
 - FR38: The project can retain Nostr authentication patterns, architecture decisions, research, guides, and incident knowledge needed for BMAD migration.
 - FR39: The preserved knowledge can support future wiki creation without making the polished wiki part of the current release.
 

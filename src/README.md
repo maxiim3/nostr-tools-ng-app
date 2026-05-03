@@ -12,7 +12,8 @@ Cette documentation est placee au plus proche du code pour expliquer les workflo
 
 ## Contexte produit et architecture
 
-- [Source de verite projet](../specs/project/README.md)
-- [Execution queue](../specs/project/queue.md)
-- [Roadmap projet](../specs/project/roadmap.md)
-- [Architecture globale](../specs/project/support/architecture/overview.md)
+- [Documentation projet](../docs/README.md)
+- [Roadmap projet](../docs/product/roadmap.md)
+- [Features actionnables](../docs/features/README.md)
+- [Architecture globale](../docs/architecture/overview.md)
+- [Regles auth Nostr](../docs/auth/nostr-auth-rules.md)
