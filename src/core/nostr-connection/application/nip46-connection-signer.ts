@@ -74,6 +74,14 @@ export class Nip46ConnectionSigner implements ConnectionSigner {
   supports(capability: ConnectionCapability): boolean {
     return this.capabilities.includes(capability);
   }
+
+  getRestorePayload(): string | null {
+    try {
+      return this.signer.toPayload?.() ?? null;
+    } catch {
+      return null;
+    }
+  }
 }
 
 function toNip46DomainError(

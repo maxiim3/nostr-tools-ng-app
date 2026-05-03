@@ -166,6 +166,7 @@ export class NostrSessionService {
   }
 
   async beginExternalAppLogin(): Promise<string | null> {
+    this.currentAuthOperationId++;
     this.error.set(null);
     this.facade.clearError();
     this.cancelBunkerTimer();
@@ -212,6 +213,7 @@ export class NostrSessionService {
   }
 
   async beginBunkerLogin(connectionToken: string): Promise<boolean> {
+    this.currentAuthOperationId++;
     this.error.set(null);
     this.facade.clearError();
     this.currentExternalAttemptId++;

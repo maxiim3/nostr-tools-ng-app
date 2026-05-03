@@ -8,6 +8,10 @@ import {
 import { Nip46NostrconnectConnectionMethod } from './nip46-nostrconnect-connection-method';
 
 describe('Nip46NostrconnectConnectionMethod', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   runConnectionMethodContract({
     expectedId: 'nip46-nostrconnect',
     createAvailableMethod: () =>
@@ -72,6 +76,73 @@ describe('Nip46NostrconnectConnectionMethod', () => {
 
     expect(handle.cancelCalls).toBe(1);
   });
+
+  it('restores an active external signer connection from a stored NDK payload', async () => {
+    const remoteSigner = createRemoteSigner('a'.repeat(64));
+    const restoreRemoteSigner = vi.fn().mockResolvedValue(remoteSigner);
+    const method = new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+      restoreRemoteSigner,
+    });
+
+    const connection = await method.restoreActiveConnection({
+      version: 1,
+      methodId: 'nip46-nostrconnect',
+      restorePayload: 'payload',
+      pubkeyHex: 'a'.repeat(64),
+      validatedAt: 1,
+      relayUrls: ['wss://relay.example.com'],
+    });
+
+    expect(restoreRemoteSigner).toHaveBeenCalledWith('payload', {
+      relayUrls: ['wss://relay.example.com'],
+      connectTimeoutMs: 2000,
+      readyTimeoutMs: 8000,
+    });
+    expect(connection.getSession().methodId).toBe('nip46-nostrconnect');
+    expect(connection.getSession().pubkeyHex).toBe('a'.repeat(64));
+  });
+
+  it('fails closed and stops the restored signer when user pubkey does not match the stored context', async () => {
+    const remoteSigner = createRemoteSigner('b'.repeat(64));
+    const method = new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+      restoreRemoteSigner: vi.fn().mockResolvedValue(remoteSigner),
+    });
+
+    await expect(
+      method.restoreActiveConnection({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    ).rejects.toMatchObject({ code: 'validation_failed' });
+    expect(remoteSigner.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops the restored signer when user pubkey validation times out', async () => {
+    vi.useFakeTimers();
+    const remoteSigner = createHangingRemoteSigner();
+    const method = new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+      restoreRemoteSigner: vi.fn().mockResolvedValue(remoteSigner),
+      restoreReadyTimeoutMs: 10,
+    });
+
+    const restore = expect(
+      method.restoreActiveConnection({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    ).rejects.toMatchObject({ code: 'timeout' });
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(11);
+
+    await restore;
+    expect(remoteSigner.stop).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createIdentityChangingRemoteSigner(): Nip46RemoteSigner {
@@ -90,5 +161,31 @@ function createIdentityChangingRemoteSigner(): Nip46RemoteSigner {
     stop(): void {
       return;
     },
+  };
+}
+
+function createRemoteSigner(pubkeyHex: string): Nip46RemoteSigner {
+  return {
+    ndkSigner: { marker: 'ndk-signer' },
+    async getPublicKey(): Promise<string> {
+      return pubkeyHex;
+    },
+    async sign(): Promise<string> {
+      return 'f'.repeat(128);
+    },
+    stop: vi.fn(),
+    toPayload: vi.fn(() => 'payload'),
+  };
+}
+
+function createHangingRemoteSigner(): Nip46RemoteSigner {
+  return {
+    ndkSigner: { marker: 'ndk-signer' },
+    getPublicKey: vi.fn(() => new Promise<string>(() => undefined)),
+    async sign(): Promise<string> {
+      return 'f'.repeat(128);
+    },
+    stop: vi.fn(),
+    toPayload: vi.fn(() => 'payload'),
   };
 }

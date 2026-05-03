@@ -1,6 +1,6 @@
 # Story 1.3: Restore Valid NIP-46 External Signer Sessions After Refresh
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -12,60 +12,74 @@ so that returning to Toolstr does not force a full new pairing.
 
 ## Acceptance Criteria
 
-1. Given a user connected through NIP-46 external signer flow, when the app reloads with a valid restore payload, then the app attempts silent signer restoration, and restores connected state only after signer authorization is validated.
+1. Given a user connected through NIP-46 external signer flow, when the app reloads with a valid restore payload, then the app attempts silent signer restoration, validates the restored signer by calling `getPublicKey()`, and restores connected state only when the normalized returned user pubkey matches the persisted expected `pubkeyHex`.
 2. Given the restore payload is missing, invalid, expired, revoked, or unsupported by the signer, when restoration runs, then the app purges invalid restore data, and shows disconnected or reconnect-required state.
 3. Given restoration uses NIP-46 data, when protocol correlation is required, then `secret`, request identity, timeout behavior, and signer pubkey validation are respected, and sensitive restore values are not exposed in logs.
+4. Given an interactive `nip46-nostrconnect` login succeeds, when signer-backed user pubkey validation completes, then the app persists only a minimal method-discriminated NIP-46 restore context needed for future restore.
+5. Given the user disconnects, a restore fails, or a restore/login is superseded, when cleanup runs, then NIP-46 restore context and transient NIP-46 artifacts are cleared without deleting unrelated NIP-07 compatibility data.
 
 ## Tasks / Subtasks
 
-- [ ] Define safe NIP-46 restore context persistence for external signer sessions only (AC: 1, 2, 3)
-  - [ ] Add a focused restore-context store in `src/core/nostr-connection/application/` or adjacent infrastructure, following the `Nip07RestoreContextStore` pattern but using a separate key and method-discriminated payload for `nip46-nostrconnect`.
-  - [ ] Persist only the minimum values required by NDK/NIP-46 restore and validation: `version`, `methodId: 'nip46-nostrconnect'`, signer restore payload, expected user `pubkeyHex`, `validatedAt`, and any relay/perms metadata that is required to reconnect safely.
-  - [ ] Do not persist NIP-98 tokens, signed events, profile snapshots, QR values, launch URLs, `authUrl`, callbacks, timers, raw exceptions, private keys, or unrelated pack/admin state.
-  - [ ] Treat persisted restore context as an attempt hint only. It must never set `connected` without restoring a live signer and validating the signer returns the expected user pubkey.
-  - [ ] Guard all browser storage access with `typeof globalThis !== 'undefined'` and tolerate throwing `localStorage` property access plus throwing `getItem`, `setItem`, and `removeItem`.
-  - [ ] Purge malformed JSON, wrong version, wrong method id, missing restore payload, invalid expected pubkey, unsupported payload shape, expired payload if a TTL is introduced, and legacy data that cannot be validated.
-- [ ] Add NIP-46 restore/recreate path through existing NDK/NIP-46 infrastructure (AC: 1, 2, 3)
-  - [ ] Reuse and extend `src/core/nostr-connection/infrastructure/ndk-nip46-restore.ts`; do not duplicate NDK dynamic import, relay connection, or `NDKNip46Signer.fromPayload(...)` handling elsewhere.
-  - [ ] Use `restoreNdkNip46SignerFromPayload(...)` to obtain a remote signer, then wrap it in `Nip46ConnectionSigner` and build a normal `ConnectionSession` through existing NIP-46 session creation logic.
-  - [ ] If needed, extract a reusable helper from `nip46-connection-attempt.ts` so restored NIP-46 connections and interactive NIP-46 attempts construct `Nip46ActiveConnection` and sessions identically.
-  - [ ] Validate the restored signer by calling `getPublicKey()` and comparing normalized hex user pubkey to the persisted expected pubkey before committing active state.
-  - [ ] Ensure NIP-46 remote-signer pubkey and user pubkey are not conflated. The connected identity is the `get_public_key` result/user pubkey, not the remote-signer pubkey from the transport.
-  - [ ] Respect NIP-46 correlation semantics that NDK owns during restore: payload must include the client key/secret context needed for request/response correlation; invalid or stale payloads must fail closed.
-  - [ ] Apply bounded restore timeouts for NDK relay connect, `fromPayload`, readiness, and public-key validation so restore cannot leave `authSessionState` in `restoring` indefinitely.
-- [ ] Integrate NIP-46 restore into `ConnectionFacade` without regressing NIP-07 restore (AC: 1, 2, 3)
-  - [ ] Generalize `ConnectionFacade.hasRestoreContext()` so startup can detect either NIP-07 or NIP-46 restore data without calling signers when no context exists.
-  - [ ] Extend `restoreSessionFromStoredContext()` or add a focused method-discriminated restore API that can restore NIP-07 and `nip46-nostrconnect` while preserving existing NIP-07 behavior and tests.
-  - [ ] Set `_restoringMethodId` to `nip46-nostrconnect` during external signer restore so `authSessionState` emits `{ status: 'restoring', methodId: 'nip46-nostrconnect' }`.
-  - [ ] Clear restore state in every success, failure, cancellation, timeout, disconnect, superseded-login, and stale-completion branch using the existing attempt-id/operation guard style.
-  - [ ] Commit restored NIP-46 active connections through `ConnectionOrchestrator.completeAttempt(...)` or an equivalent safe commit seam so the in-memory active connection, `currentSession`, and `ndkSigner` stay consistent.
-  - [ ] Persist NIP-46 restore context only after successful interactive `nip46-nostrconnect` login and after signer-backed user pubkey validation.
-  - [ ] Clear NIP-46 restore context on `disconnect()` even when there is no active in-memory connection and even if lower-level signer cleanup rejects.
-  - [ ] Do not make `InMemoryConnectionSessionStore` a browser-storage store; persisted restore payload remains a separate restore hint.
-- [ ] Bridge restored NIP-46 sessions into current UI/session behavior (AC: 1, 2)
-  - [ ] Update `src/core/nostr/application/nostr-session.service.ts` startup flow to attempt NIP-46 restore when NIP-46 context exists, while preserving NIP-07 restore from Story 1.2.
-  - [ ] On successful NIP-46 restore, apply the NDK signer via `NostrClientService.applyNdkSigner(ndkSigner, session.pubkeyHex)` using `facade.ndkSigner()` exactly like interactive external signer and bunker success paths.
-  - [ ] Fetch profile only after connected signer state is committed. Profile fetch failure must not undo signer-backed connected state, matching NIP-07 restore behavior.
-  - [ ] On restore failure, clear stale signer-backed profile/user display and present disconnected or reconnect-required semantics; cached profile data must not authenticate the user.
-  - [ ] Preserve operation-generation guards so stale restore completion cannot repopulate `user`, close/open the modal, set errors, or overwrite a newer extension, external signer, bunker, private-key, or logout state.
-  - [ ] Do not redesign the auth modal for this story. Successful restore should be silent except existing connected identity/actions; failure should leave the user able to reconnect.
-- [ ] Preserve and extend external signer behavior without changing bunker scope (AC: 1, 2, 3)
-  - [ ] Build on `Nip46NostrconnectConnectionMethod`, `NdkNip46NostrconnectStarter`, `Nip46ConnectionAttempt`, `Nip46ConnectionSigner`, and `ndk-nip46-restore.ts`; do not create another external signer stack.
-  - [ ] Keep `nip46-bunker` restore out of scope unless code sharing requires method-discriminated no-op support. Bunker restoration and advanced bunker UX remain separate later work.
-  - [ ] Preserve current interactive external signer flow: launch/copy/QR instructions, `authUrl` instruction updates, timeout/cancel behavior, stale completion protection, NDK signer application, and profile display.
-  - [ ] Preserve current NIP-07 restore behavior and storage key compatibility. Do not convert existing `nostr.connect.restore.v1` semantics into NIP-46-only behavior.
-  - [ ] Ensure sign-in completion does not wait on feed, relay discovery beyond NIP-46 signer restore needs, notifications, Supabase, pack membership, or NIP-98 calls.
-- [ ] Add test coverage for success, fail-closed, race, timeout, and cleanup paths (AC: 1, 2, 3)
-  - [ ] Extend `ndk-nip46-restore.spec.ts` to cover restore success, invalid payload, NDK connect failure, `fromPayload` failure, readiness timeout, and public-key validation failure.
-  - [ ] Add store tests covering malformed JSON, wrong method id, missing payload, invalid expected pubkey, storage read/write/remove failures, save-after-success, and clear-on-disconnect.
-  - [ ] Extend `connection-facade.spec.ts` to cover valid NIP-46 restore, restored signer pubkey mismatch, missing/invalid restore payload purge, restore timeout, restore failure state, disconnect cleanup, and late restored active connection disconnect after timeout or superseding flow.
-  - [ ] Extend `nostr-session.service.spec.ts` to cover startup NIP-46 restore applying `applyNdkSigner`, profile fetch after validation, profile failure tolerance, stale restore after private-key login, stale restore after manual external login, stale restore after disconnect, and failed restore not authenticating from cached profile.
-  - [ ] Keep existing NIP-07 restore, external app login, bunker login, timeout, cancellation, private-key fallback, and disconnect tests passing.
-- [ ] Update documentation and verification (AC: 1, 2, 3)
-  - [ ] Update `src/core/nostr-connection/README.md` to state that `nip46-nostrconnect` can restore after reload only when the stored NIP-46 restore payload can recreate a live signer and validate the expected user pubkey.
-  - [ ] Update `docs/auth/nostr-auth-rules.md` or `docs/auth/mobile-auth-notes.md` only if implementation creates a new durable NIP-46 restore rule not already captured there.
-  - [ ] Document that NIP-46 restore payloads and secrets must be redacted from logs and cleared on logout.
-  - [ ] Run repository scripts only. Minimum verification before marking implementation complete: `bun run typecheck` and `bun run test`; run `bun run check` if practical.
+- [x] Define safe NIP-46 restore context persistence for external signer sessions only (AC: 1, 2, 3, 4, 5)
+  - [x] Add a focused restore-context store in `src/core/nostr-connection/application/` or adjacent infrastructure, following the `Nip07RestoreContextStore` pattern but using a separate key and method-discriminated payload for `nip46-nostrconnect`.
+  - [x] Persist only the minimum values required by NDK/NIP-46 restore and validation: `version`, `methodId: 'nip46-nostrconnect'`, signer restore payload, expected user `pubkeyHex`, `validatedAt`, and any relay/perms metadata that is required to reconnect safely.
+  - [x] Expose a typed NIP-46 restore-payload serialization seam from the NDK signer wrapper or attempt result after readiness and user pubkey validation; do not cast raw `unknown` NDK objects or call NDK-specific serialization directly from `ConnectionFacade`.
+  - [x] Do not persist NIP-98 tokens, signed events, profile snapshots, QR values, launch URLs, `authUrl`, callbacks, timers, raw exceptions, user private keys, standalone local signer keys outside the opaque restore payload, or unrelated pack/admin state.
+  - [x] Treat the NDK NIP-46 restore payload as sensitive opaque client restore material. It may contain the local NIP-46 client signer state required for request correlation; it must not contain a user `nsec`, must be redacted from logs, and must be cleared on logout/disconnect.
+  - [x] Treat persisted restore context as an attempt hint only. It must never set `connected` without restoring a live signer and validating the signer returns the expected user pubkey.
+  - [x] Guard all browser storage access with `typeof globalThis !== 'undefined'` and tolerate throwing `localStorage` property access plus throwing `getItem`, `setItem`, and `removeItem`.
+  - [x] Purge malformed JSON, wrong version, wrong method id, missing restore payload, invalid expected pubkey, unsupported payload shape, expired payload if a TTL is introduced, and legacy data that cannot be validated.
+- [x] Add NIP-46 restore/recreate path through existing NDK/NIP-46 infrastructure (AC: 1, 2, 3, 4, 5)
+  - [x] Reuse and extend `src/core/nostr-connection/infrastructure/ndk-nip46-restore.ts`; do not duplicate NDK dynamic import, relay connection, or `NDKNip46Signer.fromPayload(...)` handling elsewhere.
+  - [x] Use `restoreNdkNip46SignerFromPayload(...)` to obtain a remote signer, then wrap it in `Nip46ConnectionSigner` and build a normal `ConnectionSession` through existing NIP-46 session creation logic.
+  - [x] If needed, extract a reusable helper from `nip46-connection-attempt.ts` so restored NIP-46 connections and interactive NIP-46 attempts construct `Nip46ActiveConnection` and sessions identically.
+  - [x] Validate the restored signer by calling `getPublicKey()` and comparing normalized hex user pubkey to the persisted expected pubkey before committing active state.
+  - [x] If the restored signer returns a different valid user pubkey than the persisted expected `pubkeyHex`, purge the NIP-46 restore context, disconnect/stop the restored signer, clear display state, and fail closed.
+  - [x] Ensure NIP-46 remote-signer pubkey and user pubkey are not conflated. The connected identity is the `get_public_key` result/user pubkey, not the remote-signer pubkey from the transport.
+  - [x] Respect NIP-46 correlation semantics that NDK owns during restore: payload must include the client key/secret context needed for request/response correlation; invalid or stale payloads must fail closed.
+  - [x] Apply bounded restore timeouts for NDK relay connect, `fromPayload`, readiness, and public-key validation so restore cannot leave `authSessionState` in `restoring` indefinitely.
+- [x] Integrate NIP-46 restore into `ConnectionFacade` without regressing NIP-07 restore (AC: 1, 2, 3, 4, 5)
+  - [x] Generalize `ConnectionFacade.hasRestoreContext()` so startup can detect either NIP-07 or NIP-46 restore data without calling signers when no context exists.
+  - [x] Extend `restoreSessionFromStoredContext()` or add a focused method-discriminated restore API that can restore NIP-07 and `nip46-nostrconnect` while preserving existing NIP-07 behavior and tests.
+  - [x] Set `_restoringMethodId` to `nip46-nostrconnect` during external signer restore so `authSessionState` emits `{ status: 'restoring', methodId: 'nip46-nostrconnect' }`.
+  - [x] Clear restore state in every success, failure, cancellation, timeout, disconnect, superseded-login, and stale-completion branch using the existing attempt-id/operation guard style.
+  - [x] Commit restored NIP-46 active connections through `ConnectionOrchestrator.completeAttempt(...)` or an equivalent safe commit seam so the in-memory active connection, `currentSession`, and `ndkSigner` stay consistent.
+  - [x] Persist NIP-46 restore context only after successful interactive `nip46-nostrconnect` login and after signer-backed user pubkey validation.
+  - [x] Clear NIP-46 restore context on `disconnect()` even when there is no active in-memory connection and even if lower-level signer cleanup rejects.
+  - [x] Do not make `InMemoryConnectionSessionStore` a browser-storage store; persisted restore payload remains a separate restore hint.
+- [x] Bridge restored NIP-46 sessions into current UI/session behavior (AC: 1, 2, 5)
+  - [x] Update `src/core/nostr/application/nostr-session.service.ts` startup flow to attempt NIP-46 restore when NIP-46 context exists, while preserving NIP-07 restore from Story 1.2.
+  - [x] On successful NIP-46 restore, apply the NDK signer via `NostrClientService.applyNdkSigner(ndkSigner, session.pubkeyHex)` using `facade.ndkSigner()` exactly like interactive external signer and bunker success paths.
+  - [x] Fetch profile only after connected signer state is committed. Profile fetch failure must not undo signer-backed connected state, matching NIP-07 restore behavior.
+  - [x] On restore failure, clear stale signer-backed profile/user display and present disconnected or reconnect-required semantics; cached profile data must not authenticate the user.
+  - [x] Preserve operation-generation guards so stale restore completion cannot repopulate `user`, close/open the modal, set errors, or overwrite a newer extension, external signer, bunker, private-key, or logout state.
+  - [x] Do not redesign the auth modal for this story. Successful restore should be silent except existing connected identity/actions; failure should leave the user able to reconnect.
+- [x] Preserve and extend external signer behavior without changing bunker scope (AC: 1, 2, 3, 4, 5)
+  - [x] Build on `Nip46NostrconnectConnectionMethod`, `NdkNip46NostrconnectStarter`, `Nip46ConnectionAttempt`, `Nip46ConnectionSigner`, and `ndk-nip46-restore.ts`; do not create another external signer stack.
+  - [x] Keep `nip46-bunker` restore out of scope unless code sharing requires method-discriminated no-op support. Bunker restoration and advanced bunker UX remain separate later work.
+  - [x] Preserve current interactive external signer flow: launch/copy/QR instructions, `authUrl` instruction updates, timeout/cancel behavior, stale completion protection, NDK signer application, and profile display.
+  - [x] Preserve current NIP-07 restore behavior and storage key compatibility. Do not convert existing `nostr.connect.restore.v1` semantics into NIP-46-only behavior.
+  - [x] Ensure sign-in completion does not wait on feed, relay discovery beyond NIP-46 signer restore needs, notifications, Supabase, pack membership, or NIP-98 calls.
+- [x] Add test coverage for success, fail-closed, race, timeout, and cleanup paths (AC: 1, 2, 3, 4, 5)
+  - [x] Extend `ndk-nip46-restore.spec.ts` to cover restore success, invalid payload, NDK connect failure, `fromPayload` failure, readiness timeout, and public-key validation failure.
+  - [x] Add store tests covering malformed JSON, wrong method id, missing payload, invalid expected pubkey, storage read/write/remove failures, save-after-success, and clear-on-disconnect.
+  - [x] Extend `connection-facade.spec.ts` to cover valid NIP-46 restore, restored signer pubkey mismatch, missing/invalid restore payload purge, restore timeout, restore failure state, save-after-validated interactive `nip46-nostrconnect` login, disconnect cleanup, and late restored active connection disconnect after timeout or superseding flow.
+  - [x] Extend `nostr-session.service.spec.ts` to cover startup NIP-46 restore applying `applyNdkSigner`, profile fetch after validation, profile failure tolerance, stale restore after private-key login, stale restore after manual external login, stale restore after disconnect, and failed restore not authenticating from cached profile.
+  - [x] Keep existing NIP-07 restore, external app login, bunker login, timeout, cancellation, private-key fallback, and disconnect tests passing.
+- [x] Update documentation and verification (AC: 1, 2, 3, 4, 5)
+  - [x] Update `src/core/nostr-connection/README.md` to state that `nip46-nostrconnect` can restore after reload only when the stored NIP-46 restore payload can recreate a live signer and validate the expected user pubkey.
+  - [x] Update `docs/auth/nostr-auth-rules.md` or `docs/auth/mobile-auth-notes.md` only if implementation creates a new durable NIP-46 restore rule not already captured there.
+  - [x] Document that NIP-46 restore payloads and secrets must be redacted from logs and cleared on logout.
+  - [x] Run repository scripts only. Minimum verification before marking implementation complete: `bun run typecheck` and `bun run test`; run `bun run check` if practical.
+
+### Review Findings
+
+- [x] [Review][Patch] Late NIP-46 restore can leave an orphan signer connected [src/core/nostr-connection/application/connection-facade.ts:283]
+- [x] [Review][Patch] NIP-46 restore can be skipped when stale NIP-07 context exists [src/core/nostr-connection/application/connection-facade.ts:416]
+- [x] [Review][Patch] Readiness rejection does not stop the restored NIP-46 signer [src/core/nostr-connection/infrastructure/ndk-nip46-shared.ts:12]
+- [x] [Review][Patch] Malformed optional restore metadata is accepted instead of purged [src/core/nostr-connection/application/nip46-restore-context-store.ts:98]
+- [x] [Review][Patch] Superseded restore completions do not clear NIP-46 restore context [src/core/nostr-connection/application/connection-facade.ts:288]
+- [x] [Review][Patch] Manual external or bunker login can race with startup restore display state [src/core/nostr/application/nostr-session.service.ts:168]
 
 ## Dev Notes
 
@@ -141,7 +155,7 @@ The minimal correct design is:
 - NIP-46 requests/responses use kind `24133`, response IDs, encrypted payloads, and optional auth challenges. Toolstr exposes protocol `auth_url` as app `authUrl`; do not persist or log it as restore data. [Source: `docs/auth/nostr-auth-rules.md#NIP-46`]
 - Local NIP-46 persistence is only for restoring a NIP-46 signer after reload, must never simulate connected state, must purge invalid payloads immediately, and must fail closed. [Source: `docs/auth/nostr-auth-rules.md#Local NIP-46 Persistence`]
 - Redact sensitive values from logs: NIP-46 secret, bunker token, auth URLs, NIP-98 tokens, restore payloads, and signed authorization material. [Source: `docs/auth/mobile-auth-notes.md#Applicable Security Notes`]
-- Do not request, store, transmit, derive, or persist private keys. NIP-49/private-key encryption is unrelated to this story and must not be introduced. [Source: `_bmad-output/planning-artifacts/prd.md#Security`]
+- Do not request, store, transmit, derive, or persist user private keys or `nsec` material. NIP-49/private-key encryption is unrelated to this story and must not be introduced. The NDK NIP-46 restore payload is separate sensitive client restore material used only to recreate the remote signer; keep it opaque, redact it, and clear it on logout/disconnect. [Source: `_bmad-output/planning-artifacts/prd.md#Security`]
 
 ### Failure State Mapping
 
@@ -255,12 +269,50 @@ openai/gpt-5.5
 
 ### Debug Log References
 
+- 2026-05-03T12:15:40Z: Red phase confirmed for missing `nip46-restore-context-store` via `bun run test`.
+- 2026-05-03T12:17:11Z: Red phase confirmed for missing NIP-46 method restore seam and remote signer payload serialization via `bun run test`.
+- 2026-05-03T12:18:36Z: Red phase confirmed for missing facade NIP-46 restore orchestration via `bun run test`.
+- 2026-05-03T12:23:38Z: Full verification passed with `bun run check`.
+- 2026-05-03T17:49:12Z: Code review patches applied for restore fallback, late cleanup, signer stop, metadata purge, and auth-operation races; verification passed with `bun run check`.
+
+### Implementation Plan
+
+- Added a separate NIP-46 restore-context store and payload serialization seam on `Nip46ConnectionSigner`, keeping the opaque NDK payload out of `ConnectionFacade` internals.
+- Reused `restoreNdkNip46SignerFromPayload(...)` and the existing NIP-46 active connection/session construction path for restored external signer sessions.
+- Extended `ConnectionFacade` to detect, restore, validate, persist, and clear `nip46-nostrconnect` restore hints while preserving NIP-07 restore behavior and storage key compatibility.
+- Kept the `NostrSessionService` bridge behavior unchanged for display application: restored NIP-46 sessions use `facade.ndkSigner()` and `applyNdkSigner(...)`, with profile fetch remaining display-only.
+
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Status set to `ready-for-dev` after source artifact, prior-story, current-code, protocol, and checklist analysis.
+- Implemented safe NIP-46 external signer restore persistence with a separate localStorage key, method-discriminated payload, pubkey normalization, storage failure tolerance, and invalid-payload purge behavior.
+- Added restored NIP-46 active connection creation through the existing NDK restore helper and shared NIP-46 session builder, including expected user pubkey validation and fail-closed cleanup on mismatch or timeout.
+- Integrated NIP-46 restore into `ConnectionFacade` startup restore detection, restoring state, session commit, NDK signer sync, restore persistence after validated interactive login, and disconnect/failure cleanup.
+- Added/extended tests for store parsing/safety, NDK restore failure/timeout, method restore success/mismatch, facade restore/persistence/cleanup, and Nostr session startup NIP-46 display behavior.
+- Updated Nostr connection and auth docs to describe NIP-46 restore constraints, expected pubkey validation, and restore payload redaction/cleanup.
+- Verification passed: `bun run typecheck`, `bun run test`, and `bun run check`.
+- Review findings resolved: NIP-46 restore now prefers/falls back correctly when compatibility keys coexist, clears superseded restore data, stops restored signers on readiness/public-key timeouts, purges malformed optional metadata, and invalidates startup restore display when manual external/bunker login begins.
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/1-3-restore-valid-nip-46-external-signer-sessions-after-refresh.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `docs/auth/nostr-auth-rules.md`
+- `src/core/nostr-connection/README.md`
+- `src/core/nostr-connection/application/connection-facade.spec.ts`
+- `src/core/nostr-connection/application/connection-facade.ts`
+- `src/core/nostr-connection/application/nip46-connection-attempt.ts`
+- `src/core/nostr-connection/application/nip46-connection-signer.ts`
+- `src/core/nostr-connection/application/nip46-nostrconnect-connection-method.spec.ts`
+- `src/core/nostr-connection/application/nip46-nostrconnect-connection-method.ts`
+- `src/core/nostr-connection/application/nip46-restore-context-store.spec.ts`
+- `src/core/nostr-connection/application/nip46-restore-context-store.ts`
+- `src/core/nostr-connection/infrastructure/ndk-nip46-restore.spec.ts`
+- `src/core/nostr-connection/infrastructure/ndk-nip46-shared.ts`
+- `src/core/nostr-connection/infrastructure/nip46-nostrconnect-starter.ts`
+- `src/core/nostr/application/nostr-session.service.spec.ts`
+
+### Change Log
+
+- 2026-05-03T12:24:02Z: Implemented Story 1.3 NIP-46 external signer restore, tests, docs, and verification; status set to `review`.

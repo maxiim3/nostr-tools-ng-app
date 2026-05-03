@@ -7,6 +7,7 @@ export interface Nip46RemoteSigner {
   getPublicKey(): Promise<string>;
   sign(event: UnsignedNostrEvent & { pubkey: string }): Promise<string>;
   stop(): void;
+  toPayload?(): string;
 }
 
 export interface Nip46AttemptHandle {

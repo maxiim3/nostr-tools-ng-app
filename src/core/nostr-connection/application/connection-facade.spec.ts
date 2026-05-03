@@ -8,6 +8,12 @@ import { FakeConnectionAttempt } from '../testing/fakes/fake-connection-attempt'
 import { FakeActiveConnection } from '../testing/fakes/fake-active-connection';
 import { FakeConnectionSigner } from '../testing/fakes/fake-connection-signer';
 import { Nip07ConnectionMethod } from './nip07-connection-method';
+import { Nip46NostrconnectConnectionMethod } from './nip46-nostrconnect-connection-method';
+import {
+  FakeNip46NostrconnectAttemptHandle,
+  FakeNip46NostrconnectStarter,
+} from '../testing/fakes/fake-nip46-nostrconnect-starter';
+import type { Nip46RemoteSigner } from '../infrastructure/nip46-nostrconnect-starter';
 
 describe('ConnectionFacade', () => {
   afterEach(() => {
@@ -459,9 +465,203 @@ describe('ConnectionFacade', () => {
     expect(facade.currentSession()).toBeNull();
     expect(facade.authSessionState()).toEqual({ status: 'disconnected' });
   });
+
+  it('detects either nip07 or nip46 restore context without starting a connection', () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.nip46.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const starter = new FakeNip46NostrconnectStarter();
+    const facade = createFacade([new Nip46NostrconnectConnectionMethod(starter)]);
+
+    expect(facade.hasRestoreContext()).toBe(true);
+    expect(starter.startCalls).toBe(0);
+  });
+
+  it('restores a stored nip46 external signer session with signer validation', async () => {
+    const storage = createStorage();
+    const remoteSigner = createRemoteSigner('a'.repeat(64));
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.nip46.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+        restoreRemoteSigner: vi.fn().mockResolvedValue(remoteSigner),
+      }),
+    ]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    expect(facade.authSessionState()).toEqual({
+      status: 'restoring',
+      methodId: 'nip46-nostrconnect',
+    });
+    const restored = await restore;
+
+    expect(restored?.methodId).toBe('nip46-nostrconnect');
+    expect(facade.currentSession()?.pubkeyHex).toBe('a'.repeat(64));
+    expect(facade.ndkSigner()).toEqual({ marker: 'ndk-signer' });
+    expect(facade.authSessionState().status).toBe('connected');
+  });
+
+  it('prefers nip46 restore when unrelated nip07 compatibility data also exists', async () => {
+    const storage = createStorage();
+    const remoteSigner = createRemoteSigner('a'.repeat(64));
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: 'b'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    storage.setItem(
+      'nostr.connect.nip46.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({ resolveProvider: () => null }),
+      new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+        restoreRemoteSigner: vi.fn().mockResolvedValue(remoteSigner),
+      }),
+    ]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored?.methodId).toBe('nip46-nostrconnect');
+    expect(storage.removeItem).not.toHaveBeenCalledWith('nostr.connect.restore.v1');
+  });
+
+  it('purges nip46 restore context when restored user pubkey does not match', async () => {
+    const storage = createStorage();
+    const remoteSigner = createRemoteSigner('b'.repeat(64));
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.nip46.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+        restoreRemoteSigner: vi.fn().mockResolvedValue(remoteSigner),
+      }),
+    ]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.nip46.restore.v1');
+    expect(facade.authSessionState()).toEqual({
+      status: 'revokedOrUnavailable',
+      reasonCode: 'authorization_revoked_or_unavailable',
+    });
+  });
+
+  it('saves nip46 restore context only after validated interactive nostrconnect login', async () => {
+    const storage = createStorage();
+    const remoteSigner = createRemoteSigner('a'.repeat(64), 'saved-payload');
+    vi.stubGlobal('localStorage', storage);
+    const facade = createFacade([
+      new Nip46NostrconnectConnectionMethod(
+        new FakeNip46NostrconnectStarter({
+          attempt: new FakeNip46NostrconnectAttemptHandle({ remoteSigner }),
+        })
+      ),
+    ]);
+
+    await facade.startConnection('nip46-nostrconnect', { reason: 'interactive-login' });
+    await facade.completeCurrentAttempt();
+
+    expect(JSON.parse(storage.getItem('nostr.connect.nip46.restore.v1') ?? '')).toEqual({
+      version: 1,
+      methodId: 'nip46-nostrconnect',
+      restorePayload: 'saved-payload',
+      pubkeyHex: 'a'.repeat(64),
+      validatedAt: expect.any(Number),
+    });
+  });
+
+  it('clears nip46 restore context on disconnect', async () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem('nostr.connect.restore.v1', 'nip07');
+    storage.setItem('nostr.connect.nip46.restore.v1', 'nip46');
+    const facade = createFacade([]);
+
+    await facade.disconnect();
+
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.nip46.restore.v1');
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.restore.v1');
+  });
+
+  it('clears nip46 restore context when restore is superseded by a newer attempt', async () => {
+    const storage = createStorage();
+    const remoteSigner = createRemoteSigner('a'.repeat(64));
+    const restoreRemoteSigner = vi.fn().mockResolvedValue(remoteSigner);
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.nip46.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip46-nostrconnect',
+        restorePayload: 'payload',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip46NostrconnectConnectionMethod(new FakeNip46NostrconnectStarter(), {
+        restoreRemoteSigner,
+      }),
+      new FakeConnectionMethod({
+        id: 'nip07',
+        attempt: new FakeConnectionAttempt('nip07', {
+          methodId: 'nip07',
+          connection: new FakeActiveConnection({ methodId: 'nip07' }),
+        }),
+      }),
+    ]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    await facade.startConnection('nip07', { reason: 'interactive-login' });
+    await restore;
+
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.nip46.restore.v1');
+  });
 });
 
-function createFacade(methods: (FakeConnectionMethod | Nip07ConnectionMethod)[]): ConnectionFacade {
+function createFacade(
+  methods: (FakeConnectionMethod | Nip07ConnectionMethod | Nip46NostrconnectConnectionMethod)[]
+): ConnectionFacade {
   const orchestrator = new ConnectionOrchestrator(methods, new InMemoryConnectionSessionStore());
   return new ConnectionFacade(orchestrator);
 }
@@ -489,4 +689,18 @@ function createDeferred<T>() {
   });
 
   return { promise, resolve, reject };
+}
+
+function createRemoteSigner(pubkeyHex: string, payload = 'payload'): Nip46RemoteSigner {
+  return {
+    ndkSigner: { marker: 'ndk-signer' },
+    async getPublicKey(): Promise<string> {
+      return pubkeyHex;
+    },
+    async sign(): Promise<string> {
+      return 'f'.repeat(128);
+    },
+    stop: vi.fn(),
+    toPayload: vi.fn(() => payload),
+  };
 }

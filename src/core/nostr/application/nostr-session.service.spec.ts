@@ -148,6 +148,47 @@ describe('NostrSessionService', () => {
     expect(session.error()).toBeNull();
   });
 
+  it('restores a valid nip46 external signer session on startup', async () => {
+    facadeState.restoreContextExists = true;
+    facadeState.restoreResult = createFakeSession(
+      sessionUser.pubkey,
+      sessionUser.npub,
+      'nip46-nostrconnect'
+    );
+    facadeState.ndkSignerValue = { marker: 'ndk-signer' };
+
+    const session = createService();
+    await flushAsync();
+
+    expect(client.applyNdkSigner).toHaveBeenCalledWith(
+      { marker: 'ndk-signer' },
+      sessionUser.pubkey
+    );
+    expect(client.fetchProfile).toHaveBeenCalledWith(sessionUser.npub);
+    expect(session.user()).toEqual(sessionUser);
+  });
+
+  it('keeps restored nip46 signer state when profile fetch fails', async () => {
+    facadeState.restoreContextExists = true;
+    facadeState.restoreResult = createFakeSession(
+      sessionUser.pubkey,
+      sessionUser.npub,
+      'nip46-nostrconnect'
+    );
+    facadeState.ndkSignerValue = { marker: 'ndk-signer' };
+    client.fetchProfile.mockRejectedValue(new Error('Profile relay unavailable.'));
+
+    const session = createService();
+    await flushAsync();
+
+    expect(client.applyNdkSigner).toHaveBeenCalledWith(
+      { marker: 'ndk-signer' },
+      sessionUser.pubkey
+    );
+    expect(session.user()).toBeNull();
+    expect(session.error()).toBeNull();
+  });
+
   it('ignores stale profile fetch after disconnect', async () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
@@ -187,6 +228,41 @@ describe('NostrSessionService', () => {
     expect(client.applyNip07Signer).not.toHaveBeenCalled();
     expect(session.user()).toEqual(sessionUser);
     expect(session.isAuthenticated()).toBe(true);
+  });
+
+  it('ignores stale startup restore after manual external signer login starts', async () => {
+    const restoreDeferred = createDeferred<ConnectionSession | null>();
+    const externalDeferred = createDeferred<ConnectionSession>();
+    const externalSession = createFakeSession(
+      sessionUser.pubkey,
+      sessionUser.npub,
+      'nip46-nostrconnect'
+    );
+    facadeState.restoreContextExists = true;
+    facadeState.restoreFn = () => restoreDeferred.promise;
+    facadeState.startConnectionResult = createFakeAttempt('nip46-nostrconnect', {
+      launchUrl: 'nostrconnect://example',
+    });
+    facadeState.completeFn = () => externalDeferred.promise;
+    facadeState.ndkSignerValue = { marker: 'ndk-signer' };
+
+    const session = createService();
+    await flushAsync();
+
+    await session.beginExternalAppLogin();
+    await flushAsync();
+    restoreDeferred.resolve(
+      createFakeSession('a'.repeat(64), 'npub1restored', 'nip46-nostrconnect')
+    );
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+
+    facadeState.currentSession = externalSession;
+    externalDeferred.resolve(externalSession);
+    await flushAsync();
+
+    expect(session.user()).toEqual(sessionUser);
   });
 
   it('does not let a stale extension failure clear a newer private-key session', async () => {

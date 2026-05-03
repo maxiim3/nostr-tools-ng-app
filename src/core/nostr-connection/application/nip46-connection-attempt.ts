@@ -11,6 +11,7 @@ import {
 import type { ConnectionCapability } from '../domain/connection-capability';
 import type { ConnectionMethodId } from '../domain/connection-method-id';
 import type { Nip46AttemptHandle } from '../infrastructure/nip46-nostrconnect-starter';
+import type { Nip46RemoteSigner } from '../infrastructure/nip46-nostrconnect-starter';
 import { Nip46ConnectionSigner } from './nip46-connection-signer';
 
 export function createNip46ConnectionAttempt(
@@ -59,14 +60,11 @@ class Nip46ConnectionAttempt implements ConnectionAttempt {
     const remoteSigner = await this.handle.waitForConnection();
     this.unsubscribeAuthUrl();
 
-    const signer = new Nip46ConnectionSigner(
+    return createNip46ActiveConnectionFromRemoteSigner(
       remoteSigner,
       this.handle.capabilities,
-      remoteSigner.ndkSigner
+      this.methodId
     );
-    const session = await buildNip46Session(signer, this.handle.capabilities, this.methodId);
-
-    return new Nip46ActiveConnection(signer, session, remoteSigner);
   }
 
   async cancel(): Promise<void> {
@@ -81,6 +79,17 @@ class Nip46ConnectionAttempt implements ConnectionAttempt {
       listener(this.currentInstructions);
     }
   }
+}
+
+export async function createNip46ActiveConnectionFromRemoteSigner(
+  remoteSigner: Nip46RemoteSigner,
+  capabilities: readonly ConnectionCapability[],
+  methodId: ConnectionMethodId
+): Promise<ActiveConnection> {
+  const signer = new Nip46ConnectionSigner(remoteSigner, capabilities, remoteSigner.ndkSigner);
+  const session = await buildNip46Session(signer, capabilities, methodId);
+
+  return new Nip46ActiveConnection(signer, session, remoteSigner);
 }
 
 class Nip46ActiveConnection implements ActiveConnection {

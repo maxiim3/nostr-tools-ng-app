@@ -8,17 +8,30 @@ export async function waitForNdkNip46SignerReady(
   timeoutMs: number
 ): Promise<Nip46RemoteSigner> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
+
+  const stopSigner = () => {
+    if (stopped) {
+      return;
+    }
+
+    stopped = true;
+    signer.stop();
+  };
 
   try {
     await Promise.race([
       signer.blockUntilReady(),
       new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => {
-          signer.stop();
+          stopSigner();
           reject(new ConnectionDomainError('timeout', 'NIP-46 connection timed out.'));
         }, timeoutMs);
       }),
     ]);
+  } catch (error) {
+    stopSigner();
+    throw error;
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -56,5 +69,9 @@ export class NdkNip46RemoteSigner implements Nip46RemoteSigner {
 
   stop(): void {
     this.signer.stop();
+  }
+
+  toPayload(): string {
+    return this.signer.toPayload();
   }
 }

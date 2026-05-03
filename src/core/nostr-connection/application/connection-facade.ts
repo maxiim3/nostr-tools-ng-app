@@ -13,6 +13,9 @@ import { ConnectionOrchestrator } from './connection-orchestrator';
 import { createDefaultConnectionOrchestrator } from './default-connection-orchestrator';
 import { Nip07RestoreContextStore, type Nip07RestoreContext } from './nip07-restore-context-store';
 import { Nip07ConnectionMethod } from './nip07-connection-method';
+import { Nip46RestoreContextStore, type Nip46RestoreContext } from './nip46-restore-context-store';
+import { Nip46NostrconnectConnectionMethod } from './nip46-nostrconnect-connection-method';
+import type { Nip46ConnectionSigner } from './nip46-connection-signer';
 
 type AttemptTerminalStatus =
   | { kind: 'none' }
@@ -35,10 +38,12 @@ export class ConnectionFacade {
   private readonly _attemptId = signal(0);
   private readonly _attemptTerminalStatus = signal<AttemptTerminalStatus>({ kind: 'none' });
   private readonly _restoringMethodId = signal<ConnectionMethodId | null>(null);
-  private readonly restoreStore = new Nip07RestoreContextStore();
+  private readonly nip07RestoreStore = new Nip07RestoreContextStore();
+  private readonly nip46RestoreStore = new Nip46RestoreContextStore();
   private readonly RESTORE_TIMEOUT_MS = 8000;
   private readonly RESTORE_PROVIDER_RETRY_MS = 100;
   private readonly RESTORE_PROVIDER_MAX_ATTEMPTS = 20;
+  private lastRestoreAttemptId = 0;
   readonly authSessionState = computed<AuthSessionState>(() => {
     const session = this.currentSession();
     if (session) {
@@ -195,6 +200,7 @@ export class ConnectionFacade {
       this._attemptTerminalStatus.set({ kind: 'none' });
       this.syncNdkSigner();
       this.persistNip07RestoreContext(session);
+      this.persistNip46RestoreContext(session);
       return session;
     } catch (error) {
       if (!this.isCurrentAttempt(attempt, attemptId)) {
@@ -249,7 +255,8 @@ export class ConnectionFacade {
       this.currentSession.set(null);
       this.ndkSigner.set(null);
       this._attemptTerminalStatus.set({ kind: 'none' });
-      this.restoreStore.clear();
+      this.nip07RestoreStore.clear();
+      this.nip46RestoreStore.clear();
     } finally {
       this._restoringMethodId.set(null);
       this.pending.set(false);
@@ -257,42 +264,72 @@ export class ConnectionFacade {
   }
 
   hasRestoreContext(): boolean {
-    return this.restoreStore.load() !== null;
+    return this.nip07RestoreStore.load() !== null || this.nip46RestoreStore.load() !== null;
   }
 
   async restoreSessionFromStoredContext(): Promise<ConnectionSession | null> {
-    const restoreContext = this.restoreStore.load();
-    if (!restoreContext) {
+    const restoreContexts = this.loadRestoreContexts();
+    if (restoreContexts.length === 0) {
       return null;
     }
 
+    let lastTerminalStatus: AttemptTerminalStatus | null = null;
+
+    for (const restoreContext of restoreContexts) {
+      const restoredSession = await this.restoreSessionFromContext(restoreContext);
+      if (restoredSession) {
+        return restoredSession;
+      }
+
+      lastTerminalStatus = this._attemptTerminalStatus();
+      if (this._attemptId() !== this.lastRestoreAttemptId) {
+        return null;
+      }
+    }
+
+    if (lastTerminalStatus) {
+      this._attemptTerminalStatus.set(lastTerminalStatus);
+    }
+
+    return null;
+  }
+
+  private async restoreSessionFromContext(
+    restoreContext: Nip07RestoreContext | Nip46RestoreContext
+  ): Promise<ConnectionSession | null> {
     const restoreAttemptId = this._attemptId() + 1;
+    this.lastRestoreAttemptId = restoreAttemptId;
     this._attemptId.set(restoreAttemptId);
     this._attemptTerminalStatus.set({ kind: 'none' });
     this.pending.set(false);
     this.error.set(null);
-    this._restoringMethodId.set('nip07');
+    this._restoringMethodId.set(restoreContext.methodId);
 
     try {
       const activeConnection = await withConnectionTimeout(
-        this.createNip07RestoredConnection(restoreContext),
+        this.createRestoredConnection(restoreContext),
         this.RESTORE_TIMEOUT_MS
       );
 
       if (this._attemptId() !== restoreAttemptId) {
+        this.clearRestoreContext(restoreContext.methodId);
         await activeConnection.disconnect().catch(() => undefined);
         return null;
       }
 
-      const session = await this.orchestrator.completeAttempt({
-        methodId: 'nip07',
-        instructions: null,
-        onInstructionsChange: () => () => undefined,
-        cancel: async () => Promise.resolve(),
-        complete: async () => activeConnection,
-      });
+      const session = await this.orchestrator.completeAttempt(
+        {
+          methodId: restoreContext.methodId,
+          instructions: null,
+          onInstructionsChange: () => () => undefined,
+          cancel: async () => Promise.resolve(),
+          complete: async () => activeConnection,
+        },
+        () => this._attemptId() === restoreAttemptId
+      );
 
       if (this._attemptId() !== restoreAttemptId) {
+        this.clearRestoreContext(restoreContext.methodId);
         await this.orchestrator.disconnect().catch(() => undefined);
         this.currentSession.set(null);
         this.ndkSigner.set(null);
@@ -303,13 +340,14 @@ export class ConnectionFacade {
       this.currentSession.set(session);
       this.syncNdkSigner();
       this.persistNip07RestoreContext(session);
+      this.persistNip46RestoreContext(session);
       return session;
     } catch (error) {
       if (this._attemptId() === restoreAttemptId) {
         this.currentAttempt.set(null);
         this.currentSession.set(null);
         this.ndkSigner.set(null);
-        this.restoreStore.clear();
+        this.clearRestoreContext(restoreContext.methodId);
         this._attemptTerminalStatus.set(resolveRestoreTerminalStatus(error));
       }
 
@@ -381,14 +419,77 @@ export class ConnectionFacade {
     throw new ConnectionDomainError('method_unavailable', 'NIP-07 provider is not available.');
   }
 
+  private async createNip46RestoredConnection(
+    restoreContext: Nip46RestoreContext
+  ): Promise<ActiveConnection> {
+    const method = this.orchestrator.getMethod('nip46-nostrconnect');
+
+    if (!(method instanceof Nip46NostrconnectConnectionMethod)) {
+      throw new ConnectionDomainError(
+        'method_unavailable',
+        'NIP-46 nostrconnect method is not registered.'
+      );
+    }
+
+    return method.restoreActiveConnection(restoreContext);
+  }
+
+  private createRestoredConnection(
+    restoreContext: Nip07RestoreContext | Nip46RestoreContext
+  ): Promise<ActiveConnection> {
+    if (restoreContext.methodId === 'nip07') {
+      return this.createNip07RestoredConnection(restoreContext);
+    }
+
+    return this.createNip46RestoredConnection(restoreContext);
+  }
+
+  private loadRestoreContexts(): (Nip07RestoreContext | Nip46RestoreContext)[] {
+    return [this.nip46RestoreStore.load(), this.nip07RestoreStore.load()].filter(
+      (context): context is Nip07RestoreContext | Nip46RestoreContext => context !== null
+    );
+  }
+
+  private clearRestoreContext(methodId: ConnectionMethodId): void {
+    if (methodId === 'nip07') {
+      this.nip07RestoreStore.clear();
+      return;
+    }
+
+    if (methodId === 'nip46-nostrconnect') {
+      this.nip46RestoreStore.clear();
+    }
+  }
+
   private persistNip07RestoreContext(session: ConnectionSession): void {
     if (session.methodId !== 'nip07') {
       return;
     }
 
-    this.restoreStore.save({
+    this.nip07RestoreStore.save({
       version: 1,
       methodId: 'nip07',
+      pubkeyHex: session.pubkeyHex,
+      validatedAt: session.validatedAt,
+    });
+  }
+
+  private persistNip46RestoreContext(session: ConnectionSession): void {
+    if (session.methodId !== 'nip46-nostrconnect') {
+      return;
+    }
+
+    const restorePayload = resolveNip46RestorePayload(
+      this.orchestrator.getActiveConnection()?.signer
+    );
+    if (!restorePayload) {
+      return;
+    }
+
+    this.nip46RestoreStore.save({
+      version: 1,
+      methodId: 'nip46-nostrconnect',
+      restorePayload,
       pubkeyHex: session.pubkeyHex,
       validatedAt: session.validatedAt,
     });
@@ -457,6 +558,15 @@ function resolveRestoreTerminalStatus(error: unknown): AttemptTerminalStatus {
   }
 
   return { kind: 'failed', reasonCode };
+}
+
+function resolveNip46RestorePayload(signer: unknown): string | null {
+  if (!signer || typeof signer !== 'object' || !('getRestorePayload' in signer)) {
+    return null;
+  }
+
+  const restorePayload = (signer as Nip46ConnectionSigner).getRestorePayload();
+  return restorePayload && restorePayload.length > 0 ? restorePayload : null;
 }
 
 function isConnectionDomainError(

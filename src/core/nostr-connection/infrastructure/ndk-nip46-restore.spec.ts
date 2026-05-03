@@ -45,6 +45,20 @@ vi.mock('@nostr-dev-kit/ndk', () => {
 });
 
 describe('restoreNdkNip46SignerFromPayload', () => {
+  beforeEach(() => {
+    constructedNdkOptions.length = 0;
+    mockConnect.mockClear();
+    mockFromPayload.mockClear();
+    restoredSigner.blockUntilReady.mockReset().mockResolvedValue(undefined);
+    restoredSigner.getPublicKey.mockClear();
+    restoredSigner.sign.mockClear();
+    restoredSigner.stop.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('restores a ready NIP-46 remote signer from an NDK payload', async () => {
     const remoteSigner = await restoreNdkNip46SignerFromPayload('payload-json', {
       relayUrls: ['wss://relay.example.com'],
@@ -67,6 +81,39 @@ describe('restoreNdkNip46SignerFromPayload', () => {
       code: 'validation_failed',
       message: 'Unable to restore the NIP-46 signer payload.',
     } satisfies Partial<ConnectionDomainError>);
+  });
+
+  it('fails when NDK relay connection fails before payload restore', async () => {
+    mockConnect.mockRejectedValueOnce(new Error('relay unavailable'));
+
+    await expect(restoreNdkNip46SignerFromPayload('payload-json')).rejects.toThrow(
+      'relay unavailable'
+    );
+    expect(mockFromPayload).not.toHaveBeenCalled();
+  });
+
+  it('bounds readiness waiting and stops a signer that does not become ready', async () => {
+    vi.useFakeTimers();
+    restoredSigner.blockUntilReady.mockReturnValueOnce(new Promise(() => undefined));
+
+    const restore = expect(
+      restoreNdkNip46SignerFromPayload('payload-json', { readyTimeoutMs: 10 })
+    ).rejects.toMatchObject({
+      code: 'timeout',
+      message: 'NIP-46 connection timed out.',
+    } satisfies Partial<ConnectionDomainError>);
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(11);
+
+    await restore;
+    expect(restoredSigner.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops a restored signer when readiness rejects before timeout', async () => {
+    restoredSigner.blockUntilReady.mockRejectedValueOnce(new Error('revoked'));
+
+    await expect(restoreNdkNip46SignerFromPayload('payload-json')).rejects.toThrow('revoked');
+    expect(restoredSigner.stop).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -173,6 +173,7 @@ HTTP auth is separate from app session state. It transforms the current signer i
 
 - Local persistence is only for restoring a NIP-46 signer after reload.
 - It must never simulate connected state if the signer is not restorable.
+- A restored signer must return the expected user pubkey from `get_public_key` before the app commits connected state.
 - Invalid restore payloads must be purged immediately.
 - Restore failure returns the app to disconnected state and offers explicit reconnect.
 
@@ -180,7 +181,7 @@ HTTP auth is separate from app session state. It transforms the current signer i
 
 - Correlate NIP-46 strictly by `secret`, request `id`, and timeout.
 - Prefer minimum permissions, logout cleanup, and fail-closed behavior.
-- Redact sensitive values from logs: NIP-46 secrets, bunker tokens, auth URLs, and NIP-98 tokens.
+- Redact sensitive values from logs: NIP-46 secrets, restore payloads, bunker tokens, auth URLs, and NIP-98 tokens.
 - External links should avoid `window.opener`, for example with `rel="noopener"` where applicable.
 - Use HTTPS/WSS only.
 - Do not introduce backend session state.

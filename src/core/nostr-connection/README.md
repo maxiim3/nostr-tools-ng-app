@@ -71,17 +71,20 @@ Lecture generique :
 
 ## Persistance / restore
 
-Etat actuel: la connexion active est stockee en memoire via `InMemoryConnectionSessionStore`.
-Pour `nip07`, un contexte de restauration minimal est persiste en local (`version`, `methodId`, `pubkeyHex`, `validatedAt`) afin de revalider silencieusement une session apres refresh.
+Current state: the active connection is kept in memory via `InMemoryConnectionSessionStore`.
+For `nip07`, a minimal restore context is persisted locally (`version`, `methodId`, `pubkeyHex`, `validatedAt`) so the app can silently revalidate a session after refresh.
+For `nip46-nostrconnect`, a separate method-discriminated restore context is persisted only after a successful interactive external signer login and signer-backed user pubkey validation. That context contains the opaque NDK NIP-46 restore payload plus the expected user `pubkeyHex`; it is only a restore hint.
 
 Consequence:
 
-- apres reload de la PWA, l'utilisateur doit relancer un flow `nip46-nostrconnect` ou `nip46-bunker`;
-- apres reload avec `nip07`, l'application tente une restauration en relisant `window.nostr.getPublicKey()` puis en comparant la pubkey avec le contexte persiste;
+- after PWA reload with `nip07`, the app attempts restore by calling `window.nostr.getPublicKey()` and comparing the returned pubkey with the persisted context;
+- after PWA reload with `nip46-nostrconnect`, the app attempts restore only when the stored NIP-46 payload can recreate a live signer and `getPublicKey()` returns the expected user pubkey;
+- `nip46-bunker` still requires relaunching the bunker flow after reload;
 - aucun modele de session backend n'est introduit;
 - le backend continue a verifier les requetes avec `NIP-98`.
 
 Important: le contexte persiste n'est jamais une preuve d'authentification. Seule la validation courante du signer peut produire l'etat `connected`.
+NIP-46 restore payloads are sensitive opaque client restore material. They must be redacted from logs and cleared on logout/disconnect, restore failure, superseded login, and stale completion paths.
 
 Ce qui change selon la methode :
 
@@ -176,6 +179,8 @@ Points clefs :
 - si le remote signer emet un `auth_url`, la tentative met a jour ses instructions via `onInstructionsChange(...)`
 - `complete()` ne termine pas immediatement : il attend `waitForConnection()`
 - une fois le signer distant pret, la tentative construit la session et l'orchestrateur la stocke
+- after a successful interactive login, the facade persists only the minimal NIP-46 restore context needed for a future restore
+- on reload, restore uses `NDKNip46Signer.fromPayload(...)` through the shared NDK restore helper, then validates the restored user pubkey before committing connected state
 
 ## Workflow `nip46-bunker`
 
