@@ -40,6 +40,26 @@ export class Nip07ConnectionMethod implements ConnectionMethod {
 
     return new ImmediateConnectionAttempt(this.id, signer, detectCapabilities(provider));
   }
+
+  async restoreActiveConnection(expectedPubkeyHex: string): Promise<ActiveConnection> {
+    const provider = this.resolveProvider();
+    if (!provider) {
+      throw new ConnectionDomainError('method_unavailable', 'NIP-07 provider is not available.');
+    }
+
+    const signer = new Nip07ConnectionSigner(provider);
+    const capabilities = detectCapabilities(provider);
+    const session = await buildSession(signer, capabilities, this.id);
+
+    if (session.pubkeyHex !== expectedPubkeyHex) {
+      throw new ConnectionDomainError(
+        'validation_failed',
+        'NIP-07 provider pubkey does not match stored restore context.'
+      );
+    }
+
+    return new Nip07ActiveConnection(signer, session);
+  }
 }
 
 class ImmediateConnectionAttempt implements ConnectionAttempt {

@@ -11,11 +11,14 @@ import type { AuthSessionFailureReasonCode, AuthSessionState } from '../domain/a
 import { isAuthSessionConnected } from '../domain/auth-session-state';
 import { ConnectionOrchestrator } from './connection-orchestrator';
 import { createDefaultConnectionOrchestrator } from './default-connection-orchestrator';
+import { Nip07RestoreContextStore, type Nip07RestoreContext } from './nip07-restore-context-store';
+import { Nip07ConnectionMethod } from './nip07-connection-method';
 
 type AttemptTerminalStatus =
   | { kind: 'none' }
   | { kind: 'cancelled'; methodId: ConnectionMethodId; attemptId: number }
   | { kind: 'timedOut'; methodId: ConnectionMethodId; attemptId: number }
+  | { kind: 'revokedOrUnavailable' }
   | { kind: 'failed'; reasonCode: AuthSessionFailureReasonCode };
 
 interface AttemptCancellationOptions {
@@ -31,6 +34,9 @@ export class ConnectionFacade {
   readonly error = signal<string | null>(null);
   private readonly _attemptId = signal(0);
   private readonly _attemptTerminalStatus = signal<AttemptTerminalStatus>({ kind: 'none' });
+  private readonly _restoringMethodId = signal<ConnectionMethodId | null>(null);
+  private readonly restoreStore = new Nip07RestoreContextStore();
+  private readonly RESTORE_TIMEOUT_MS = 8000;
   readonly authSessionState = computed<AuthSessionState>(() => {
     const session = this.currentSession();
     if (session) {
@@ -85,8 +91,20 @@ export class ConnectionFacade {
       return { status: 'recoverableRetry', reasonCode: terminalStatus.reasonCode };
     }
 
+    if (terminalStatus.kind === 'revokedOrUnavailable') {
+      return {
+        status: 'revokedOrUnavailable',
+        reasonCode: 'authorization_revoked_or_unavailable',
+      };
+    }
+
     if (this.pending()) {
       return { status: 'detectingSigner' };
+    }
+
+    const restoringMethodId = this._restoringMethodId();
+    if (restoringMethodId) {
+      return { status: 'restoring', methodId: restoringMethodId };
     }
 
     return { status: 'disconnected' };
@@ -115,6 +133,7 @@ export class ConnectionFacade {
     request: ConnectionRequest
   ): Promise<ConnectionAttempt> {
     let startedAttemptId = 0;
+    this._restoringMethodId.set(null);
     this.pending.set(true);
     this.error.set(null);
 
@@ -173,6 +192,7 @@ export class ConnectionFacade {
       this.currentAttempt.set(null);
       this._attemptTerminalStatus.set({ kind: 'none' });
       this.syncNdkSigner();
+      this.persistNip07RestoreContext(session);
       return session;
     } catch (error) {
       if (!this.isCurrentAttempt(attempt, attemptId)) {
@@ -217,17 +237,85 @@ export class ConnectionFacade {
   }
 
   async disconnect(): Promise<void> {
+    this._attemptId.set(this._attemptId() + 1);
     this.pending.set(true);
     this.error.set(null);
 
     try {
       await this.cancelCurrentAttempt();
-      await this.orchestrator.disconnect();
+      await this.orchestrator.disconnect().catch(() => undefined);
       this.currentSession.set(null);
       this.ndkSigner.set(null);
       this._attemptTerminalStatus.set({ kind: 'none' });
+      this.restoreStore.clear();
     } finally {
+      this._restoringMethodId.set(null);
       this.pending.set(false);
+    }
+  }
+
+  hasRestoreContext(): boolean {
+    return this.restoreStore.load() !== null;
+  }
+
+  async restoreSessionFromStoredContext(): Promise<ConnectionSession | null> {
+    const restoreContext = this.restoreStore.load();
+    if (!restoreContext) {
+      return null;
+    }
+
+    const restoreAttemptId = this._attemptId() + 1;
+    this._attemptId.set(restoreAttemptId);
+    this._attemptTerminalStatus.set({ kind: 'none' });
+    this.pending.set(false);
+    this.error.set(null);
+    this._restoringMethodId.set('nip07');
+
+    try {
+      const activeConnection = await withConnectionTimeout(
+        this.createNip07RestoredConnection(restoreContext),
+        this.RESTORE_TIMEOUT_MS
+      );
+
+      if (this._attemptId() !== restoreAttemptId) {
+        await activeConnection.disconnect().catch(() => undefined);
+        return null;
+      }
+
+      const session = await this.orchestrator.completeAttempt({
+        methodId: 'nip07',
+        instructions: null,
+        onInstructionsChange: () => () => undefined,
+        cancel: async () => Promise.resolve(),
+        complete: async () => activeConnection,
+      });
+
+      if (this._attemptId() !== restoreAttemptId) {
+        await this.orchestrator.disconnect().catch(() => undefined);
+        this.currentSession.set(null);
+        this.ndkSigner.set(null);
+        return null;
+      }
+
+      this.currentAttempt.set(null);
+      this.currentSession.set(session);
+      this.syncNdkSigner();
+      this.persistNip07RestoreContext(session);
+      return session;
+    } catch (error) {
+      if (this._attemptId() === restoreAttemptId) {
+        this.currentAttempt.set(null);
+        this.currentSession.set(null);
+        this.ndkSigner.set(null);
+        this.restoreStore.clear();
+        this._attemptTerminalStatus.set(resolveRestoreTerminalStatus(error));
+      }
+
+      return null;
+    } finally {
+      if (this._attemptId() === restoreAttemptId) {
+        this._restoringMethodId.set(null);
+      }
     }
   }
 
@@ -262,6 +350,31 @@ export class ConnectionFacade {
 
   private isCurrentAttempt(attempt: ConnectionAttempt, attemptId: number): boolean {
     return this.currentAttempt() === attempt && this._attemptId() === attemptId;
+  }
+
+  private async createNip07RestoredConnection(
+    restoreContext: Nip07RestoreContext
+  ): Promise<ActiveConnection> {
+    const method = this.orchestrator.getMethod('nip07');
+
+    if (!(method instanceof Nip07ConnectionMethod)) {
+      throw new ConnectionDomainError('method_unavailable', 'NIP-07 method is not registered.');
+    }
+
+    return method.restoreActiveConnection(restoreContext.pubkeyHex);
+  }
+
+  private persistNip07RestoreContext(session: ConnectionSession): void {
+    if (session.methodId !== 'nip07') {
+      return;
+    }
+
+    this.restoreStore.save({
+      version: 1,
+      methodId: 'nip07',
+      pubkeyHex: session.pubkeyHex,
+      validatedAt: session.validatedAt,
+    });
   }
 }
 
@@ -317,4 +430,43 @@ function resolveAuthSessionFailureReasonCode(error: unknown): AuthSessionFailure
   }
 
   return 'connection_failed';
+}
+
+function resolveRestoreTerminalStatus(error: unknown): AttemptTerminalStatus {
+  const reasonCode = resolveAuthSessionFailureReasonCode(error);
+
+  if (reasonCode === 'method_unavailable' || reasonCode === 'validation_failed') {
+    return { kind: 'revokedOrUnavailable' };
+  }
+
+  return { kind: 'failed', reasonCode };
+}
+
+async function withConnectionTimeout(
+  promise: Promise<ActiveConnection>,
+  timeoutMs: number
+): Promise<ActiveConnection> {
+  return new Promise<ActiveConnection>((resolve, reject) => {
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      reject(new ConnectionDomainError('timeout', 'Session restore timed out.'));
+    }, timeoutMs);
+
+    void promise.then(
+      (value) => {
+        clearTimeout(timeout);
+        if (timedOut) {
+          void value.disconnect().catch(() => undefined);
+          return;
+        }
+
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    );
+  });
 }

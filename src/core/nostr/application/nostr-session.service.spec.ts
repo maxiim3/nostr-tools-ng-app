@@ -111,6 +111,107 @@ describe('NostrSessionService', () => {
     expect(session.error()).toBe('Extension rejected the request.');
   });
 
+  it('restores a valid nip07 session on startup', async () => {
+    facadeState.restoreContextExists = true;
+    facadeState.restoreResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
+
+    const session = createService();
+    await flushAsync();
+
+    expect(client.applyNip07Signer).toHaveBeenCalledWith(sessionUser.pubkey);
+    expect(client.fetchProfile).toHaveBeenCalledWith(sessionUser.npub);
+    expect(session.user()).toEqual(sessionUser);
+  });
+
+  it('does not authenticate from profile when restore fails', async () => {
+    facadeState.restoreContextExists = true;
+    facadeState.restoreResult = null;
+
+    const session = createService();
+    await flushAsync();
+
+    expect(client.applyNip07Signer).not.toHaveBeenCalled();
+    expect(session.user()).toBeNull();
+  });
+
+  it('keeps restored signer state when profile fetch fails', async () => {
+    facadeState.restoreContextExists = true;
+    facadeState.restoreResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
+    client.fetchProfile.mockRejectedValue(new Error('Profile relay unavailable.'));
+
+    const session = createService();
+    await flushAsync();
+
+    expect(client.applyNip07Signer).toHaveBeenCalledWith(sessionUser.pubkey);
+    expect(client.fetchProfile).toHaveBeenCalledWith(sessionUser.npub);
+    expect(session.user()).toBeNull();
+    expect(session.error()).toBeNull();
+  });
+
+  it('ignores stale profile fetch after disconnect', async () => {
+    facadeState.availableMethods = ['nip07'];
+    facadeState.startConnectionResult = createFakeAttempt('nip07', null);
+    facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
+    const profileDeferred = createDeferred<SessionUser>();
+    client.fetchProfile.mockImplementation(() => profileDeferred.promise);
+
+    const session = createService();
+    await flushAsync();
+
+    const connectPromise = session.connectWithExtension();
+    await flushAsync();
+    await session.disconnect();
+    profileDeferred.resolve(sessionUser);
+    await connectPromise;
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+  });
+
+  it('ignores stale startup restore after private-key login', async () => {
+    const restoreDeferred = createDeferred<ConnectionSession | null>();
+    facadeState.restoreContextExists = true;
+    facadeState.restoreFn = () => restoreDeferred.promise;
+    client.connectWithPrivateKey.mockResolvedValue(sessionUser);
+
+    const session = createService();
+    session.openAuthModal();
+    await flushAsync();
+
+    const result = await session.connectWithPrivateKey('nsec1test');
+    await flushAsync();
+    restoreDeferred.resolve(createFakeSession('a'.repeat(64), 'npub1restored', 'nip07'));
+    await flushAsync();
+
+    expect(result).toBe(true);
+    expect(client.applyNip07Signer).not.toHaveBeenCalled();
+    expect(session.user()).toEqual(sessionUser);
+    expect(session.isAuthenticated()).toBe(true);
+  });
+
+  it('does not let a stale extension failure clear a newer private-key session', async () => {
+    const completionDeferred = createDeferred<ConnectionSession>();
+    facadeState.availableMethods = ['nip07'];
+    facadeState.startConnectionResult = createFakeAttempt('nip07', null);
+    facadeState.completeFn = () => completionDeferred.promise;
+    client.connectWithPrivateKey.mockResolvedValue(sessionUser);
+
+    const session = createService();
+    await flushAsync();
+
+    const extensionLogin = session.connectWithExtension();
+    await flushAsync();
+    await session.connectWithPrivateKey('nsec1test');
+    completionDeferred.reject(new Error('Late extension failure.'));
+    await extensionLogin;
+    await flushAsync();
+
+    expect(session.user()).toEqual(sessionUser);
+    expect(session.isAuthenticated()).toBe(true);
+    expect(client.clearSigner).toHaveBeenCalledTimes(1);
+    expect(session.error()).toBeNull();
+  });
+
   it('cleans up facade on partial extension auth failure', async () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
@@ -739,6 +840,9 @@ interface FacadeState {
   disconnectCalls: number;
   currentFacadeAttemptId: number;
   currentFacadeAttemptMethodId: string | null;
+  restoreContextExists: boolean;
+  restoreResult: ConnectionSession | null;
+  restoreFn: (() => Promise<ConnectionSession | null>) | null;
 }
 
 function createFacadeState(): FacadeState {
@@ -756,6 +860,9 @@ function createFacadeState(): FacadeState {
     disconnectCalls: 0,
     currentFacadeAttemptId: 0,
     currentFacadeAttemptMethodId: null,
+    restoreContextExists: false,
+    restoreResult: null,
+    restoreFn: null,
   };
 }
 
@@ -778,6 +885,16 @@ function createFacadeProxy(state: FacadeState) {
     refreshAvailableMethods: vi
       .fn<() => Promise<string[]>>()
       .mockResolvedValue(state.availableMethods),
+    hasRestoreContext: vi.fn<() => boolean>().mockImplementation(() => state.restoreContextExists),
+    restoreSessionFromStoredContext: vi
+      .fn<() => Promise<ConnectionSession | null>>()
+      .mockImplementation(async () => {
+        if (state.restoreFn) {
+          return state.restoreFn();
+        }
+
+        return state.restoreResult;
+      }),
     clearError: vi.fn(),
     startConnection: vi
       .fn<(methodId: string, req: unknown) => Promise<ConnectionAttempt>>()

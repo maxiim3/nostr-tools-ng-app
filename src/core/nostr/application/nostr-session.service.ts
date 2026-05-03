@@ -7,6 +7,7 @@ import type {
   ConnectionAttempt,
   ConnectionAttemptInstructions,
 } from '../../nostr-connection/domain/connection-attempt';
+import type { ConnectionSession } from '../../nostr-connection/domain/connection-session';
 import {
   isAuthSessionConnected,
   type AuthSessionState,
@@ -19,6 +20,7 @@ export class NostrSessionService {
   private readonly client = inject(NostrClientService);
   private currentExternalAttemptId = 0;
   private currentBunkerAttemptId = 0;
+  private currentAuthOperationId = 0;
   private readonly AUTH_TIMEOUT_MS = 120000;
   private externalAuthTimeout?: ReturnType<typeof setTimeout>;
   private bunkerAuthTimeout?: ReturnType<typeof setTimeout>;
@@ -51,7 +53,30 @@ export class NostrSessionService {
   });
 
   constructor() {
+    void this.initializeSession();
+  }
+
+  private async initializeSession(): Promise<void> {
     this.refreshAvailability();
+
+    if (!this.facade.hasRestoreContext()) {
+      return;
+    }
+
+    const operationId = ++this.currentAuthOperationId;
+    const restoredSession = await this.facade.restoreSessionFromStoredContext();
+    if (operationId !== this.currentAuthOperationId) {
+      return;
+    }
+
+    if (!restoredSession) {
+      this.user.set(null);
+      return;
+    }
+
+    await this.applySessionForDisplay(restoredSession, operationId, {
+      tolerateProfileFailure: true,
+    });
   }
 
   refreshAvailability(): void {
@@ -73,6 +98,7 @@ export class NostrSessionService {
   }
 
   async connectWithExtension(): Promise<boolean> {
+    const operationId = ++this.currentAuthOperationId;
     const methods = await this.facade.refreshAvailableMethods();
     this.extensionAvailable.set(methods.includes('nip07'));
 
@@ -84,22 +110,24 @@ export class NostrSessionService {
     try {
       await this.facade.startConnection('nip07', { reason: 'interactive-login' });
       const session = await this.facade.completeCurrentAttempt();
-
-      if (session.methodId === 'nip07') {
-        await this.client.applyNip07Signer(session.pubkeyHex);
-      } else {
-        const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
-        if (ndkSigner) {
-          await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
-        }
+      if (operationId !== this.currentAuthOperationId) {
+        await this.clearStaleFacadeSession(session);
+        return false;
       }
 
-      const profile = await this.client.fetchProfile(session.npub);
-      this.user.set(profile);
+      await this.applySessionForDisplay(session, operationId);
       this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
+      this.clearExternalInstructionsSubscription();
+      this.externalAuthUri.set(null);
+      this.waitingForExternalAuth.set(false);
+      this.cancelExternalTimer();
       return true;
     } catch (err) {
+      if (operationId !== this.currentAuthOperationId) {
+        return false;
+      }
+
       if (this.facade.isAuthenticated()) {
         await this.facade.disconnect().catch(() => undefined);
       }
@@ -111,6 +139,18 @@ export class NostrSessionService {
   }
 
   async connectWithPrivateKey(privateKeyOrNsec: string): Promise<boolean> {
+    this.currentAuthOperationId++;
+    this.currentExternalAttemptId++;
+    this.currentBunkerAttemptId++;
+    this.clearExternalInstructionsSubscription();
+    this.cancelExternalTimer();
+    this.cancelBunkerTimer();
+    this.externalAuthUri.set(null);
+    this.waitingForExternalAuth.set(false);
+    this.waitingForBunkerAuth.set(false);
+    await this.facade.disconnect().catch(() => undefined);
+    await this.client.clearSigner().catch(() => undefined);
+
     try {
       const sessionUser = await this.client.connectWithPrivateKey(privateKeyOrNsec);
       this.user.set(sessionUser);
@@ -215,6 +255,7 @@ export class NostrSessionService {
   }
 
   async disconnect(): Promise<void> {
+    this.currentAuthOperationId++;
     this.currentExternalAttemptId++;
     this.currentBunkerAttemptId++;
     this.clearExternalInstructionsSubscription();
@@ -233,6 +274,7 @@ export class NostrSessionService {
   }
 
   private async finishExternalAppLogin(attemptId: number): Promise<void> {
+    const operationId = ++this.currentAuthOperationId;
     if (attemptId !== this.currentExternalAttemptId) {
       return;
     }
@@ -243,16 +285,11 @@ export class NostrSessionService {
         return;
       }
 
-      const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
-      if (ndkSigner) {
-        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
-      }
-
-      const profile = await this.client.fetchProfile(session.npub);
-      if (attemptId !== this.currentExternalAttemptId) {
-        return;
-      }
-      this.user.set(profile);
+      this.clearExternalInstructionsSubscription();
+      this.externalAuthUri.set(null);
+      this.waitingForExternalAuth.set(false);
+      this.cancelExternalTimer();
+      await this.applySessionForDisplay(session, operationId);
       this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
@@ -308,6 +345,7 @@ export class NostrSessionService {
   }
 
   private async finishBunkerLogin(attemptId: number): Promise<void> {
+    const operationId = ++this.currentAuthOperationId;
     if (attemptId !== this.currentBunkerAttemptId) {
       return;
     }
@@ -318,16 +356,9 @@ export class NostrSessionService {
         return;
       }
 
-      const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
-      if (ndkSigner) {
-        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
-      }
-
-      const profile = await this.client.fetchProfile(session.npub);
-      if (attemptId !== this.currentBunkerAttemptId) {
-        return;
-      }
-      this.user.set(profile);
+      this.waitingForBunkerAuth.set(false);
+      this.cancelBunkerTimer();
+      await this.applySessionForDisplay(session, operationId);
       this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
@@ -373,6 +404,61 @@ export class NostrSessionService {
 
     clearTimeout(this.bunkerAuthTimeout);
     this.bunkerAuthTimeout = undefined;
+  }
+
+  private async applySessionForDisplay(
+    session: ConnectionSession,
+    operationId: number,
+    options: { tolerateProfileFailure?: boolean } = {}
+  ): Promise<void> {
+    if (operationId !== this.currentAuthOperationId) {
+      return;
+    }
+
+    if (session.methodId === 'nip07') {
+      await this.client.applyNip07Signer(session.pubkeyHex);
+    } else {
+      const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
+      if (ndkSigner) {
+        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
+      }
+    }
+
+    if (operationId !== this.currentAuthOperationId) {
+      if (!this.facade.isAuthenticated() && !this.privateKeyFallbackActive()) {
+        await this.client.clearSigner().catch(() => undefined);
+      }
+      return;
+    }
+
+    let profile: SessionUser | null;
+    try {
+      profile = await this.client.fetchProfile(session.npub);
+    } catch (error) {
+      if (options.tolerateProfileFailure) {
+        profile = null;
+      } else {
+        throw error;
+      }
+    }
+
+    if (!profile) {
+      return;
+    }
+
+    if (operationId !== this.currentAuthOperationId) {
+      return;
+    }
+
+    this.user.set(profile);
+  }
+
+  private async clearStaleFacadeSession(session: ConnectionSession): Promise<void> {
+    if (this.facade.currentSession()?.pubkeyHex !== session.pubkeyHex) {
+      return;
+    }
+
+    await this.facade.disconnect().catch(() => undefined);
   }
 }
 

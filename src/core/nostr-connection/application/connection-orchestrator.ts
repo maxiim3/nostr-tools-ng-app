@@ -20,6 +20,10 @@ export class ConnectionOrchestrator {
     return this.methods.map((method) => method.id);
   }
 
+  getMethod(methodId: ConnectionMethodId): ConnectionMethod | undefined {
+    return this.methodsById.get(methodId);
+  }
+
   async listAvailableMethodIds(): Promise<ConnectionMethodId[]> {
     const availability = await Promise.all(
       this.methods.map(async (method) => ({

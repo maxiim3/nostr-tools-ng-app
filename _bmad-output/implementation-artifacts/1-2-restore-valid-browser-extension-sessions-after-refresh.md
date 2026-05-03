@@ -1,6 +1,6 @@
 # Story 1.2: Restore Valid Browser Extension Sessions After Refresh
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,66 +18,77 @@ so that I do not need to reconnect unnecessarily.
 
 ## Tasks / Subtasks
 
-- [ ] Add persistent NIP-07 restore context without treating it as auth proof (AC: 1, 2)
-  - [ ] Introduce a small browser-safe restore payload for NIP-07 only: `version: 1`, `methodId: 'nip07'`, `pubkeyHex`, and `validatedAt`.
-  - [ ] Treat stored `validatedAt` as diagnostic metadata only unless a product decision introduces a TTL; current signer validation is the auth proof.
-  - [ ] Do not trust persisted `npub` or capabilities. Derive `npub` from the validated hex pubkey and recompute capabilities from the current provider during restore.
-  - [ ] Store restore context only after successful signer-backed NIP-07 connection, not after profile fetch, private-key fallback, or cached `SessionUser` creation.
-  - [ ] Keep persistence in `src/core/nostr-connection/application/` or `src/core/nostr-connection/infrastructure/`; do not put localStorage access in domain files or presentation components.
-  - [ ] Guard browser storage access with `typeof globalThis !== 'undefined'` and tolerate unavailable or throwing storage APIs, including `globalThis.localStorage` property access itself.
-  - [ ] Purge invalid, malformed, non-NIP-07, or untrusted restore payloads immediately.
-- [ ] Implement NIP-07 session restore/revalidation on app/session startup (AC: 1, 2, 3)
-  - [ ] Add the smallest application-facing restore API, for example `restoreCurrentSession()` or `restoreSessionFromStoredContext()`, on `NostrConnectionFacadeService` or a focused application service.
-  - [ ] `ConnectionFacade` must own a restore-specific internal signal/status so `authSessionState` can emit `{ status: 'restoring', methodId: 'nip07' }`; do not reuse generic `pending` alone because current `pending` projects to `detectingSigner`.
-  - [ ] Clear the restore-specific signal in every success, failure, cancellation, timeout, and disconnect branch using `finally`-style cleanup.
-  - [ ] Add a bounded restore timeout for provider validation so a hung `getPublicKey()` cannot leave the app in `restoring` indefinitely.
-  - [ ] Resolve the current `window.nostr` provider through the existing `Nip07ConnectionMethod` / `Nip07ConnectionSigner` path where possible; do not duplicate provider or pubkey normalization logic.
-  - [ ] Revalidate by calling `getPublicKey()` through the signer and comparing normalized hex pubkey against the stored restore pubkey.
-  - [ ] Restore connected state only when the provider exists, returns a valid pubkey, and the pubkey matches the stored restore context; compare before committing `currentSession` or the active connection store.
-  - [ ] If no restore context exists, remain `disconnected` without calling the provider.
-  - [ ] If restore context is malformed or invalid, purge it and resolve to `disconnected`.
-  - [ ] If the extension is missing, returns an invalid pubkey, returns a different pubkey, or cannot be trusted, purge restore data and resolve to reconnect-required semantics through `revokedOrUnavailable`.
-  - [ ] If the provider rejects, throws, or times out while reading the pubkey, purge restore data and resolve to a recoverable reconnect state; do not leave stale connected UI visible.
-  - [ ] Ensure restore never waits on profile, feed, relay, notifications, Supabase, pack membership, or NIP-98 calls before setting validated signer-backed connection state.
-- [ ] Add a safe restored-active-connection commit path (AC: 1, 2)
-  - [ ] Add a method-level NIP-07 restore seam, for example on `Nip07ConnectionMethod`, that resolves the provider, creates `Nip07ConnectionSigner`, builds a fresh `ConnectionSession`, compares against expected `pubkeyHex`, and returns `ActiveConnection` only on match.
-  - [ ] Add the smallest orchestrator/facade commit hook needed for an already validated restored `ActiveConnection`; do not let the facade mutate store internals directly.
-  - [ ] Do not implement restore by completing and committing a normal interactive `startConnection('nip07')` attempt before comparing the stored pubkey.
-  - [ ] Keep this seam NIP-07-only for this story, but use a method-discriminated shape so Story 1.3 can add NIP-46 restore without replacing the NIP-07 design.
-- [ ] Bridge restored NIP-07 sessions into current UI/session behavior (AC: 1, 2)
-  - [ ] Update `NostrSessionService` startup behavior to use an initialization flow: refresh availability, attempt NIP-07 restore only when restore context exists, then bridge success/failure into display state.
-  - [ ] On successful restore, apply the NIP-07 signer through existing `NostrClientService.applyNip07Signer(session.pubkeyHex)` and then fetch profile only as display context; profile fetch failure must not undo signer-backed connected state.
-  - [ ] Keep `SessionUser` as profile/display data only; do not set `isAuthenticated` from cached/fetched profile unless shared `authSessionState` is connected.
-  - [ ] Ensure restored users see the existing signed-in identity and pack/admin affordances exactly as after interactive extension login.
-  - [ ] On restore failure, clear stale profile/user state for signer-backed auth and show a reconnect-required or disconnected state without indefinite loading.
-  - [ ] Add operation-generation guards around restore, interactive extension login, and post-connection profile fetch so stale async completions cannot repopulate `user`, close the modal, set errors, or overwrite a newer auth state after logout or another login.
-- [ ] Preserve and extend NIP-07 active connection behavior (AC: 1, 2)
-  - [ ] Reuse `ConnectionSession`, `Nip07ConnectionSigner`, `Nip07ConnectionMethod`, `Nip07ActiveConnection`, and `InMemoryConnectionSessionStore`; avoid creating a parallel browser-extension auth stack.
-  - [ ] Add persistence/restore support without changing the existing interactive `connectWithExtension()` success path except to save restore context after validation.
-  - [ ] Preserve current `revalidateCurrentSession()` semantics and make restored sessions participate in the same `ActiveConnection.revalidate()` behavior.
-  - [ ] Account for NIP-07 not standardizing account-change notifications: restoration and sensitive actions must rely on explicit pubkey revalidation, not an assumed extension event.
-  - [ ] If `revalidateCurrentSession()` detects the extension account changed unexpectedly after restore, do not silently continue under the old identity; surface the identity change through existing `changed` semantics and keep protected actions tied to current signer validation.
-  - [ ] Clear NIP-07 restore context from facade-level `disconnect()` even if there is no active in-memory session and even if lower-level signer cleanup fails.
-- [ ] Add tests for restore success and fail-closed cases (AC: 1, 2, 3)
-  - [ ] Add or extend tests next to implementation files as `*.spec.ts`; use existing fake connection methods/providers/signers and fake storage where practical.
-  - [ ] Cover valid stored NIP-07 context plus available provider returning same pubkey restores connected auth state.
-  - [ ] Cover missing provider clears restore context and does not authenticate from cached profile data.
-  - [ ] Cover provider returning a different pubkey clears restore context and does not keep the previous user connected.
-  - [ ] Cover invalid/malformed restore payload is purged and produces disconnected or reconnect-required state.
-  - [ ] Cover provider rejection/throw during `getPublicKey()` maps to safe recovery state and does not leave `restoring` indefinitely.
-  - [ ] Cover provider validation timeout exits `restoring` and leaves a safe reconnect state.
-  - [ ] Cover successful interactive NIP-07 login writes restore context and `disconnect()` clears it.
-  - [ ] Cover throwing `localStorage` property access and throwing `getItem`, `setItem`, and `removeItem` calls.
-  - [ ] Cover stale restore completion after disconnect or manual login is ignored.
-  - [ ] Cover stale profile fetch after disconnect or auth switch does not set `user` or present signed-in UI.
-  - [ ] Cover stored `npub` or capabilities, if present from older payloads, are ignored or purged rather than trusted.
-- [ ] Refresh docs for NIP-07 restore semantics (AC: 1, 2)
-  - [ ] Update `src/core/nostr-connection/README.md` to state that NIP-07 can now restore after reload by revalidating `window.nostr.getPublicKey()` against persisted restore context.
-  - [ ] Document that restore context is not auth proof; only current signer validation creates `connected` state.
-  - [ ] Do not rewrite broad architecture/UX docs unless implementation creates a new durable pattern requiring documentation.
-- [ ] Verify through repository scripts (AC: 1, 2, 3)
-  - [ ] Run targeted tests through repo scripts if useful during development.
-  - [ ] Run at minimum `bun run typecheck` and `bun run test`; run `bun run check` if practical before marking implementation complete.
+- [x] Add persistent NIP-07 restore context without treating it as auth proof (AC: 1, 2)
+  - [x] Introduce a small browser-safe restore payload for NIP-07 only: `version: 1`, `methodId: 'nip07'`, `pubkeyHex`, and `validatedAt`.
+  - [x] Treat stored `validatedAt` as diagnostic metadata only unless a product decision introduces a TTL; current signer validation is the auth proof.
+  - [x] Do not trust persisted `npub` or capabilities. Derive `npub` from the validated hex pubkey and recompute capabilities from the current provider during restore.
+  - [x] Store restore context only after successful signer-backed NIP-07 connection, not after profile fetch, private-key fallback, or cached `SessionUser` creation.
+  - [x] Keep persistence in `src/core/nostr-connection/application/` or `src/core/nostr-connection/infrastructure/`; do not put localStorage access in domain files or presentation components.
+  - [x] Guard browser storage access with `typeof globalThis !== 'undefined'` and tolerate unavailable or throwing storage APIs, including `globalThis.localStorage` property access itself.
+  - [x] Purge invalid, malformed, non-NIP-07, or untrusted restore payloads immediately.
+- [x] Implement NIP-07 session restore/revalidation on app/session startup (AC: 1, 2, 3)
+  - [x] Add the smallest application-facing restore API, for example `restoreCurrentSession()` or `restoreSessionFromStoredContext()`, on `NostrConnectionFacadeService` or a focused application service.
+  - [x] `ConnectionFacade` must own a restore-specific internal signal/status so `authSessionState` can emit `{ status: 'restoring', methodId: 'nip07' }`; do not reuse generic `pending` alone because current `pending` projects to `detectingSigner`.
+  - [x] Clear the restore-specific signal in every success, failure, cancellation, timeout, and disconnect branch using `finally`-style cleanup.
+  - [x] Add a bounded restore timeout for provider validation so a hung `getPublicKey()` cannot leave the app in `restoring` indefinitely.
+  - [x] Resolve the current `window.nostr` provider through the existing `Nip07ConnectionMethod` / `Nip07ConnectionSigner` path where possible; do not duplicate provider or pubkey normalization logic.
+  - [x] Revalidate by calling `getPublicKey()` through the signer and comparing normalized hex pubkey against the stored restore pubkey.
+  - [x] Restore connected state only when the provider exists, returns a valid pubkey, and the pubkey matches the stored restore context; compare before committing `currentSession` or the active connection store.
+  - [x] If no restore context exists, remain `disconnected` without calling the provider.
+  - [x] If restore context is malformed or invalid, purge it and resolve to `disconnected`.
+  - [x] If the extension is missing, returns an invalid pubkey, returns a different pubkey, or cannot be trusted, purge restore data and resolve to reconnect-required semantics through `revokedOrUnavailable`.
+  - [x] If the provider rejects, throws, or times out while reading the pubkey, purge restore data and resolve to a recoverable reconnect state; do not leave stale connected UI visible.
+  - [x] Ensure restore never waits on profile, feed, relay, notifications, Supabase, pack membership, or NIP-98 calls before setting validated signer-backed connection state.
+- [x] Add a safe restored-active-connection commit path (AC: 1, 2)
+  - [x] Add a method-level NIP-07 restore seam, for example on `Nip07ConnectionMethod`, that resolves the provider, creates `Nip07ConnectionSigner`, builds a fresh `ConnectionSession`, compares against expected `pubkeyHex`, and returns `ActiveConnection` only on match.
+  - [x] Add the smallest orchestrator/facade commit hook needed for an already validated restored `ActiveConnection`; do not let the facade mutate store internals directly.
+  - [x] Do not implement restore by completing and committing a normal interactive `startConnection('nip07')` attempt before comparing the stored pubkey.
+  - [x] Keep this seam NIP-07-only for this story, but use a method-discriminated shape so Story 1.3 can add NIP-46 restore without replacing the NIP-07 design.
+- [x] Bridge restored NIP-07 sessions into current UI/session behavior (AC: 1, 2)
+  - [x] Update `NostrSessionService` startup behavior to use an initialization flow: refresh availability, attempt NIP-07 restore only when restore context exists, then bridge success/failure into display state.
+  - [x] On successful restore, apply the NIP-07 signer through existing `NostrClientService.applyNip07Signer(session.pubkeyHex)` and then fetch profile only as display context; profile fetch failure must not undo signer-backed connected state.
+  - [x] Keep `SessionUser` as profile/display data only; do not set `isAuthenticated` from cached/fetched profile unless shared `authSessionState` is connected.
+  - [x] Ensure restored users see the existing signed-in identity and pack/admin affordances exactly as after interactive extension login.
+  - [x] On restore failure, clear stale profile/user state for signer-backed auth and show a reconnect-required or disconnected state without indefinite loading.
+  - [x] Add operation-generation guards around restore, interactive extension login, and post-connection profile fetch so stale async completions cannot repopulate `user`, close the modal, set errors, or overwrite a newer auth state after logout or another login.
+- [x] Preserve and extend NIP-07 active connection behavior (AC: 1, 2)
+  - [x] Reuse `ConnectionSession`, `Nip07ConnectionSigner`, `Nip07ConnectionMethod`, `Nip07ActiveConnection`, and `InMemoryConnectionSessionStore`; avoid creating a parallel browser-extension auth stack.
+  - [x] Add persistence/restore support without changing the existing interactive `connectWithExtension()` success path except to save restore context after validation.
+  - [x] Preserve current `revalidateCurrentSession()` semantics and make restored sessions participate in the same `ActiveConnection.revalidate()` behavior.
+  - [x] Account for NIP-07 not standardizing account-change notifications: restoration and sensitive actions must rely on explicit pubkey revalidation, not an assumed extension event.
+  - [x] If `revalidateCurrentSession()` detects the extension account changed unexpectedly after restore, do not silently continue under the old identity; surface the identity change through existing `changed` semantics and keep protected actions tied to current signer validation.
+  - [x] Clear NIP-07 restore context from facade-level `disconnect()` even if there is no active in-memory session and even if lower-level signer cleanup fails.
+- [x] Add tests for restore success and fail-closed cases (AC: 1, 2, 3)
+  - [x] Add or extend tests next to implementation files as `*.spec.ts`; use existing fake connection methods/providers/signers and fake storage where practical.
+  - [x] Cover valid stored NIP-07 context plus available provider returning same pubkey restores connected auth state.
+  - [x] Cover missing provider clears restore context and does not authenticate from cached profile data.
+  - [x] Cover provider returning a different pubkey clears restore context and does not keep the previous user connected.
+  - [x] Cover invalid/malformed restore payload is purged and produces disconnected or reconnect-required state.
+  - [x] Cover provider rejection/throw during `getPublicKey()` maps to safe recovery state and does not leave `restoring` indefinitely.
+  - [x] Cover provider validation timeout exits `restoring` and leaves a safe reconnect state.
+  - [x] Cover successful interactive NIP-07 login writes restore context and `disconnect()` clears it.
+  - [x] Cover throwing `localStorage` property access and throwing `getItem`, `setItem`, and `removeItem` calls.
+  - [x] Cover stale restore completion after disconnect or manual login is ignored.
+  - [x] Cover stale profile fetch after disconnect or auth switch does not set `user` or present signed-in UI.
+  - [x] Cover stored `npub` or capabilities, if present from older payloads, are ignored or purged rather than trusted.
+- [x] Refresh docs for NIP-07 restore semantics (AC: 1, 2)
+  - [x] Update `src/core/nostr-connection/README.md` to state that NIP-07 can now restore after reload by revalidating `window.nostr.getPublicKey()` against persisted restore context.
+  - [x] Document that restore context is not auth proof; only current signer validation creates `connected` state.
+  - [x] Do not rewrite broad architecture/UX docs unless implementation creates a new durable pattern requiring documentation.
+- [x] Verify through repository scripts (AC: 1, 2, 3)
+  - [x] Run targeted tests through repo scripts if useful during development.
+  - [x] Run at minimum `bun run typecheck` and `bun run test`; run `bun run check` if practical before marking implementation complete.
+
+### Review Findings
+
+- [x] [Review][Patch] Stale async completion can still re-apply a signer after logout or a newer auth flow [src/core/nostr/application/nostr-session.service.ts:384]
+- [x] [Review][Patch] Superseded extension login can still leave a committed facade session behind [src/core/nostr/application/nostr-session.service.ts:108]
+- [x] [Review][Patch] Private-key login still does not invalidate an in-flight restore/auth operation [src/core/nostr/application/nostr-session.service.ts:128]
+- [x] [Review][Patch] Restore failures still do not surface reconnect-required `revokedOrUnavailable` semantics [src/core/nostr-connection/application/connection-facade.ts:89]
+- [x] [Review][Patch] Restore regression coverage still misses provider-unavailable and stale-manual-login paths [src/core/nostr-connection/application/connection-facade.spec.ts:219]
+- [x] [Review][Patch] Stale extension-login failure can disconnect or clear a newer authenticated session [src/core/nostr/application/nostr-session.service.ts:117]
+- [x] [Review][Patch] Restore timeout can leave a late-created active connection undisconnected [src/core/nostr-connection/application/connection-facade.ts:430]
+- [x] [Review][Patch] External app and bunker login close success UI before display setup succeeds [src/core/nostr/application/nostr-session.service.ts:263]
 
 ## Dev Notes
 
@@ -253,12 +264,37 @@ Avoid touching unless directly needed:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+openai/gpt-5.5
 
 ### Debug Log References
+
+- `bun run typecheck` - passed.
+- `bun run test` - passed, 242 tests.
+- `bun run check` - passed lint, CSS lint, format check, typecheck, and tests.
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
+- Implemented NIP-07 restore context persistence that stores only version, method id, hex pubkey, and validation timestamp.
+- Added signer-backed NIP-07 restore/revalidation through the existing NIP-07 provider/signer/session path with bounded timeout and fail-closed cleanup.
+- Bridged startup restore into `NostrSessionService` without treating cached profile data as authentication; stale async completions after disconnect/auth switch are ignored.
+- Updated NIP-07 connection documentation and verified the full repository quality gate.
 
 ### File List
+
+- `_bmad-output/implementation-artifacts/1-2-restore-valid-browser-extension-sessions-after-refresh.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/core/nostr-connection/README.md`
+- `src/core/nostr-connection/application/connection-facade.spec.ts`
+- `src/core/nostr-connection/application/connection-facade.ts`
+- `src/core/nostr-connection/application/connection-orchestrator.ts`
+- `src/core/nostr-connection/application/nip07-connection-method.spec.ts`
+- `src/core/nostr-connection/application/nip07-connection-method.ts`
+- `src/core/nostr-connection/application/nip07-restore-context-store.spec.ts`
+- `src/core/nostr-connection/application/nip07-restore-context-store.ts`
+- `src/core/nostr/application/nostr-session.service.spec.ts`
+- `src/core/nostr/application/nostr-session.service.ts`
+
+### Change Log
+
+- 2026-05-03: Implemented NIP-07 browser extension session restore and marked story ready for review.

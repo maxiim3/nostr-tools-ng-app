@@ -2,11 +2,20 @@ import { ConnectionFacade } from './connection-facade';
 import { ConnectionOrchestrator } from './connection-orchestrator';
 import { InMemoryConnectionSessionStore } from './in-memory-connection-session-store';
 import { ConnectionDomainError } from '../domain/connection-errors';
+import { FakeNip07Provider } from '../testing/fakes/fake-nip07-provider';
 import { FakeConnectionMethod } from '../testing/fakes/fake-connection-method';
 import { FakeConnectionAttempt } from '../testing/fakes/fake-connection-attempt';
 import { FakeActiveConnection } from '../testing/fakes/fake-active-connection';
+import { FakeConnectionSigner } from '../testing/fakes/fake-connection-signer';
+import { Nip07ConnectionMethod } from './nip07-connection-method';
 
 describe('ConnectionFacade', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it('loads available methods from the orchestrator', async () => {
     const facade = createFacade([
       new FakeConnectionMethod({ id: 'nip07', available: true }),
@@ -206,9 +215,246 @@ describe('ConnectionFacade', () => {
       reasonCode: 'user_rejected',
     });
   });
+
+  it('restores a stored nip07 session with signer validation', async () => {
+    const storage = createStorage();
+    const signer = new FakeConnectionSigner();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: signer.publicKeyHex,
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({
+        resolveProvider: () => new FakeNip07Provider({ signers: [signer] }),
+      }),
+    ]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored?.methodId).toBe('nip07');
+    expect(facade.currentSession()?.pubkeyHex).toBe(signer.publicKeyHex);
+    expect(facade.authSessionState().status).toBe('connected');
+  });
+
+  it('fails closed when restore pubkey does not match', async () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: 'b'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({ resolveProvider: () => new FakeNip07Provider() }),
+    ]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.restore.v1');
+    expect(facade.authSessionState()).toEqual({
+      status: 'revokedOrUnavailable',
+      reasonCode: 'authorization_revoked_or_unavailable',
+    });
+  });
+
+  it('maps missing provider during restore to reconnect-required state', async () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([new Nip07ConnectionMethod({ resolveProvider: () => null })]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.restore.v1');
+    expect(facade.authSessionState()).toEqual({
+      status: 'revokedOrUnavailable',
+      reasonCode: 'authorization_revoked_or_unavailable',
+    });
+  });
+
+  it('maps provider rejection during restore to a safe retry state', async () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({
+        resolveProvider: () => ({
+          getPublicKey: async () => Promise.reject(new Error('User rejected restore.')),
+          signEvent: async () => null as never,
+        }),
+      }),
+    ]);
+
+    const restored = await facade.restoreSessionFromStoredContext();
+
+    expect(restored).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.restore.v1');
+    expect(facade.authSessionState()).toEqual({
+      status: 'recoverableRetry',
+      reasonCode: 'user_rejected',
+    });
+  });
+
+  it('times out a hanging nip07 restore and leaves a safe retry state', async () => {
+    vi.useFakeTimers();
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: 'a'.repeat(64),
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({
+        resolveProvider: () => ({
+          getPublicKey: () => new Promise<string>(() => undefined),
+          signEvent: async () => null as never,
+        }),
+      }),
+    ]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    await Promise.resolve();
+    expect(facade.authSessionState()).toEqual({ status: 'restoring', methodId: 'nip07' });
+
+    vi.advanceTimersByTime(8001);
+    const restored = await restore;
+
+    expect(restored).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(facade.authSessionState()).toEqual({
+      status: 'recoverableRetry',
+      reasonCode: 'approval_timed_out',
+    });
+  });
+
+  it('disconnects a restored active connection that resolves after timeout', async () => {
+    vi.useFakeTimers();
+    const storage = createStorage();
+    const connectionDeferred = createDeferred<FakeActiveConnection>();
+    const lateConnection = new FakeActiveConnection({ methodId: 'nip07' });
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: lateConnection.getSession().pubkeyHex,
+        validatedAt: 1,
+      })
+    );
+    const method = new Nip07ConnectionMethod({ resolveProvider: () => null });
+    vi.spyOn(method, 'restoreActiveConnection').mockReturnValue(connectionDeferred.promise);
+    const facade = createFacade([method]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    await Promise.resolve();
+    vi.advanceTimersByTime(8001);
+    await expect(restore).resolves.toBeNull();
+
+    connectionDeferred.resolve(lateConnection);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(lateConnection.disconnectCalls).toBe(1);
+  });
+
+  it('ignores stale restore completion after disconnect', async () => {
+    const storage = createStorage();
+    const signer = new FakeConnectionSigner();
+    const pubkeyDeferred = createDeferred<string>();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem(
+      'nostr.connect.restore.v1',
+      JSON.stringify({
+        version: 1,
+        methodId: 'nip07',
+        pubkeyHex: signer.publicKeyHex,
+        validatedAt: 1,
+      })
+    );
+    const facade = createFacade([
+      new Nip07ConnectionMethod({
+        resolveProvider: () => ({
+          getPublicKey: () => pubkeyDeferred.promise,
+          signEvent: async () => null as never,
+        }),
+      }),
+    ]);
+
+    const restore = facade.restoreSessionFromStoredContext();
+    await Promise.resolve();
+    await facade.disconnect();
+    pubkeyDeferred.resolve(signer.publicKeyHex);
+
+    await expect(restore).resolves.toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(facade.authSessionState()).toEqual({ status: 'disconnected' });
+  });
 });
 
-function createFacade(methods: FakeConnectionMethod[]): ConnectionFacade {
+function createFacade(methods: (FakeConnectionMethod | Nip07ConnectionMethod)[]): ConnectionFacade {
   const orchestrator = new ConnectionOrchestrator(methods, new InMemoryConnectionSessionStore());
   return new ConnectionFacade(orchestrator);
+}
+
+function createStorage() {
+  const map = new Map<string, string>();
+  return {
+    getItem: vi.fn((key: string) => map.get(key) ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      map.set(key, value);
+    }),
+    removeItem: vi.fn((key: string) => {
+      map.delete(key);
+    }),
+  };
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+
+  return { promise, resolve, reject };
 }

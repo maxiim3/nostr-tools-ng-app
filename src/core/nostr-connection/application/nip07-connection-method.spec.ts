@@ -1,4 +1,5 @@
 import { runConnectionMethodContract } from '../testing/contracts/connection-method.contract';
+import { ConnectionDomainError } from '../domain/connection-errors';
 import { FakeConnectionSigner } from '../testing/fakes/fake-connection-signer';
 import { FakeNip07Provider } from '../testing/fakes/fake-nip07-provider';
 import { Nip07ConnectionMethod } from './nip07-connection-method';
@@ -29,5 +30,25 @@ describe('Nip07ConnectionMethod', () => {
     const method = new Nip07ConnectionMethod({ resolveProvider: () => null });
 
     await expect(method.isAvailable()).resolves.toBe(false);
+  });
+
+  it('restores an active connection when pubkey matches', async () => {
+    const signer = new FakeConnectionSigner();
+    const provider = new FakeNip07Provider({ signers: [signer] });
+    const method = new Nip07ConnectionMethod({ resolveProvider: () => provider });
+
+    const activeConnection = await method.restoreActiveConnection(signer.publicKeyHex);
+
+    expect(activeConnection.getSession().methodId).toBe('nip07');
+    expect(activeConnection.getSession().pubkeyHex).toBe(signer.publicKeyHex);
+  });
+
+  it('fails restore when pubkey does not match', async () => {
+    const provider = new FakeNip07Provider();
+    const method = new Nip07ConnectionMethod({ resolveProvider: () => provider });
+
+    await expect(method.restoreActiveConnection('b'.repeat(64))).rejects.toMatchObject({
+      code: 'validation_failed',
+    } as Partial<ConnectionDomainError>);
   });
 });
