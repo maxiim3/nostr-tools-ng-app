@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 
 import type { ActiveConnection } from '../../nostr-connection/domain/active-connection';
 import type {
@@ -6,6 +7,7 @@ import type {
   ConnectionAttemptInstructions,
 } from '../../nostr-connection/domain/connection-attempt';
 import type { ConnectionSession } from '../../nostr-connection/domain/connection-session';
+import type { AuthSessionState } from '../../nostr-connection/domain/auth-session-state';
 import { NostrClientService, type SessionUser } from './nostr-client.service';
 import { NostrSessionService } from './nostr-session.service';
 import { NostrConnectionFacadeService } from '../../nostr-connection/application/connection-facade';
@@ -493,6 +495,14 @@ describe('NostrSessionService', () => {
     expect(session.isAdmin()).toBe(false);
   });
 
+  it('does not treat profile-only user data as authenticated session', () => {
+    const session = createService();
+
+    session.user.set(sessionUser);
+
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
   it('exposes isAuthenticated for private key auth', async () => {
     client.connectWithPrivateKey.mockResolvedValue(sessionUser);
     client.clearSigner.mockResolvedValue(undefined);
@@ -727,6 +737,8 @@ interface FacadeState {
   completeCalls: number;
   cancelCalls: number;
   disconnectCalls: number;
+  currentFacadeAttemptId: number;
+  currentFacadeAttemptMethodId: string | null;
 }
 
 function createFacadeState(): FacadeState {
@@ -742,15 +754,24 @@ function createFacadeState(): FacadeState {
     completeCalls: 0,
     cancelCalls: 0,
     disconnectCalls: 0,
+    currentFacadeAttemptId: 0,
+    currentFacadeAttemptMethodId: null,
   };
 }
 
 function createFacadeProxy(state: FacadeState) {
+  const authSessionState = signal<AuthSessionState>(
+    state.currentSession
+      ? { status: 'connected', session: state.currentSession }
+      : { status: 'disconnected' }
+  );
+
   return {
     pending: () => false,
     error: () => null,
     currentAttempt: () => null,
     currentSession: () => state.currentSession,
+    authSessionState,
     ndkSigner: () => state.ndkSignerValue,
     isAuthenticated: () => state.currentSession !== null,
     availableMethodIds: () => state.availableMethods,
@@ -764,6 +785,21 @@ function createFacadeProxy(state: FacadeState) {
         state.startConnectionCalls.push([methodId, req]);
         if (state.startConnectionError) throw state.startConnectionError;
         if (!state.startConnectionResult) throw new Error('startConnection not configured');
+        state.currentFacadeAttemptId++;
+        state.currentFacadeAttemptMethodId = methodId;
+        if (methodId === 'nip46-nostrconnect') {
+          authSessionState.set({
+            status: 'awaitingExternalSignerApproval',
+            methodId,
+            attemptId: state.currentFacadeAttemptId,
+          });
+        } else if (methodId === 'nip46-bunker') {
+          authSessionState.set({
+            status: 'awaitingBunkerApproval',
+            methodId,
+            attemptId: state.currentFacadeAttemptId,
+          });
+        }
         return state.startConnectionResult;
       }),
     completeCurrentAttempt: vi
@@ -773,18 +809,51 @@ function createFacadeProxy(state: FacadeState) {
         if (state.completeFn) return state.completeFn();
         if (state.completeResult) {
           state.currentSession = state.completeResult;
+          state.currentFacadeAttemptMethodId = null;
+          authSessionState.set({ status: 'connected', session: state.completeResult });
           return state.completeResult;
         }
         throw new Error('completeCurrentAttempt not configured');
       }),
-    cancelCurrentAttempt: vi.fn<() => Promise<void>>().mockImplementation(async () => {
-      state.cancelCalls++;
-    }),
+    cancelCurrentAttempt: vi
+      .fn<(options?: { reason?: 'cancelled' | 'timedOut'; attemptId?: number }) => Promise<void>>()
+      .mockImplementation(async (options) => {
+        state.cancelCalls++;
+        const methodId = state.currentFacadeAttemptMethodId;
+        if (
+          !methodId ||
+          (options?.attemptId && options.attemptId !== state.currentFacadeAttemptId)
+        ) {
+          return;
+        }
+
+        if (options?.reason === 'timedOut') {
+          authSessionState.set({
+            status: 'timedOut',
+            methodId: methodId as never,
+            attemptId: state.currentFacadeAttemptId,
+            reasonCode: 'approval_timed_out',
+          });
+        } else {
+          authSessionState.set({
+            status: 'cancelled',
+            methodId: methodId as never,
+            attemptId: state.currentFacadeAttemptId,
+            reasonCode: 'approval_cancelled',
+          });
+        }
+        state.currentFacadeAttemptMethodId = null;
+      }),
     disconnect: vi.fn<() => Promise<void>>().mockImplementation(async () => {
       state.disconnectCalls++;
       state.currentSession = null;
       state.ndkSignerValue = null;
+      state.currentFacadeAttemptMethodId = null;
+      authSessionState.set({ status: 'disconnected' });
     }),
+    getCurrentAttemptId: vi
+      .fn<() => number>()
+      .mockImplementation(() => state.currentFacadeAttemptId),
   };
 }
 

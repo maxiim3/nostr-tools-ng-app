@@ -7,6 +7,10 @@ import type {
   ConnectionAttempt,
   ConnectionAttemptInstructions,
 } from '../../nostr-connection/domain/connection-attempt';
+import {
+  isAuthSessionConnected,
+  type AuthSessionState,
+} from '../../nostr-connection/domain/auth-session-state';
 import { NostrClientService, type SessionUser } from './nostr-client.service';
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +32,17 @@ export class NostrSessionService {
   readonly externalAuthUri = signal<string | null>(null);
   readonly waitingForExternalAuth = signal(false);
   readonly waitingForBunkerAuth = signal(false);
-  readonly isAuthenticated = computed(() => this.user() !== null);
+  private readonly privateKeyFallbackActive = signal(false);
+  readonly authSessionState = computed(() => this.facade.authSessionState());
+  readonly externalAuthTimedOut = computed(() =>
+    isTimedOutFor(this.authSessionState(), 'nip46-nostrconnect')
+  );
+  readonly bunkerAuthTimedOut = computed(() =>
+    isTimedOutFor(this.authSessionState(), 'nip46-bunker')
+  );
+  readonly isAuthenticated = computed(
+    () => isAuthSessionConnected(this.authSessionState()) || this.privateKeyFallbackActive()
+  );
   readonly isAdmin = computed(() => {
     const currentUser = this.user();
     return currentUser
@@ -82,6 +96,7 @@ export class NostrSessionService {
 
       const profile = await this.client.fetchProfile(session.npub);
       this.user.set(profile);
+      this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
       return true;
     } catch (err) {
@@ -89,6 +104,7 @@ export class NostrSessionService {
         await this.facade.disconnect().catch(() => undefined);
       }
       await this.client.clearSigner().catch(() => undefined);
+      this.privateKeyFallbackActive.set(false);
       this.error.set(err instanceof Error ? err.message : 'Unable to connect with Nostr.');
       return false;
     }
@@ -98,6 +114,7 @@ export class NostrSessionService {
     try {
       const sessionUser = await this.client.connectWithPrivateKey(privateKeyOrNsec);
       this.user.set(sessionUser);
+      this.privateKeyFallbackActive.set(true);
       this.authModalOpen.set(false);
       return true;
     } catch (err) {
@@ -111,6 +128,9 @@ export class NostrSessionService {
   async beginExternalAppLogin(): Promise<string | null> {
     this.error.set(null);
     this.facade.clearError();
+    this.cancelBunkerTimer();
+    this.waitingForBunkerAuth.set(false);
+    this.currentBunkerAttemptId++;
     this.currentExternalAttemptId++;
     this.clearExternalInstructionsSubscription();
     const attemptId = this.currentExternalAttemptId;
@@ -148,15 +168,17 @@ export class NostrSessionService {
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
     this.currentExternalAttemptId++;
-    if (this.externalAuthTimeout) {
-      clearTimeout(this.externalAuthTimeout);
-      this.externalAuthTimeout = undefined;
-    }
+    this.cancelExternalTimer();
   }
 
   async beginBunkerLogin(connectionToken: string): Promise<boolean> {
     this.error.set(null);
     this.facade.clearError();
+    this.currentExternalAttemptId++;
+    this.clearExternalInstructionsSubscription();
+    this.cancelExternalTimer();
+    this.externalAuthUri.set(null);
+    this.waitingForExternalAuth.set(false);
     this.currentBunkerAttemptId++;
     const attemptId = this.currentBunkerAttemptId;
 
@@ -189,28 +211,20 @@ export class NostrSessionService {
     void this.facade.cancelCurrentAttempt().catch(() => undefined);
     this.waitingForBunkerAuth.set(false);
     this.currentBunkerAttemptId++;
-    if (this.bunkerAuthTimeout) {
-      clearTimeout(this.bunkerAuthTimeout);
-      this.bunkerAuthTimeout = undefined;
-    }
+    this.cancelBunkerTimer();
   }
 
   async disconnect(): Promise<void> {
     this.currentExternalAttemptId++;
     this.currentBunkerAttemptId++;
     this.clearExternalInstructionsSubscription();
-    if (this.externalAuthTimeout) {
-      clearTimeout(this.externalAuthTimeout);
-      this.externalAuthTimeout = undefined;
-    }
-    if (this.bunkerAuthTimeout) {
-      clearTimeout(this.bunkerAuthTimeout);
-      this.bunkerAuthTimeout = undefined;
-    }
+    this.cancelExternalTimer();
+    this.cancelBunkerTimer();
 
     await this.facade.disconnect();
     await this.client.clearSigner();
     this.user.set(null);
+    this.privateKeyFallbackActive.set(false);
     this.error.set(null);
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
@@ -239,6 +253,7 @@ export class NostrSessionService {
         return;
       }
       this.user.set(profile);
+      this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
       if (attemptId !== this.currentExternalAttemptId) {
@@ -250,10 +265,7 @@ export class NostrSessionService {
         this.clearExternalInstructionsSubscription();
         this.externalAuthUri.set(null);
         this.waitingForExternalAuth.set(false);
-        if (this.externalAuthTimeout) {
-          clearTimeout(this.externalAuthTimeout);
-          this.externalAuthTimeout = undefined;
-        }
+        this.cancelExternalTimer();
       }
     }
   }
@@ -267,12 +279,11 @@ export class NostrSessionService {
     this.clearExternalInstructionsSubscription();
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);
-    if (this.externalAuthTimeout) {
-      clearTimeout(this.externalAuthTimeout);
-      this.externalAuthTimeout = undefined;
-    }
+    this.cancelExternalTimer();
     this.error.set('External app login timed out. Please try again.');
-    void this.facade.cancelCurrentAttempt().catch(() => undefined);
+    void this.facade
+      .cancelCurrentAttempt({ reason: 'timedOut', attemptId: this.facade.getCurrentAttemptId() })
+      .catch(() => undefined);
   }
 
   private bindExternalInstructions(attemptId: number, attempt: ConnectionAttempt): void {
@@ -317,6 +328,7 @@ export class NostrSessionService {
         return;
       }
       this.user.set(profile);
+      this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
       if (attemptId !== this.currentBunkerAttemptId) {
@@ -326,10 +338,7 @@ export class NostrSessionService {
     } finally {
       if (attemptId === this.currentBunkerAttemptId) {
         this.waitingForBunkerAuth.set(false);
-        if (this.bunkerAuthTimeout) {
-          clearTimeout(this.bunkerAuthTimeout);
-          this.bunkerAuthTimeout = undefined;
-        }
+        this.cancelBunkerTimer();
       }
     }
   }
@@ -341,15 +350,39 @@ export class NostrSessionService {
 
     this.currentBunkerAttemptId++;
     this.waitingForBunkerAuth.set(false);
-    if (this.bunkerAuthTimeout) {
-      clearTimeout(this.bunkerAuthTimeout);
-      this.bunkerAuthTimeout = undefined;
-    }
+    this.cancelBunkerTimer();
     this.error.set('Bunker login timed out. Please try again.');
-    void this.facade.cancelCurrentAttempt().catch(() => undefined);
+    void this.facade
+      .cancelCurrentAttempt({ reason: 'timedOut', attemptId: this.facade.getCurrentAttemptId() })
+      .catch(() => undefined);
+  }
+
+  private cancelExternalTimer(): void {
+    if (!this.externalAuthTimeout) {
+      return;
+    }
+
+    clearTimeout(this.externalAuthTimeout);
+    this.externalAuthTimeout = undefined;
+  }
+
+  private cancelBunkerTimer(): void {
+    if (!this.bunkerAuthTimeout) {
+      return;
+    }
+
+    clearTimeout(this.bunkerAuthTimeout);
+    this.bunkerAuthTimeout = undefined;
   }
 }
 
 function resolveExternalAuthUri(instructions: ConnectionAttemptInstructions | null): string | null {
   return instructions?.authUrl ?? instructions?.launchUrl ?? instructions?.copyValue ?? null;
+}
+
+function isTimedOutFor(
+  state: AuthSessionState,
+  methodId: 'nip46-nostrconnect' | 'nip46-bunker'
+): boolean {
+  return state.status === 'timedOut' && state.methodId === methodId;
 }

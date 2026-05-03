@@ -32,6 +32,8 @@ interface SessionServiceMock {
   externalAuthUri: WritableSignal<string | null>;
   waitingForExternalAuth: WritableSignal<boolean>;
   waitingForBunkerAuth: WritableSignal<boolean>;
+  externalAuthTimedOut: WritableSignal<boolean>;
+  bunkerAuthTimedOut: WritableSignal<boolean>;
   connectWithExtension: ReturnType<typeof vi.fn>;
   connectWithPrivateKey: ReturnType<typeof vi.fn>;
   beginExternalAppLogin: ReturnType<typeof vi.fn>;
@@ -224,7 +226,7 @@ describe('AppAuthModalComponent', () => {
   it('displays retry button when external auth times out', async () => {
     session.externalAuthUri.set('nostrconnect://example');
     session.waitingForExternalAuth.set(true);
-    session.error.set('External app login timed out. Please try again.');
+    session.externalAuthTimedOut.set(true);
     fixture.detectChanges();
 
     clickButton(fixture, 'authModal.external.retry');
@@ -288,7 +290,7 @@ describe('AppAuthModalComponent', () => {
 
   it('retries bunker auth on timeout retry click', async () => {
     session.waitingForBunkerAuth.set(true);
-    session.error.set('Bunker login timed out. Please try again.');
+    session.bunkerAuthTimedOut.set(true);
     fixture.detectChanges();
 
     clickButton(fixture, 'authModal.bunker.retry');
@@ -308,6 +310,8 @@ function createSessionServiceMock(): SessionServiceMock {
     externalAuthUri: signal<string | null>(null),
     waitingForExternalAuth: signal(false),
     waitingForBunkerAuth: signal(false),
+    externalAuthTimedOut: signal(false),
+    bunkerAuthTimedOut: signal(false),
     connectWithExtension: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
     connectWithPrivateKey: vi.fn<(value: string) => Promise<boolean>>().mockResolvedValue(true),
     beginExternalAppLogin: vi.fn<() => Promise<string | null>>().mockImplementation(async () => {
@@ -318,13 +322,16 @@ function createSessionServiceMock(): SessionServiceMock {
     cancelExternalAppLogin: vi.fn<() => void>().mockImplementation(() => {
       session.externalAuthUri.set(null);
       session.waitingForExternalAuth.set(false);
+      session.externalAuthTimedOut.set(false);
     }),
     beginBunkerLogin: vi.fn<(token: string) => Promise<boolean>>().mockImplementation(async () => {
       session.waitingForBunkerAuth.set(true);
+      session.bunkerAuthTimedOut.set(false);
       return true;
     }),
     cancelBunkerLogin: vi.fn<() => void>().mockImplementation(() => {
       session.waitingForBunkerAuth.set(false);
+      session.bunkerAuthTimedOut.set(false);
     }),
     closeAuthModal: vi.fn<() => void>().mockImplementation(() => {
       session.authModalOpen.set(false);

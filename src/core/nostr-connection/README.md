@@ -7,6 +7,7 @@ Il ne cree pas de session backend: le frontend obtient un signer local, puis les
 ## Fichiers clefs
 
 - [ConnectionFacade](./application/connection-facade.ts)
+- [Auth session state model](./domain/auth-session-state.ts)
 - [ConnectionOrchestrator](./application/connection-orchestrator.ts)
 - [Default orchestrator wiring](./application/default-connection-orchestrator.ts)
 - [NIP-07 method](./application/nip07-connection-method.ts)
@@ -231,6 +232,11 @@ Points clefs :
 
 - normalisation pubkey hex + generation `npub` : [connection-session.ts](./domain/connection-session.ts)
 - detection de changement d'identite : `didConnectionIdentityChange(...)` dans le meme fichier
+- etat semantique partage de session/authentification : [auth-session-state.ts](./domain/auth-session-state.ts)
+
+Le modele `AuthSessionState` est la source semantique unique des etats de connexion dans le domaine `nostr-connection`.
+`ConnectionSession` reste la preuve d'une connexion valide cote signer, tandis que les donnees de profil (`SessionUser`)
+restent des donnees d'affichage/copie de contexte et ne prouvent pas, a elles seules, l'authentification active.
 
 ## Auth HTTP NIP-98
 

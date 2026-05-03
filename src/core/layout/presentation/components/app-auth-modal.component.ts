@@ -59,45 +59,47 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                   {{ 'authModal.external.body' | transloco }}
                 </p>
 
-                @if (session.externalAuthUri()) {
+                @if (session.externalAuthUri() || session.externalAuthTimedOut()) {
                   <div class="space-y-3">
-                    <a
-                      [href]="session.externalAuthUri()!"
-                      class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                      rel="noreferrer"
-                    >
-                      {{ 'authModal.external.open' | transloco }}
-                    </a>
-                    <button
-                      type="button"
-                      class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                      (click)="copyUri()"
-                    >
-                      {{
-                        (copied() ? 'authModal.external.copied' : 'authModal.external.copy')
-                          | transloco
-                      }}
-                    </button>
-                    @if (externalAuthQr()) {
-                      <div class="flex justify-center">
-                        <img
-                          [src]="externalAuthQr()!"
-                          alt="Nostr Connect QR code"
-                          class="border-[3px] border-[#0a0a0a] size-40"
-                        />
-                      </div>
+                    @if (session.externalAuthUri()) {
+                      <a
+                        [href]="session.externalAuthUri()!"
+                        class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                        rel="noreferrer"
+                      >
+                        {{ 'authModal.external.open' | transloco }}
+                      </a>
+                      <button
+                        type="button"
+                        class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
+                        (click)="copyUri()"
+                      >
+                        {{
+                          (copied() ? 'authModal.external.copied' : 'authModal.external.copy')
+                            | transloco
+                        }}
+                      </button>
+                      @if (externalAuthQr()) {
+                        <div class="flex justify-center">
+                          <img
+                            [src]="externalAuthQr()!"
+                            alt="Nostr Connect QR code"
+                            class="border-[3px] border-[#0a0a0a] size-40"
+                          />
+                        </div>
+                      }
+                      <p
+                        class="break-all border-[3px] border-[#0a0a0a] bg-[#FFE600]/10 px-3 py-2 text-xs text-[#0a0a0a]/70"
+                      >
+                        {{ session.externalAuthUri() }}
+                      </p>
                     }
-                    <p
-                      class="break-all border-[3px] border-[#0a0a0a] bg-[#FFE600]/10 px-3 py-2 text-xs text-[#0a0a0a]/70"
-                    >
-                      {{ session.externalAuthUri() }}
-                    </p>
                     @if (session.waitingForExternalAuth()) {
                       <p class="text-xs font-bold text-[#0a0a0a]/50">
                         {{ 'authModal.external.waiting' | transloco }}
                       </p>
                     }
-                    @if (session.error()?.includes('timed out')) {
+                    @if (session.externalAuthTimedOut()) {
                       <button
                         type="button"
                         class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
@@ -136,11 +138,13 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                   {{ 'authModal.bunker.body' | transloco }}
                 </p>
 
-                @if (session.waitingForBunkerAuth()) {
-                  <p class="text-xs font-bold text-[#0a0a0a]/50">
-                    {{ 'authModal.bunker.waiting' | transloco }}
-                  </p>
-                  @if (session.error()?.includes('timed out')) {
+                @if (session.waitingForBunkerAuth() || session.bunkerAuthTimedOut()) {
+                  @if (session.waitingForBunkerAuth()) {
+                    <p class="text-xs font-bold text-[#0a0a0a]/50">
+                      {{ 'authModal.bunker.waiting' | transloco }}
+                    </p>
+                  }
+                  @if (session.bunkerAuthTimedOut()) {
                     <button
                       type="button"
                       class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"

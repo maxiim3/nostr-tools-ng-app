@@ -38,6 +38,11 @@ describe('ConnectionFacade', () => {
     expect(attempt.instructions).toEqual({ copyValue: 'bunker://token' });
     expect(facade.currentAttempt()).toBe(attempt);
     expect(facade.error()).toBeNull();
+    expect(facade.authSessionState()).toEqual({
+      status: 'awaitingBunkerApproval',
+      methodId: 'nip46-bunker',
+      attemptId: 1,
+    });
   });
 
   it('cancels a previous attempt before starting a new one', async () => {
@@ -79,6 +84,7 @@ describe('ConnectionFacade', () => {
     expect(session).toEqual(connection.getSession());
     expect(facade.currentSession()).toEqual(connection.getSession());
     expect(facade.currentAttempt()).toBeNull();
+    expect(facade.authSessionState()).toEqual({ status: 'connected', session });
   });
 
   it('clears the current attempt when it is cancelled', async () => {
@@ -93,6 +99,33 @@ describe('ConnectionFacade', () => {
 
     expect(attempt.cancelCalls).toBe(1);
     expect(facade.currentAttempt()).toBeNull();
+    expect(facade.authSessionState()).toEqual({
+      status: 'cancelled',
+      methodId: 'nip07',
+      attemptId: 1,
+      reasonCode: 'approval_cancelled',
+    });
+  });
+
+  it('marks timed out when cancellation reason is timedOut', async () => {
+    const attempt = new FakeConnectionAttempt('nip46-nostrconnect', {
+      methodId: 'nip46-nostrconnect',
+      connection: new FakeActiveConnection({ methodId: 'nip46-nostrconnect' }),
+    });
+    const facade = createFacade([new FakeConnectionMethod({ id: 'nip46-nostrconnect', attempt })]);
+
+    await facade.startConnection('nip46-nostrconnect', { reason: 'interactive-login' });
+    await facade.cancelCurrentAttempt({
+      reason: 'timedOut',
+      attemptId: facade.getCurrentAttemptId(),
+    });
+
+    expect(facade.authSessionState()).toEqual({
+      status: 'timedOut',
+      methodId: 'nip46-nostrconnect',
+      attemptId: 1,
+      reasonCode: 'approval_timed_out',
+    });
   });
 
   it('disconnects the current session', async () => {
@@ -144,6 +177,10 @@ describe('ConnectionFacade', () => {
 
     expect(facade.error()).toBe('Unavailable.');
     expect(facade.currentAttempt()).toBeNull();
+    expect(facade.authSessionState()).toEqual({
+      status: 'recoverableRetry',
+      reasonCode: 'method_unavailable',
+    });
   });
 
   it('stores a domain error when attempt completion fails', async () => {
@@ -164,6 +201,10 @@ describe('ConnectionFacade', () => {
     expect(facade.error()).toBe('Rejected.');
     expect(facade.currentAttempt()).toBeNull();
     expect(facade.currentSession()).toBeNull();
+    expect(facade.authSessionState()).toEqual({
+      status: 'recoverableRetry',
+      reasonCode: 'user_rejected',
+    });
   });
 });
 

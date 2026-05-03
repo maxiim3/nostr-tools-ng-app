@@ -54,8 +54,19 @@ export class ConnectionOrchestrator {
     return method.start(request);
   }
 
-  async completeAttempt(attempt: ConnectionAttempt): Promise<ConnectionSession> {
+  async completeAttempt(
+    attempt: ConnectionAttempt,
+    shouldCommit: () => boolean = () => true
+  ): Promise<ConnectionSession> {
     const nextConnection = await attempt.complete();
+    if (!shouldCommit()) {
+      await nextConnection.disconnect();
+      throw new ConnectionDomainError(
+        'connection_failed',
+        'Connection attempt is no longer active.'
+      );
+    }
+
     const previousConnection = this.store.getCurrent();
 
     this.store.setCurrent(nextConnection);
