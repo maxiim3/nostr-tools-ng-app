@@ -53,6 +53,53 @@
       "show": "Show advanced methods",
       "hide": "Hide advanced methods",
       "description": "Advanced options for bunker and private-key fallback."
+    },
+    "status": {
+      "pending": {
+        "extension": {
+          "title": "Waiting for browser extension approval",
+          "body": "Approve the request in your browser extension to continue."
+        },
+        "external": {
+          "title": "Waiting for mobile signer approval",
+          "body": "Approve the request in your signer app to continue."
+        },
+        "bunker": {
+          "title": "Waiting for bunker approval",
+          "body": "Approve the request in your bunker signer to continue."
+        }
+      },
+      "recovery": {
+        "timeout": {
+          "title": "Approval timed out",
+          "body": "No response was received in time. Try again."
+        },
+        "cancelled": {
+          "title": "Approval was cancelled",
+          "body": "The request was cancelled before completion. You can retry."
+        },
+        "denied": {
+          "title": "Approval was denied",
+          "body": "Your signer refused the request. Retry or choose another method."
+        },
+        "expired": {
+          "title": "Connection expired",
+          "body": "Your previous authorization has expired. Reconnect to continue."
+        },
+        "revokedOrUnavailable": {
+          "title": "Reconnection required",
+          "body": "Your previous authorization is no longer available. Reconnect to continue."
+        },
+        "generic": {
+          "title": "Connection could not be completed",
+          "body": "Try again or choose another method."
+        }
+      },
+      "action": {
+        "retry": "Try again",
+        "reconnect": "Reconnect",
+        "chooseMethod": "Choose another method"
+      }
     }
   },
   "header": {

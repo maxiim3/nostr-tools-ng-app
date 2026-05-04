@@ -53,6 +53,53 @@
       "show": "Afficher les méthodes avancées",
       "hide": "Masquer les méthodes avancées",
       "description": "Options avancées pour bunker et secours par clé privée."
+    },
+    "status": {
+      "pending": {
+        "extension": {
+          "title": "En attente de l'approbation de l'extension navigateur",
+          "body": "Approuve la demande dans ton extension navigateur pour continuer."
+        },
+        "external": {
+          "title": "En attente de l'approbation de l'app mobile",
+          "body": "Approuve la demande dans ton app de signature pour continuer."
+        },
+        "bunker": {
+          "title": "En attente de l'approbation du bunker",
+          "body": "Approuve la demande dans ton signer bunker pour continuer."
+        }
+      },
+      "recovery": {
+        "timeout": {
+          "title": "Le délai d'approbation est dépassé",
+          "body": "Aucune réponse n'a été reçue à temps. Réessaie."
+        },
+        "cancelled": {
+          "title": "L'approbation a été annulée",
+          "body": "La demande a été annulée avant la fin. Tu peux réessayer."
+        },
+        "denied": {
+          "title": "L'approbation a été refusée",
+          "body": "Ton signer a refusé la demande. Réessaie ou choisis une autre méthode."
+        },
+        "expired": {
+          "title": "Connexion expirée",
+          "body": "Ton autorisation précédente a expiré. Reconnecte-toi pour continuer."
+        },
+        "revokedOrUnavailable": {
+          "title": "Reconnexion requise",
+          "body": "Ton autorisation précédente n'est plus disponible. Reconnecte-toi pour continuer."
+        },
+        "generic": {
+          "title": "La connexion n'a pas pu aboutir",
+          "body": "Réessaie ou choisis une autre méthode."
+        }
+      },
+      "action": {
+        "retry": "Réessayer",
+        "reconnect": "Reconnecter",
+        "chooseMethod": "Choisir une autre méthode"
+      }
     }
   },
   "header": {

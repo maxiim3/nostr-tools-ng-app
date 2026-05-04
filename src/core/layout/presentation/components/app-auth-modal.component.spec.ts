@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
+import type { AuthSessionState } from '../../../nostr-connection/domain/auth-session-state';
 import { AppAuthModalComponent } from './app-auth-modal.component';
 
 const { toDataUrlMock } = vi.hoisted(() => ({
@@ -34,6 +35,7 @@ interface SessionServiceMock {
   waitingForBunkerAuth: WritableSignal<boolean>;
   externalAuthTimedOut: WritableSignal<boolean>;
   bunkerAuthTimedOut: WritableSignal<boolean>;
+  authSessionState: WritableSignal<AuthSessionState>;
   connectWithExtension: ReturnType<typeof vi.fn>;
   connectWithPrivateKey: ReturnType<typeof vi.fn>;
   beginExternalAppLogin: ReturnType<typeof vi.fn>;
@@ -41,6 +43,7 @@ interface SessionServiceMock {
   beginBunkerLogin: ReturnType<typeof vi.fn>;
   cancelBunkerLogin: ReturnType<typeof vi.fn>;
   closeAuthModal: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
 }
 
 describe('AppAuthModalComponent', () => {
@@ -132,6 +135,135 @@ describe('AppAuthModalComponent', () => {
     expect(link).not.toBeNull();
     expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
     expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.pending.external.body');
+  });
+
+  it('shows extension pending guidance from authSessionState', () => {
+    session.authSessionState.set({ status: 'awaitingPermission', methodId: 'nip07', attemptId: 1 });
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('[role="status"]') as HTMLElement | null;
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.pending.extension.title');
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.action.chooseMethod');
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+    expect(status?.getAttribute('aria-atomic')).toBe('true');
+  });
+
+  it('choose another method cancels extension pending state', async () => {
+    session.authSessionState.set({ status: 'awaitingPermission', methodId: 'nip07', attemptId: 1 });
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.status.action.chooseMethod');
+    await fixture.whenStable();
+
+    expect(session.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows denied recovery guidance instead of raw error text for user rejection', () => {
+    session.authSessionState.set({ status: 'recoverableRetry', reasonCode: 'user_rejected' });
+    session.error.set('Signer rejected the connection.');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.recovery.denied.title');
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.action.retry');
+    expect(fixture.nativeElement.textContent).not.toContain('Signer rejected the connection.');
+  });
+
+  it('retries extension auth after user rejection', async () => {
+    await component['loginWithExtension']();
+    session.authSessionState.set({ status: 'recoverableRetry', reasonCode: 'user_rejected' });
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.status.action.retry');
+    await fixture.whenStable();
+
+    expect(session.connectWithExtension).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows reconnect guidance for expired state', () => {
+    session.authSessionState.set({ status: 'expired', reasonCode: 'authorization_expired' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.recovery.expired.title');
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.action.reconnect');
+  });
+
+  it('shows reconnect guidance for revoked or unavailable state', () => {
+    session.authSessionState.set({
+      status: 'revokedOrUnavailable',
+      reasonCode: 'authorization_revoked_or_unavailable',
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'authModal.status.recovery.revokedOrUnavailable.title'
+    );
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.action.reconnect');
+  });
+
+  it('shows bunker pending guidance while advanced recovery remains reachable', () => {
+    session.authSessionState.set({
+      status: 'awaitingBunkerApproval',
+      methodId: 'nip46-bunker',
+      attemptId: 1,
+    });
+    session.waitingForBunkerAuth.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('authModal.status.pending.bunker.title');
+    expect(fixture.nativeElement.textContent).toContain('authModal.bunker.cancel');
+    expect(fixture.nativeElement.querySelector('#auth-modal-advanced-options')?.hidden).toBe(false);
+  });
+
+  it('retries external signer auth from timed out authSessionState', async () => {
+    session.authSessionState.set({
+      status: 'timedOut',
+      methodId: 'nip46-nostrconnect',
+      attemptId: 1,
+      reasonCode: 'approval_timed_out',
+    });
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.status.action.retry');
+    await fixture.whenStable();
+
+    expect(session.beginExternalAppLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries bunker auth with the previous token after timeout', async () => {
+    component['bunkerTokenControl'].setValue('bunker://abc?relay=wss://relay.example.com');
+    await component['submitBunker']();
+    session.authSessionState.set({
+      status: 'timedOut',
+      methodId: 'nip46-bunker',
+      attemptId: 1,
+      reasonCode: 'approval_timed_out',
+    });
+    session.waitingForBunkerAuth.set(false);
+    session.bunkerAuthTimedOut.set(true);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.status.action.retry');
+    await fixture.whenStable();
+
+    expect(session.beginBunkerLogin).toHaveBeenLastCalledWith(
+      'bunker://abc?relay=wss://relay.example.com'
+    );
+    expect(session.beginBunkerLogin).toHaveBeenCalledTimes(2);
+  });
+
+  it('reconnect action disconnects session', async () => {
+    session.authSessionState.set({
+      status: 'revokedOrUnavailable',
+      reasonCode: 'authorization_revoked_or_unavailable',
+    });
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.status.action.reconnect');
+    await fixture.whenStable();
+
+    expect(session.disconnect).toHaveBeenCalledTimes(1);
   });
 
   it('shows primary extension and external actions while advanced methods are hidden by default', () => {
@@ -358,6 +490,14 @@ describe('AppAuthModalComponent', () => {
   });
 
   it('retries bunker auth on timeout retry click', async () => {
+    component['bunkerTokenControl'].setValue('bunker://abc?relay=wss://relay.example.com');
+    await component['submitBunker']();
+    session.authSessionState.set({
+      status: 'timedOut',
+      methodId: 'nip46-bunker',
+      attemptId: 1,
+      reasonCode: 'approval_timed_out',
+    });
     session.waitingForBunkerAuth.set(true);
     session.bunkerAuthTimedOut.set(true);
     fixture.detectChanges();
@@ -366,7 +506,10 @@ describe('AppAuthModalComponent', () => {
     await fixture.whenStable();
 
     expect(session.cancelBunkerLogin).toHaveBeenCalledTimes(1);
-    expect(session.beginBunkerLogin).toHaveBeenCalledTimes(1);
+    expect(session.beginBunkerLogin).toHaveBeenLastCalledWith(
+      'bunker://abc?relay=wss://relay.example.com'
+    );
+    expect(session.beginBunkerLogin).toHaveBeenCalledTimes(2);
   });
 
   it('renders translated private-key action and input label', () => {
@@ -416,30 +559,54 @@ function createSessionServiceMock(): SessionServiceMock {
     waitingForBunkerAuth: signal(false),
     externalAuthTimedOut: signal(false),
     bunkerAuthTimedOut: signal(false),
+    authSessionState: signal<AuthSessionState>({ status: 'disconnected' }),
     connectWithExtension: vi.fn<() => Promise<boolean>>().mockResolvedValue(true),
     connectWithPrivateKey: vi.fn<(value: string) => Promise<boolean>>().mockResolvedValue(true),
     beginExternalAppLogin: vi.fn<() => Promise<string | null>>().mockImplementation(async () => {
+      session.authSessionState.set({
+        status: 'awaitingExternalSignerApproval',
+        methodId: 'nip46-nostrconnect',
+        attemptId: 1,
+      });
       session.externalAuthUri.set('nostrconnect://example');
       session.waitingForExternalAuth.set(true);
       return 'nostrconnect://example';
     }),
     cancelExternalAppLogin: vi.fn<() => void>().mockImplementation(() => {
+      session.authSessionState.set({
+        status: 'cancelled',
+        methodId: 'nip46-nostrconnect',
+        attemptId: 1,
+        reasonCode: 'approval_cancelled',
+      });
       session.externalAuthUri.set(null);
       session.waitingForExternalAuth.set(false);
       session.externalAuthTimedOut.set(false);
     }),
     beginBunkerLogin: vi.fn<(token: string) => Promise<boolean>>().mockImplementation(async () => {
+      session.authSessionState.set({
+        status: 'awaitingBunkerApproval',
+        methodId: 'nip46-bunker',
+        attemptId: 1,
+      });
       session.waitingForBunkerAuth.set(true);
       session.bunkerAuthTimedOut.set(false);
       return true;
     }),
     cancelBunkerLogin: vi.fn<() => void>().mockImplementation(() => {
+      session.authSessionState.set({
+        status: 'cancelled',
+        methodId: 'nip46-bunker',
+        attemptId: 1,
+        reasonCode: 'approval_cancelled',
+      });
       session.waitingForBunkerAuth.set(false);
       session.bunkerAuthTimedOut.set(false);
     }),
     closeAuthModal: vi.fn<() => void>().mockImplementation(() => {
       session.authModalOpen.set(false);
     }),
+    disconnect: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
   } satisfies SessionServiceMock;
 
   return session;

@@ -1,9 +1,18 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import QRCode from 'qrcode';
 
 import { NostrSessionService } from '../../../nostr/application/nostr-session.service';
+import type { AuthSessionState } from '../../../nostr-connection/domain/auth-session-state';
+import type { ConnectionMethodId } from '../../../nostr-connection/domain/connection-method-id';
 
 @Component({
   selector: 'app-auth-modal',
@@ -29,7 +38,44 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
               </p>
             </div>
 
-            @if (session.error()) {
+            @if (modalStatus(); as status) {
+              <div
+                class="rounded-box border-[3px] border-[#0a0a0a] bg-[#FFE600]/10 px-4 py-3"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <p class="text-sm font-bold text-[#0a0a0a]">{{ status.titleKey | transloco }}</p>
+                <p class="mt-1 text-sm text-[#0a0a0a]/70">{{ status.bodyKey | transloco }}</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @if (status.action === 'retry-current') {
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="retryCurrentMethod()"
+                    >
+                      {{ 'authModal.status.action.retry' | transloco }}
+                    </button>
+                  }
+                  @if (status.action === 'reconnect') {
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="reconnect()">
+                      {{ 'authModal.status.action.reconnect' | transloco }}
+                    </button>
+                  }
+                  @if (status.action === 'choose-method') {
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      (click)="chooseAnotherMethod()"
+                    >
+                      {{ 'authModal.status.action.chooseMethod' | transloco }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (showRawError()) {
               <div
                 class="border-[3px] border-error bg-error/10 px-4 py-3 text-sm font-bold text-error"
               >
@@ -182,7 +228,7 @@ import { NostrSessionService } from '../../../nostr/application/nostr-session.se
                         <button
                           type="button"
                           class="btn btn-secondary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                          (click)="cancelBunker(); submitBunker()"
+                          (click)="cancelBunker({ clearToken: false }); retryCurrentMethod()"
                         >
                           {{ 'authModal.bunker.retry' | transloco }}
                         </button>
@@ -273,6 +319,14 @@ export class AppAuthModalComponent {
   protected readonly copied = signal(false);
   protected readonly externalAuthQr = signal<string | null>(null);
   protected readonly advancedOptionsOpen = signal(false);
+  private readonly lastAttemptedMethod = signal<AuthRetryMethod | null>(null);
+  private readonly lastBunkerToken = signal('');
+  protected readonly modalStatus = computed(() =>
+    resolveModalStatus(this.session.authSessionState())
+  );
+  protected readonly showRawError = computed(
+    () => this.session.error() !== null && this.modalStatus() === null
+  );
   private externalAuthQrRequestId = 0;
 
   constructor() {
@@ -289,6 +343,7 @@ export class AppAuthModalComponent {
     this.copied.set(false);
     this.externalAuthQr.set(null);
     this.advancedOptionsOpen.set(false);
+    this.lastBunkerToken.set('');
 
     if (this.session.externalAuthUri() || this.session.waitingForExternalAuth()) {
       this.session.cancelExternalAppLogin();
@@ -314,6 +369,7 @@ export class AppAuthModalComponent {
   }
 
   protected async loginWithExtension(): Promise<void> {
+    this.lastAttemptedMethod.set('nip07');
     await this.session.connectWithExtension();
     this.privateKeyControl.setValue('');
     this.privateKeyControl.markAsPristine();
@@ -326,6 +382,7 @@ export class AppAuthModalComponent {
   }
 
   protected async startExternalApp(): Promise<void> {
+    this.lastAttemptedMethod.set('nip46-nostrconnect');
     const uri = await this.session.beginExternalAppLogin();
     this.copied.set(false);
 
@@ -344,15 +401,84 @@ export class AppAuthModalComponent {
 
   protected async submitBunker(): Promise<void> {
     const token = this.bunkerTokenControl.getRawValue();
+    this.lastAttemptedMethod.set('nip46-bunker');
+    this.lastBunkerToken.set(token);
     this.bunkerTokenControl.setValue('');
     this.bunkerTokenControl.markAsPristine();
     await this.session.beginBunkerLogin(token);
   }
 
-  protected cancelBunker(): void {
+  protected cancelBunker(options: { clearToken?: boolean } = { clearToken: true }): void {
+    if (options.clearToken !== false) {
+      this.lastBunkerToken.set('');
+    }
     this.bunkerTokenControl.setValue('');
     this.bunkerTokenControl.markAsPristine();
     this.session.cancelBunkerLogin();
+  }
+
+  protected async chooseAnotherMethod(): Promise<void> {
+    const state = this.session.authSessionState();
+
+    if (this.session.waitingForExternalAuth() || this.session.externalAuthUri()) {
+      this.cancelExternalApp();
+    }
+
+    if (this.session.waitingForBunkerAuth()) {
+      this.cancelBunker({ clearToken: true });
+    }
+
+    if (state.status === 'awaitingPermission' && state.methodId === 'nip07') {
+      await this.session.disconnect();
+    }
+
+    this.copied.set(false);
+    this.externalAuthQr.set(null);
+  }
+
+  protected async reconnect(): Promise<void> {
+    await this.session.disconnect();
+  }
+
+  protected async retryCurrentMethod(): Promise<void> {
+    const state = this.session.authSessionState();
+    if (state.status === 'timedOut' || state.status === 'cancelled') {
+      await this.retryMethod(state.methodId);
+      return;
+    }
+
+    if (state.status === 'recoverableRetry' && state.reasonCode === 'user_rejected') {
+      await this.retryMethod(this.lastAttemptedMethod());
+      return;
+    }
+
+    if (state.status === 'recoverableRetry') {
+      if (this.session.waitingForExternalAuth() || this.session.externalAuthUri()) {
+        await this.startExternalApp();
+      }
+    }
+  }
+
+  private async retryMethod(methodId: ConnectionMethodId | null): Promise<void> {
+    if (methodId === 'nip07') {
+      await this.loginWithExtension();
+      return;
+    }
+
+    if (methodId === 'nip46-nostrconnect') {
+      await this.startExternalApp();
+      return;
+    }
+
+    if (methodId === 'nip46-bunker') {
+      const token = this.lastBunkerToken();
+      if (!token) {
+        return;
+      }
+
+      this.lastAttemptedMethod.set('nip46-bunker');
+      await this.session.beginBunkerLogin(token);
+    }
   }
 
   protected copyUri(): void {
@@ -391,4 +517,89 @@ export class AppAuthModalComponent {
 
     this.externalAuthQr.set(qr);
   }
+}
+
+type ModalStatusAction = 'retry-current' | 'reconnect' | 'choose-method';
+type AuthRetryMethod = 'nip07' | 'nip46-nostrconnect' | 'nip46-bunker';
+
+interface ModalStatus {
+  titleKey: string;
+  bodyKey: string;
+  action: ModalStatusAction;
+}
+
+function resolveModalStatus(state: AuthSessionState): ModalStatus | null {
+  if (state.status === 'awaitingPermission' && state.methodId === 'nip07') {
+    return {
+      titleKey: 'authModal.status.pending.extension.title',
+      bodyKey: 'authModal.status.pending.extension.body',
+      action: 'choose-method',
+    };
+  }
+
+  if (state.status === 'awaitingExternalSignerApproval') {
+    return {
+      titleKey: 'authModal.status.pending.external.title',
+      bodyKey: 'authModal.status.pending.external.body',
+      action: 'choose-method',
+    };
+  }
+
+  if (state.status === 'awaitingBunkerApproval') {
+    return {
+      titleKey: 'authModal.status.pending.bunker.title',
+      bodyKey: 'authModal.status.pending.bunker.body',
+      action: 'choose-method',
+    };
+  }
+
+  if (state.status === 'timedOut') {
+    return {
+      titleKey: 'authModal.status.recovery.timeout.title',
+      bodyKey: 'authModal.status.recovery.timeout.body',
+      action: 'retry-current',
+    };
+  }
+
+  if (state.status === 'cancelled') {
+    return {
+      titleKey: 'authModal.status.recovery.cancelled.title',
+      bodyKey: 'authModal.status.recovery.cancelled.body',
+      action: 'retry-current',
+    };
+  }
+
+  if (state.status === 'recoverableRetry' && state.reasonCode === 'user_rejected') {
+    return {
+      titleKey: 'authModal.status.recovery.denied.title',
+      bodyKey: 'authModal.status.recovery.denied.body',
+      action: 'retry-current',
+    };
+  }
+
+  if (state.status === 'expired') {
+    return {
+      titleKey: 'authModal.status.recovery.expired.title',
+      bodyKey: 'authModal.status.recovery.expired.body',
+      action: 'reconnect',
+    };
+  }
+
+  if (state.status === 'revokedOrUnavailable') {
+    return {
+      titleKey: 'authModal.status.recovery.revokedOrUnavailable.title',
+      bodyKey: 'authModal.status.recovery.revokedOrUnavailable.body',
+      action: 'reconnect',
+    };
+  }
+
+  if (state.status === 'recoverableRetry' || state.status === 'failed') {
+    return {
+      titleKey: 'authModal.status.recovery.generic.title',
+      bodyKey: 'authModal.status.recovery.generic.body',
+      action: 'choose-method',
+    };
+  }
+
+  return null;
 }

@@ -53,6 +53,53 @@
       "show": "Mostrar métodos avanzados",
       "hide": "Ocultar métodos avanzados",
       "description": "Opciones avanzadas para bunker y respaldo con clave privada."
+    },
+    "status": {
+      "pending": {
+        "extension": {
+          "title": "Esperando aprobación de la extensión del navegador",
+          "body": "Aprueba la solicitud en tu extensión del navegador para continuar."
+        },
+        "external": {
+          "title": "Esperando aprobación de la app móvil",
+          "body": "Aprueba la solicitud en tu app firmante para continuar."
+        },
+        "bunker": {
+          "title": "Esperando aprobación del bunker",
+          "body": "Aprueba la solicitud en tu firmante bunker para continuar."
+        }
+      },
+      "recovery": {
+        "timeout": {
+          "title": "Se agotó el tiempo de aprobación",
+          "body": "No se recibió respuesta a tiempo. Inténtalo de nuevo."
+        },
+        "cancelled": {
+          "title": "La aprobación fue cancelada",
+          "body": "La solicitud se canceló antes de completarse. Puedes reintentar."
+        },
+        "denied": {
+          "title": "La aprobación fue rechazada",
+          "body": "Tu firmante rechazó la solicitud. Reintenta o elige otro método."
+        },
+        "expired": {
+          "title": "La conexión expiró",
+          "body": "Tu autorización anterior ha expirado. Reconéctate para continuar."
+        },
+        "revokedOrUnavailable": {
+          "title": "Se requiere reconexión",
+          "body": "Tu autorización anterior ya no está disponible. Reconéctate para continuar."
+        },
+        "generic": {
+          "title": "No se pudo completar la conexión",
+          "body": "Inténtalo de nuevo o elige otro método."
+        }
+      },
+      "action": {
+        "retry": "Intentar de nuevo",
+        "reconnect": "Reconectar",
+        "chooseMethod": "Elegir otro método"
+      }
     }
   },
   "header": {
