@@ -22,12 +22,12 @@
       "title": "Aplicación externa",
       "body": "Recomendado en móvil. Abre tu app firmante y aprueba la solicitud.",
       "cta": "Generar enlace",
-      "open": "Abrir app",
+      "open": "Abrir o reabrir app",
       "copy": "Copiar enlace",
       "copied": "Enlace copiado",
       "recommendedMobile": "Recomendado en móvil",
       "qrAlt": "Escanea para abrir tu app firmante",
-      "waiting": "Esperando aprobación en tu app...",
+      "waiting": "Aprueba en tu app firmante y vuelve a Toolstr.",
       "cancel": "Cancelar",
       "timeout": "La conexión expiró. Inténtalo de nuevo.",
       "authRequired": "Se requiere autenticación para continuar.",
@@ -62,7 +62,7 @@
         },
         "external": {
           "title": "Esperando aprobación de la app móvil",
-          "body": "Aprueba la solicitud en tu app firmante para continuar."
+          "body": "Aprueba la solicitud en tu app firmante y vuelve a Toolstr para terminar."
         },
         "bunker": {
           "title": "Esperando aprobación del bunker",

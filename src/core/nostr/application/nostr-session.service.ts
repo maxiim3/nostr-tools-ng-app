@@ -204,6 +204,7 @@ export class NostrSessionService {
   }
 
   cancelExternalAppLogin(): void {
+    this.currentAuthOperationId++;
     void this.facade.cancelCurrentAttempt().catch(() => undefined);
     this.clearExternalInstructionsSubscription();
     this.externalAuthUri.set(null);
@@ -292,6 +293,13 @@ export class NostrSessionService {
       this.waitingForExternalAuth.set(false);
       this.cancelExternalTimer();
       await this.applySessionForDisplay(session, operationId);
+      if (
+        attemptId !== this.currentExternalAttemptId ||
+        operationId !== this.currentAuthOperationId
+      ) {
+        return;
+      }
+
       this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
@@ -315,6 +323,7 @@ export class NostrSessionService {
     }
 
     this.currentExternalAttemptId++;
+    this.currentAuthOperationId++;
     this.clearExternalInstructionsSubscription();
     this.externalAuthUri.set(null);
     this.waitingForExternalAuth.set(false);

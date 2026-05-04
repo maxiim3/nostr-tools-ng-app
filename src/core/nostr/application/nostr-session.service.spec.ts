@@ -380,6 +380,46 @@ describe('NostrSessionService', () => {
     expect(session.error()).toBeNull();
   });
 
+  it('keeps a cancelled mobile return completion from setting user display state', async () => {
+    const connectionSession = createFakeSession(
+      sessionUser.pubkey,
+      sessionUser.npub,
+      'nip46-nostrconnect'
+    );
+    const completionDeferred = createDeferred<ConnectionSession>();
+    const signerApplyDeferred = createDeferred<void>();
+
+    facadeState.startConnectionResult = createFakeAttempt('nip46-nostrconnect', {
+      launchUrl: 'nostrconnect://mobile-return',
+    });
+    facadeState.completeFn = () => completionDeferred.promise;
+    facadeState.ndkSignerValue = {} as never;
+    client.applyNdkSigner.mockImplementation(() => signerApplyDeferred.promise);
+
+    const session = createService();
+    session.openAuthModal();
+
+    await session.beginExternalAppLogin();
+    await flushAsync();
+    expect(session.externalAuthUri()).toBe('nostrconnect://mobile-return');
+    expect(session.waitingForExternalAuth()).toBe(true);
+    expect(session.authSessionState().status).toBe('awaitingExternalSignerApproval');
+
+    facadeState.currentSession = connectionSession;
+    completionDeferred.resolve(connectionSession);
+    await flushAsync();
+    expect(client.applyNdkSigner).toHaveBeenCalledTimes(1);
+
+    session.cancelExternalAppLogin();
+    signerApplyDeferred.resolve();
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+    expect(session.authModalOpen()).toBe(true);
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+  });
+
   it('updates the external auth URI when the active attempt publishes a new auth URL', async () => {
     let notifyInstructions:
       | ((instructions: ConnectionAttemptInstructions | null) => void)

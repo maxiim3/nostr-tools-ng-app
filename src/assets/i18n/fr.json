@@ -22,12 +22,12 @@
       "title": "Application externe",
       "body": "Recommandé sur mobile. Ouvre ton app de signature et approuve la demande.",
       "cta": "Générer le lien",
-      "open": "Ouvrir l'app",
+      "open": "Ouvrir ou rouvrir l'app",
       "copy": "Copier le lien",
       "copied": "Lien copié",
       "recommendedMobile": "Recommandé sur mobile",
       "qrAlt": "Scanne pour ouvrir ton application de signature",
-      "waiting": "En attente d'approbation dans ton application...",
+      "waiting": "Approuve dans ton app de signature, puis reviens sur Toolstr.",
       "cancel": "Annuler",
       "timeout": "La connexion a expiré. Réessaie.",
       "authRequired": "Une authentification est nécessaire pour continuer.",
@@ -62,7 +62,7 @@
         },
         "external": {
           "title": "En attente de l'approbation de l'app mobile",
-          "body": "Approuve la demande dans ton app de signature pour continuer."
+          "body": "Approuve la demande dans ton app de signature, puis reviens sur Toolstr pour terminer."
         },
         "bunker": {
           "title": "En attente de l'approbation du bunker",

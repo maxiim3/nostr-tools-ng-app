@@ -22,12 +22,12 @@
       "title": "External app",
       "body": "Best on mobile. Open your signer app and approve the request.",
       "cta": "Generate link",
-      "open": "Open app",
+      "open": "Open or reopen app",
       "copy": "Copy link",
       "copied": "Link copied",
       "recommendedMobile": "Recommended on mobile",
       "qrAlt": "Scan to open your signer app",
-      "waiting": "Waiting for approval in your app...",
+      "waiting": "Approve in your signer app, then return to Toolstr.",
       "cancel": "Cancel",
       "timeout": "The connection timed out. Please try again.",
       "authRequired": "Authentication is required to continue.",
@@ -62,7 +62,7 @@
         },
         "external": {
           "title": "Waiting for mobile signer approval",
-          "body": "Approve the request in your signer app to continue."
+          "body": "Approve the request in your signer app, then return to Toolstr to finish."
         },
         "bunker": {
           "title": "Waiting for bunker approval",
