@@ -99,6 +99,11 @@ export class NostrSessionService {
 
   async connectWithExtension(): Promise<boolean> {
     const operationId = ++this.currentAuthOperationId;
+    this.currentExternalAttemptId++;
+    this.clearExternalInstructionsSubscription();
+    this.externalAuthUri.set(null);
+    this.waitingForExternalAuth.set(false);
+    this.cancelExternalTimer();
     const methods = await this.facade.refreshAvailableMethods();
     this.extensionAvailable.set(methods.includes('nip07'));
 
@@ -166,7 +171,7 @@ export class NostrSessionService {
   }
 
   async beginExternalAppLogin(): Promise<string | null> {
-    this.currentAuthOperationId++;
+    const operationId = ++this.currentAuthOperationId;
     this.error.set(null);
     this.facade.clearError();
     this.cancelBunkerTimer();
@@ -181,7 +186,13 @@ export class NostrSessionService {
         reason: 'interactive-login',
       });
 
-      if (attemptId !== this.currentExternalAttemptId) {
+      if (
+        attemptId !== this.currentExternalAttemptId ||
+        operationId !== this.currentAuthOperationId
+      ) {
+        await this.facade
+          .cancelCurrentAttempt({ attemptId: this.facade.getCurrentAttemptId() })
+          .catch(() => undefined);
         return null;
       }
 
@@ -284,7 +295,11 @@ export class NostrSessionService {
 
     try {
       const session = await this.facade.completeCurrentAttempt();
-      if (attemptId !== this.currentExternalAttemptId) {
+      if (
+        attemptId !== this.currentExternalAttemptId ||
+        operationId !== this.currentAuthOperationId
+      ) {
+        await this.clearStaleFacadeSession(session);
         return;
       }
 
@@ -297,6 +312,7 @@ export class NostrSessionService {
         attemptId !== this.currentExternalAttemptId ||
         operationId !== this.currentAuthOperationId
       ) {
+        await this.clearStaleFacadeSession(session);
         return;
       }
 
@@ -465,11 +481,12 @@ export class NostrSessionService {
   }
 
   private async clearStaleFacadeSession(session: ConnectionSession): Promise<void> {
-    if (this.facade.currentSession()?.pubkeyHex !== session.pubkeyHex) {
+    if (this.facade.currentSession() !== session) {
       return;
     }
 
     await this.facade.disconnect().catch(() => undefined);
+    await this.client.clearSigner().catch(() => undefined);
   }
 }
 

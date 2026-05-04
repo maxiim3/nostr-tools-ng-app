@@ -134,6 +134,7 @@ describe('AppAuthModalComponent', () => {
 
     expect(link).not.toBeNull();
     expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(fixture.nativeElement.textContent).toContain('authModal.external.open');
     expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
     expect(fixture.nativeElement.textContent).toContain('authModal.status.pending.external.body');
   });

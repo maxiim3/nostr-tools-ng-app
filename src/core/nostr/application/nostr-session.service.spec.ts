@@ -415,9 +415,13 @@ describe('NostrSessionService', () => {
     await flushAsync();
 
     expect(session.user()).toBeNull();
+    expect(session.isAuthenticated()).toBe(false);
     expect(session.authModalOpen()).toBe(true);
     expect(session.externalAuthUri()).toBeNull();
     expect(session.waitingForExternalAuth()).toBe(false);
+    expect(facadeState.currentSession).toBeNull();
+    expect(facadeState.disconnectCalls).toBe(1);
+    expect(client.clearSigner).toHaveBeenCalledTimes(1);
   });
 
   it('updates the external auth URI when the active attempt publishes a new auth URL', async () => {
@@ -520,6 +524,8 @@ describe('NostrSessionService', () => {
     await flushAsync();
 
     expect(session.user()).toBeNull();
+    expect(session.externalAuthUri()).toBe('nostrconnect://example2');
+    expect(session.waitingForExternalAuth()).toBe(true);
 
     facadeState.currentSession = session2;
     deferred2.resolve(session2);
@@ -529,6 +535,32 @@ describe('NostrSessionService', () => {
     expect(session.authModalOpen()).toBe(false);
     expect(session.externalAuthUri()).toBeNull();
     expect(session.waitingForExternalAuth()).toBe(false);
+  });
+
+  it('cancels an external attempt that resolves after the user cancelled pending startup', async () => {
+    const startDeferred = createDeferred<ConnectionAttempt>();
+    facadeState.startConnectionFn = () => startDeferred.promise;
+
+    const session = createService();
+
+    const loginPromise = session.beginExternalAppLogin();
+    await flushAsync();
+
+    session.cancelExternalAppLogin();
+
+    startDeferred.resolve(
+      createFakeAttempt('nip46-nostrconnect', {
+        launchUrl: 'nostrconnect://late-start',
+      })
+    );
+    const uri = await loginPromise;
+    await flushAsync();
+
+    expect(uri).toBeNull();
+    expect(facadeState.cancelCalls).toBeGreaterThanOrEqual(1);
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+    expect(session.authSessionState().status).toBe('cancelled');
   });
 
   it('times out external auth and invalidates the timed out attempt', async () => {
@@ -947,6 +979,7 @@ interface FacadeState {
   currentSession: ConnectionSession | null;
   ndkSignerValue: unknown;
   startConnectionResult: ConnectionAttempt | null;
+  startConnectionFn: ((methodId: string, req: unknown) => Promise<ConnectionAttempt>) | null;
   startConnectionError: Error | null;
   startConnectionCalls: unknown[][];
   completeResult: ConnectionSession | null;
@@ -967,6 +1000,7 @@ function createFacadeState(): FacadeState {
     currentSession: null,
     ndkSignerValue: null,
     startConnectionResult: null,
+    startConnectionFn: null,
     startConnectionError: null,
     startConnectionCalls: [],
     completeResult: null,
@@ -1017,7 +1051,10 @@ function createFacadeProxy(state: FacadeState) {
       .mockImplementation(async (methodId, req) => {
         state.startConnectionCalls.push([methodId, req]);
         if (state.startConnectionError) throw state.startConnectionError;
-        if (!state.startConnectionResult) throw new Error('startConnection not configured');
+        const attempt = state.startConnectionFn
+          ? await state.startConnectionFn(methodId, req)
+          : state.startConnectionResult;
+        if (!attempt) throw new Error('startConnection not configured');
         state.currentFacadeAttemptId++;
         state.currentFacadeAttemptMethodId = methodId;
         if (methodId === 'nip46-nostrconnect') {
@@ -1033,7 +1070,7 @@ function createFacadeProxy(state: FacadeState) {
             attemptId: state.currentFacadeAttemptId,
           });
         }
-        return state.startConnectionResult;
+        return attempt;
       }),
     completeCurrentAttempt: vi
       .fn<() => Promise<ConnectionSession>>()

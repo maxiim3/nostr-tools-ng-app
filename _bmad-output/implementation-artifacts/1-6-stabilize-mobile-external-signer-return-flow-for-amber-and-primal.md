@@ -1,6 +1,6 @@
 # Story 1.6: Stabilize Mobile External Signer Return Flow for Amber and Primal
 
-Status: review
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -47,6 +47,14 @@ so that mobile authentication feels stable instead of fragile.
   - [x] Run `bun run typecheck`.
   - [x] Run `bun run test`.
   - [x] Run `bun run check` if practical before moving the story to review.
+
+### Review Findings
+
+- [ ] [Review][Patch] Complete Amber/Primal real-device validation before story completion — AC2 and AC3 require app-specific limitations and manual validation notes when validation is performed, but `docs/auth/mobile-auth-notes.md` marks every Amber and Primal scenario and limitation as `Pending manual verification`. User decision: perform device validation before completion and keep this story open until Amber/Primal results are recorded.
+- [x] [Review][Patch] Stale cancelled completion can still leave the underlying signer or facade authenticated [src/core/nostr/application/nostr-session.service.ts:286]
+- [x] [Review][Patch] Stale external start can overwrite a newer auth flow [src/core/nostr/application/nostr-session.service.ts:168]
+- [x] [Review][Patch] Cancelling while external start is still pending can leak a live facade attempt [src/core/nostr/application/nostr-session.service.ts:180]
+- [x] [Review][Patch] UI copy changed without corresponding modal-copy/component assertions [src/assets/i18n/fr.json:22]
 
 ## Dev Notes
 
