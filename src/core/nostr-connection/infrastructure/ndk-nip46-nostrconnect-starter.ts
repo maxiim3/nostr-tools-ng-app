@@ -5,26 +5,16 @@ import { DEFAULT_RELAY_URLS } from '../../nostr/infrastructure/relay.config';
 import type { ConnectionAttemptInstructions } from '../domain/connection-attempt';
 import type { ConnectionCapability } from '../domain/connection-capability';
 import { ConnectionDomainError } from '../domain/connection-errors';
+import {
+  NIP46_MINIMUM_CAPABILITIES,
+  NIP46_MINIMUM_STARTUP_PERMS_STRING,
+} from '../domain/nip46-permission-policy';
 import type { Nip46AttemptHandle, Nip46NostrconnectStarter } from './nip46-nostrconnect-starter';
 import { subscribeToNdkNip46AuthUrl, waitForNdkNip46SignerReady } from './ndk-nip46-shared';
 
-const DEFAULT_NOSTRCONNECT_CAPABILITIES: readonly ConnectionCapability[] = [
-  'sign-event',
-  'nip98-auth',
-  'nip04-encrypt',
-  'nip04-decrypt',
-  'nip44-encrypt',
-  'nip44-decrypt',
-];
+const DEFAULT_NOSTRCONNECT_CAPABILITIES = NIP46_MINIMUM_CAPABILITIES;
 
-const DEFAULT_NOSTRCONNECT_PERMS = [
-  'get_public_key',
-  'sign_event',
-  'nip04_encrypt',
-  'nip04_decrypt',
-  'nip44_encrypt',
-  'nip44_decrypt',
-].join(',');
+const DEFAULT_NOSTRCONNECT_PERMS = NIP46_MINIMUM_STARTUP_PERMS_STRING;
 
 export interface NdkNip46NostrconnectStarterOptions {
   relayUrl?: string;

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ConnectionDomainError } from '../../nostr-connection/domain/connection-errors';
 import { normalizeHexPubkey, NostrClientService } from './nostr-client.service';
 
 const mockNdkInstance = {
@@ -9,6 +10,8 @@ const mockNdkInstance = {
   getUser: vi.fn(),
   fetchEvents: vi.fn(),
 };
+const mockEncrypt = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+const mockPublish = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
 const { mockNip07SignerCtor, mockNdkUserCtor } = vi.hoisted(() => ({
   mockNip07SignerCtor: vi.fn().mockImplementation(function MockNip07Signer() {
@@ -35,7 +38,12 @@ vi.mock('@nostr-dev-kit/ndk', () => {
 
   return {
     default: MockNDK,
-    NDKEvent: vi.fn(),
+    NDKEvent: vi.fn().mockImplementation(function MockNDKEvent() {
+      return {
+        encrypt: mockEncrypt,
+        publish: mockPublish,
+      };
+    }),
     NDKNip07Signer: mockNip07SignerCtor,
     NDKPrivateKeySigner: vi.fn(),
     NDKNip46Signer: Object.assign(vi.fn(), { nostrconnect: vi.fn() }),
@@ -79,6 +87,9 @@ describe('NostrClientService', () => {
     mockNdkInstance.connect.mockResolvedValue();
     mockNdkInstance.signer = undefined;
     mockNdkInstance.activeUser = undefined;
+    mockNdkInstance.getUser.mockReturnValue({ pubkey: 'b'.repeat(64) });
+    mockEncrypt.mockClear();
+    mockPublish.mockClear();
 
     mockNip07SignerCtor.mockReset();
     mockNip07SignerCtor.mockImplementation(function MockNip07Signer() {
@@ -170,5 +181,27 @@ describe('NostrClientService', () => {
     await expect(service.sendDirectMessage('a'.repeat(64), '   ')).rejects.toThrow(
       'DM content cannot be empty.'
     );
+  });
+
+  it('fails safely before DM encryption when the applied signer lacks NIP-04 encryption capability', async () => {
+    await service.applyNdkSigner({} as never, 'f'.repeat(64), ['sign-event', 'nip98-auth']);
+
+    await expect(service.sendDirectMessage('a'.repeat(64), 'hello')).rejects.toMatchObject({
+      code: 'unsupported_capability',
+    } satisfies Partial<ConnectionDomainError>);
+    expect(mockEncrypt).not.toHaveBeenCalled();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  it('allows DM encryption when the applied signer reports NIP-04 encryption capability', async () => {
+    await service.applyNdkSigner({} as never, 'f'.repeat(64), [
+      'sign-event',
+      'nip98-auth',
+      'nip04-encrypt',
+    ]);
+
+    await expect(service.sendDirectMessage('a'.repeat(64), 'hello')).resolves.toBeUndefined();
+    expect(mockEncrypt).toHaveBeenCalledOnce();
+    expect(mockPublish).toHaveBeenCalledOnce();
   });
 });

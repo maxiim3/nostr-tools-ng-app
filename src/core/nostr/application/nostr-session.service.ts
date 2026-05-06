@@ -447,7 +447,7 @@ export class NostrSessionService {
     } else {
       const ndkSigner = this.facade.ndkSigner() as NDKSigner | null;
       if (ndkSigner) {
-        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex);
+        await this.client.applyNdkSigner(ndkSigner, session.pubkeyHex, session.capabilities);
       }
     }
 

@@ -4,6 +4,7 @@ import type {
   Nip46NostrconnectStarter,
   Nip46RemoteSigner,
 } from '../../infrastructure/nip46-nostrconnect-starter';
+import { NIP46_MINIMUM_CAPABILITIES } from '../../domain/nip46-permission-policy';
 import { FakeNip46RemoteSigner } from './fake-nip46-remote-signer';
 
 export interface FakeNip46NostrconnectAttemptHandleOptions {
@@ -31,12 +32,7 @@ export class FakeNip46NostrconnectAttemptHandle implements Nip46AttemptHandle {
       copyValue: uri,
       qrCodeValue: uri,
     };
-    this.capabilities = options.capabilities ?? [
-      'sign-event',
-      'nip98-auth',
-      'nip44-encrypt',
-      'nip44-decrypt',
-    ];
+    this.capabilities = options.capabilities ?? NIP46_MINIMUM_CAPABILITIES;
     this.remoteSigner = options.remoteSigner ?? new FakeNip46RemoteSigner();
     this.waitError = options.waitError;
   }

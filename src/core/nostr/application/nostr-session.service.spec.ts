@@ -162,7 +162,8 @@ describe('NostrSessionService', () => {
 
     expect(client.applyNdkSigner).toHaveBeenCalledWith(
       { marker: 'ndk-signer' },
-      sessionUser.pubkey
+      sessionUser.pubkey,
+      ['sign-event']
     );
     expect(client.fetchProfile).toHaveBeenCalledWith(sessionUser.npub);
     expect(session.user()).toEqual(sessionUser);
@@ -183,7 +184,8 @@ describe('NostrSessionService', () => {
 
     expect(client.applyNdkSigner).toHaveBeenCalledWith(
       { marker: 'ndk-signer' },
-      sessionUser.pubkey
+      sessionUser.pubkey,
+      ['sign-event']
     );
     expect(session.user()).toBeNull();
     expect(session.error()).toBeNull();
@@ -962,7 +964,13 @@ function createClientMock() {
     applyNip07Signer: vi.fn<(hex: string) => Promise<void>>().mockResolvedValue(undefined),
     connectWithPrivateKey: vi.fn<(key: string) => Promise<SessionUser>>(),
     applyNdkSigner: vi
-      .fn<(signer: unknown, hex: string) => Promise<void>>()
+      .fn<
+        (
+          signer: unknown,
+          hex: string,
+          capabilities: ConnectionSession['capabilities']
+        ) => Promise<void>
+      >()
       .mockResolvedValue(undefined),
     clearSigner: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     fetchProfile: vi

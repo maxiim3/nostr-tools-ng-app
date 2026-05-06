@@ -3,18 +3,12 @@ import type NDK from '@nostr-dev-kit/ndk';
 import { DEFAULT_RELAY_URLS } from '../../nostr/infrastructure/relay.config';
 import type { ConnectionCapability } from '../domain/connection-capability';
 import { ConnectionDomainError } from '../domain/connection-errors';
+import { NIP46_MINIMUM_CAPABILITIES } from '../domain/nip46-permission-policy';
 import type { Nip46BunkerStarter } from './nip46-bunker-starter';
 import { subscribeToNdkNip46AuthUrl, waitForNdkNip46SignerReady } from './ndk-nip46-shared';
 import type { Nip46AttemptHandle } from './nip46-nostrconnect-starter';
 
-const DEFAULT_BUNKER_CAPABILITIES: readonly ConnectionCapability[] = [
-  'sign-event',
-  'nip98-auth',
-  'nip04-encrypt',
-  'nip04-decrypt',
-  'nip44-encrypt',
-  'nip44-decrypt',
-];
+const DEFAULT_BUNKER_CAPABILITIES = NIP46_MINIMUM_CAPABILITIES;
 
 export interface NdkNip46BunkerStarterOptions {
   capabilities?: readonly ConnectionCapability[];

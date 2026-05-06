@@ -3,6 +3,7 @@ import { ConnectionDomainError } from '../domain/connection-errors';
 import type { ConnectionMethod, ConnectionRequest } from '../domain/connection-method';
 import type { ConnectionMethodId } from '../domain/connection-method-id';
 import type { ActiveConnection } from '../domain/active-connection';
+import { NIP46_MINIMUM_CAPABILITIES } from '../domain/nip46-permission-policy';
 import type { Nip46RestoreContext } from './nip46-restore-context-store';
 import { restoreNdkNip46SignerFromPayload } from '../infrastructure/ndk-nip46-restore';
 import type { Nip46NostrconnectStarter } from '../infrastructure/nip46-nostrconnect-starter';
@@ -63,14 +64,7 @@ export class Nip46NostrconnectConnectionMethod implements ConnectionMethod {
       const connection = await withActiveConnectionTimeout(
         createNip46ActiveConnectionFromRemoteSigner(
           remoteSigner,
-          [
-            'sign-event',
-            'nip98-auth',
-            'nip04-encrypt',
-            'nip04-decrypt',
-            'nip44-encrypt',
-            'nip44-decrypt',
-          ],
+          NIP46_MINIMUM_CAPABILITIES,
           this.id
         ),
         this.restoreReadyTimeoutMs

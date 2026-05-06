@@ -100,6 +100,12 @@ describe('Nip46NostrconnectConnectionMethod', () => {
     });
     expect(connection.getSession().methodId).toBe('nip46-nostrconnect');
     expect(connection.getSession().pubkeyHex).toBe('a'.repeat(64));
+    expect(connection.signer.supports('sign-event')).toBe(true);
+    expect(connection.signer.supports('nip98-auth')).toBe(true);
+    expect(connection.signer.supports('nip04-encrypt')).toBe(false);
+    expect(connection.signer.supports('nip04-decrypt')).toBe(false);
+    expect(connection.signer.supports('nip44-encrypt')).toBe(false);
+    expect(connection.signer.supports('nip44-decrypt')).toBe(false);
   });
 
   it('fails closed and stops the restored signer when user pubkey does not match the stored context', async () => {

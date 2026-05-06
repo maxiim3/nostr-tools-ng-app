@@ -24,12 +24,14 @@ export interface SessionUser {
 export class NostrClientService {
   private readonly ndkModulePromise = import('@nostr-dev-kit/ndk');
   private ndkPromise: Promise<NDK> | null = null;
+  private signerCapabilities: readonly ConnectionCapability[] | null = null;
 
   async connectWithPrivateKey(privateKeyOrNsec: string): Promise<SessionUser> {
     const ndk = await this.ensureNdk();
     const { NDKPrivateKeySigner } = await this.ndkModulePromise;
     const signer = new NDKPrivateKeySigner(privateKeyOrNsec.trim(), ndk);
     const user = await signer.user();
+    this.signerCapabilities = null;
 
     return this.applySigner(signer, user);
   }
@@ -42,21 +44,28 @@ export class NostrClientService {
     user.ndk = ndk;
     ndk.signer = signer;
     ndk.activeUser = user;
+    this.signerCapabilities = null;
   }
 
-  async applyNdkSigner(signer: NDKSigner, pubkeyHex: string): Promise<void> {
+  async applyNdkSigner(
+    signer: NDKSigner,
+    pubkeyHex: string,
+    capabilities: readonly ConnectionCapability[] = []
+  ): Promise<void> {
     const ndk = await this.ensureNdk();
     const { NDKUser } = await this.ndkModulePromise;
     const user = new NDKUser({ pubkey: pubkeyHex });
     user.ndk = ndk;
     ndk.signer = signer;
     ndk.activeUser = user;
+    this.signerCapabilities = capabilities;
   }
 
   async clearSigner(): Promise<void> {
     const ndk = await this.ensureNdk();
     ndk.signer = undefined;
     ndk.activeUser = undefined;
+    this.signerCapabilities = null;
   }
 
   async getNdk(): Promise<NDK> {
@@ -118,6 +127,13 @@ export class NostrClientService {
     const messageContent = message.trim();
     if (!messageContent) {
       throw new Error('DM content cannot be empty.');
+    }
+
+    if (this.signerCapabilities && !this.signerCapabilities.includes('nip04-encrypt')) {
+      throw new ConnectionDomainError(
+        'unsupported_capability',
+        'This connection cannot send encrypted direct messages. Reconnect with a signer that grants NIP-04 encryption before sending this notification.'
+      );
     }
 
     const { NDKEvent } = await this.ndkModulePromise;
