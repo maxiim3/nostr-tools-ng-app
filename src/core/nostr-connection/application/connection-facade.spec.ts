@@ -160,6 +160,33 @@ describe('ConnectionFacade', () => {
     expect(facade.currentSession()).toBeNull();
   });
 
+  it('clears local auth artifacts when attempt cancellation fails during disconnect', async () => {
+    const storage = createStorage();
+    vi.stubGlobal('localStorage', storage);
+    storage.setItem('nostr.connect.restore.v1', 'nip07');
+    storage.setItem('nostr.connect.nip46.restore.v1', 'nip46');
+    const attempt = new FakeConnectionAttempt('nip46-bunker', {
+      methodId: 'nip46-bunker',
+      connection: new FakeActiveConnection({ methodId: 'nip46-bunker' }),
+      cancelError: new Error('Remote signer did not answer cancellation.'),
+    });
+    const facade = createFacade([new FakeConnectionMethod({ id: 'nip46-bunker', attempt })]);
+
+    await facade.startConnection('nip46-bunker', {
+      reason: 'interactive-login',
+      connectionToken: 'bunker://token',
+    });
+    await expect(facade.disconnect()).resolves.toBeUndefined();
+
+    expect(attempt.cancelCalls).toBe(1);
+    expect(facade.currentAttempt()).toBeNull();
+    expect(facade.currentSession()).toBeNull();
+    expect(facade.ndkSigner()).toBeNull();
+    expect(facade.authSessionState()).toEqual({ status: 'disconnected' });
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.restore.v1');
+    expect(storage.removeItem).toHaveBeenCalledWith('nostr.connect.nip46.restore.v1');
+  });
+
   it('revalidates the current session and updates it', async () => {
     const connection = new FakeActiveConnection({ methodId: 'nip07' });
     const facade = createFacade([

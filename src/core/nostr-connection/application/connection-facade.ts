@@ -250,8 +250,9 @@ export class ConnectionFacade {
     this.error.set(null);
 
     try {
-      await this.cancelCurrentAttempt();
+      await this.cancelCurrentAttempt().catch(() => undefined);
       await this.orchestrator.disconnect().catch(() => undefined);
+      this.currentAttempt.set(null);
       this.currentSession.set(null);
       this.ndkSigner.set(null);
       this._attemptTerminalStatus.set({ kind: 'none' });

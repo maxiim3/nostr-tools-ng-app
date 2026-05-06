@@ -712,6 +712,30 @@ describe('NostrSessionService', () => {
     expect(session.waitingForExternalAuth()).toBe(false);
   });
 
+  it('clears local auth artifacts even when facade disconnect rejects', async () => {
+    facadeState.availableMethods = ['nip07'];
+    facadeState.startConnectionResult = createFakeAttempt('nip07', null);
+    facadeState.completeResult = createFakeSession(sessionUser.pubkey, sessionUser.npub, 'nip07');
+    facadeState.disconnectError = new Error('Remote cancellation failed.');
+    client.clearSigner.mockResolvedValue(undefined);
+
+    const session = createService();
+    await session.connectWithExtension();
+    await flushAsync();
+    expect(session.user()).toEqual(sessionUser);
+
+    await expect(session.disconnect()).resolves.toBeUndefined();
+
+    expect(facadeState.disconnectCalls).toBeGreaterThanOrEqual(1);
+    expect(client.clearSigner).toHaveBeenCalledTimes(1);
+    expect(session.user()).toBeNull();
+    expect(session.error()).toBeNull();
+    expect(session.externalAuthUri()).toBeNull();
+    expect(session.waitingForExternalAuth()).toBe(false);
+    expect(session.waitingForBunkerAuth()).toBe(false);
+    expect(session.isAuthenticated()).toBe(false);
+  });
+
   it('exposes isAuthenticated as a computed signal reflecting user presence', async () => {
     facadeState.availableMethods = ['nip07'];
     facadeState.startConnectionResult = createFakeAttempt('nip07', null);
@@ -946,6 +970,35 @@ describe('NostrSessionService', () => {
     expect(session.user()).toBeNull();
     expect(session.error()).toBeNull();
   });
+
+  it('clears a late bunker completion after disconnect instead of restoring auth', async () => {
+    const completionDeferred = createDeferred<ConnectionSession>();
+    const connectionSession = createFakeSession(
+      sessionUser.pubkey,
+      sessionUser.npub,
+      'nip46-bunker'
+    );
+    facadeState.startConnectionResult = createFakeAttempt('nip46-bunker', null);
+    facadeState.completeFn = () => completionDeferred.promise;
+    facadeState.ndkSignerValue = {} as never;
+
+    const session = createService();
+
+    await session.beginBunkerLogin('bunker://abc?relay=wss://relay.example.com');
+    await flushAsync();
+    expect(session.waitingForBunkerAuth()).toBe(true);
+
+    await session.disconnect();
+    facadeState.currentSession = connectionSession;
+    completionDeferred.resolve(connectionSession);
+    await flushAsync();
+
+    expect(session.user()).toBeNull();
+    expect(session.isAuthenticated()).toBe(false);
+    expect(session.waitingForBunkerAuth()).toBe(false);
+    expect(facadeState.currentSession).toBeNull();
+    expect(client.clearSigner).toHaveBeenCalledTimes(2);
+  });
 });
 
 function createService(): NostrSessionService {
@@ -995,6 +1048,7 @@ interface FacadeState {
   completeCalls: number;
   cancelCalls: number;
   disconnectCalls: number;
+  disconnectError: Error | null;
   currentFacadeAttemptId: number;
   currentFacadeAttemptMethodId: string | null;
   restoreContextExists: boolean;
@@ -1016,6 +1070,7 @@ function createFacadeState(): FacadeState {
     completeCalls: 0,
     cancelCalls: 0,
     disconnectCalls: 0,
+    disconnectError: null,
     currentFacadeAttemptId: 0,
     currentFacadeAttemptMethodId: null,
     restoreContextExists: false,
@@ -1128,6 +1183,9 @@ function createFacadeProxy(state: FacadeState) {
       state.ndkSignerValue = null;
       state.currentFacadeAttemptMethodId = null;
       authSessionState.set({ status: 'disconnected' });
+      if (state.disconnectError) {
+        throw state.disconnectError;
+      }
     }),
     getCurrentAttemptId: vi
       .fn<() => number>()

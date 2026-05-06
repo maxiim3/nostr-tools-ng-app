@@ -95,6 +95,11 @@ export class PackRequestPage implements OnDestroy {
   }
 
   async requestJoin(): Promise<void> {
+    if (!this.isAuthenticated()) {
+      this.session.openAuthModal();
+      return;
+    }
+
     this.submitError.set(null);
     this.loading.set(true);
     this.startLoadingMessageRotation();

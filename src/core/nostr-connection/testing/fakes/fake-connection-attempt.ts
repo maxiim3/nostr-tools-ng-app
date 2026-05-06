@@ -10,6 +10,7 @@ export interface FakeConnectionAttemptOptions {
   connection: ActiveConnection;
   instructions?: ConnectionAttemptInstructions | null;
   completeError?: Error;
+  cancelError?: Error;
 }
 
 export class FakeConnectionAttempt implements ConnectionAttempt {
@@ -20,6 +21,7 @@ export class FakeConnectionAttempt implements ConnectionAttempt {
 
   private readonly connection: ActiveConnection;
   private readonly completeError?: Error;
+  private readonly cancelError?: Error;
 
   constructor(
     readonly methodId: ConnectionMethodId,
@@ -28,6 +30,7 @@ export class FakeConnectionAttempt implements ConnectionAttempt {
     this.instructions = options.instructions ?? null;
     this.connection = options.connection;
     this.completeError = options.completeError;
+    this.cancelError = options.cancelError;
   }
 
   async complete(): Promise<ActiveConnection> {
@@ -46,5 +49,9 @@ export class FakeConnectionAttempt implements ConnectionAttempt {
 
   async cancel(): Promise<void> {
     this.cancelCalls += 1;
+
+    if (this.cancelError) {
+      throw this.cancelError;
+    }
   }
 }

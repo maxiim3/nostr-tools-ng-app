@@ -276,8 +276,7 @@ export class NostrSessionService {
     this.cancelExternalTimer();
     this.cancelBunkerTimer();
 
-    await this.facade.disconnect();
-    await this.client.clearSigner();
+    await Promise.allSettled([this.facade.disconnect(), this.client.clearSigner()]);
     this.user.set(null);
     this.privateKeyFallbackActive.set(false);
     this.error.set(null);
@@ -379,13 +378,25 @@ export class NostrSessionService {
 
     try {
       const session = await this.facade.completeCurrentAttempt();
-      if (attemptId !== this.currentBunkerAttemptId) {
+      if (
+        attemptId !== this.currentBunkerAttemptId ||
+        operationId !== this.currentAuthOperationId
+      ) {
+        await this.clearStaleFacadeSession(session);
         return;
       }
 
       this.waitingForBunkerAuth.set(false);
       this.cancelBunkerTimer();
       await this.applySessionForDisplay(session, operationId);
+      if (
+        attemptId !== this.currentBunkerAttemptId ||
+        operationId !== this.currentAuthOperationId
+      ) {
+        await this.clearStaleFacadeSession(session);
+        return;
+      }
+
       this.privateKeyFallbackActive.set(false);
       this.authModalOpen.set(false);
     } catch (err) {
