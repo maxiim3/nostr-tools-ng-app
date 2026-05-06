@@ -91,6 +91,85 @@ describe('AppAuthModalComponent', () => {
     expect(component['privateKeyControl'].value).toBe('');
   });
 
+  it('shows loading text and disables extension CTA while extension auth is in flight', async () => {
+    const extensionRequest = createDeferred<boolean>();
+    session.connectWithExtension.mockReturnValue(extensionRequest.promise);
+    fixture.detectChanges();
+
+    clickButton(fixture, 'authModal.extension.cta');
+    fixture.detectChanges();
+
+    const loadingButton = findButton(fixture, 'authModal.extension.loading');
+    expect(loadingButton.disabled).toBe(true);
+
+    extensionRequest.resolve(true);
+    await fixture.whenStable();
+  });
+
+  it('ignores duplicate extension submits until the first attempt resolves', async () => {
+    const extensionRequest = createDeferred<boolean>();
+    session.connectWithExtension.mockReturnValue(extensionRequest.promise);
+
+    const firstAttempt = component['loginWithExtension']();
+    const secondAttempt = component['loginWithExtension']();
+
+    expect(session.connectWithExtension).toHaveBeenCalledTimes(1);
+
+    extensionRequest.resolve(true);
+    await firstAttempt;
+    await secondAttempt;
+  });
+
+  it('resets extension loading state after a rejected extension auth attempt', async () => {
+    session.connectWithExtension.mockRejectedValue(new Error('Rejected by signer'));
+    fixture.detectChanges();
+
+    await expect(component['loginWithExtension']()).rejects.toThrow('Rejected by signer');
+    fixture.detectChanges();
+
+    expect(component['extensionActionLoading']()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('authModal.extension.cta');
+  });
+
+  it('resets extension loading state after an unavailable extension result', async () => {
+    session.connectWithExtension.mockResolvedValue(false);
+    fixture.detectChanges();
+
+    await component['loginWithExtension']();
+    fixture.detectChanges();
+
+    expect(component['extensionActionLoading']()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('authModal.extension.cta');
+  });
+
+  it('resets extension loading state after cancelled and timed out auth states', async () => {
+    session.authSessionState.set({
+      status: 'awaitingPermission',
+      methodId: 'nip07',
+      attemptId: 1,
+    });
+    fixture.detectChanges();
+    expect(component['extensionActionLoading']()).toBe(true);
+
+    session.authSessionState.set({
+      status: 'cancelled',
+      methodId: 'nip07',
+      attemptId: 1,
+      reasonCode: 'approval_cancelled',
+    });
+    fixture.detectChanges();
+    expect(component['extensionActionLoading']()).toBe(false);
+
+    session.authSessionState.set({
+      status: 'timedOut',
+      methodId: 'nip07',
+      attemptId: 1,
+      reasonCode: 'approval_timed_out',
+    });
+    fixture.detectChanges();
+    expect(component['extensionActionLoading']()).toBe(false);
+  });
+
   it('submits the provided private key and clears the field', async () => {
     fixture.detectChanges();
 
@@ -137,6 +216,20 @@ describe('AppAuthModalComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('authModal.external.open');
     expect(fixture.nativeElement.textContent).toContain('authModal.external.waiting');
     expect(fixture.nativeElement.textContent).toContain('authModal.status.pending.external.body');
+  });
+
+  it('ignores duplicate external signer starts until the first call resolves', async () => {
+    const externalStart = createDeferred<string | null>();
+    session.beginExternalAppLogin.mockReturnValue(externalStart.promise);
+
+    const firstAttempt = component['startExternalApp']();
+    const secondAttempt = component['startExternalApp']();
+
+    expect(session.beginExternalAppLogin).toHaveBeenCalledTimes(1);
+
+    externalStart.resolve(null);
+    await firstAttempt;
+    await secondAttempt;
   });
 
   it('shows extension pending guidance from authSessionState', () => {
@@ -463,6 +556,36 @@ describe('AppAuthModalComponent', () => {
     expect(component['bunkerTokenControl'].value).toBe('');
   });
 
+  it('ignores duplicate bunker submit attempts until the first call resolves', async () => {
+    const bunkerStart = createDeferred<boolean>();
+    session.beginBunkerLogin.mockReturnValue(bunkerStart.promise);
+    component['bunkerTokenControl'].setValue('bunker://abc?relay=wss://relay.example.com');
+
+    const firstAttempt = component['submitBunker']();
+    const secondAttempt = component['submitBunker']();
+
+    expect(session.beginBunkerLogin).toHaveBeenCalledTimes(1);
+
+    bunkerStart.resolve(true);
+    await firstAttempt;
+    await secondAttempt;
+  });
+
+  it('ignores duplicate private-key submits until the first call resolves', async () => {
+    const privateKeyLogin = createDeferred<boolean>();
+    session.connectWithPrivateKey.mockReturnValue(privateKeyLogin.promise);
+    component['privateKeyControl'].setValue('nsec1componenttest');
+
+    const firstAttempt = component['loginWithPrivateKey']();
+    const secondAttempt = component['loginWithPrivateKey']();
+
+    expect(session.connectWithPrivateKey).toHaveBeenCalledTimes(1);
+
+    privateKeyLogin.resolve(true);
+    await firstAttempt;
+    await secondAttempt;
+  });
+
   it('shows waiting state when bunker auth is in progress', async () => {
     session.waitingForBunkerAuth.set(true);
     fixture.detectChanges();
@@ -614,6 +737,16 @@ function createSessionServiceMock(): SessionServiceMock {
 }
 
 function clickButton(fixture: ComponentFixture<AppAuthModalComponent>, text: string): void {
+  const button = findButton(fixture, text);
+
+  button.click();
+  fixture.detectChanges();
+}
+
+function findButton(
+  fixture: ComponentFixture<AppAuthModalComponent>,
+  text: string
+): HTMLButtonElement {
   const button = [...fixture.nativeElement.querySelectorAll('button')].find((element) =>
     element.textContent?.includes(text)
   ) as HTMLButtonElement | undefined;
@@ -622,8 +755,18 @@ function clickButton(fixture: ComponentFixture<AppAuthModalComponent>, text: str
     throw new Error(`Button containing "${text}" not found.`);
   }
 
-  button.click();
-  fixture.detectChanges();
+  return button;
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error?: unknown) => void;
+  const promise = new Promise<T>((innerResolve, innerReject) => {
+    resolve = innerResolve;
+    reject = innerReject;
+  });
+
+  return { promise, resolve, reject };
 }
 
 async function flushAsync(): Promise<void> {

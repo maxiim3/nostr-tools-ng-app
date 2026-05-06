@@ -16,6 +16,7 @@
       "title": "Browser extension",
       "body": "Best on desktop. Connect with your browser extension.",
       "cta": "Use extension",
+      "loading": "Waiting for extension approval...",
       "recommendedDesktop": "Recommended on desktop"
     },
     "external": {

@@ -1,5 +1,5 @@
 # generated: 2026-05-02T17:47:47Z
-# last_updated: 2026-05-06T14:00:00Z
+# last_updated: 2026-05-06T14:01:00Z
 # project: nostr-tools-ng-app
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-05-02T17:47:47Z
-last_updated: 2026-05-06T14:00:00Z
+last_updated: 2026-05-06T14:01:00Z
 project: nostr-tools-ng-app
 project_key: NOKEY
 tracking_system: file-system
@@ -50,7 +50,7 @@ development_status:
   1-5-add-explicit-pending-timeout-cancelled-denied-and-retry-states: done
   1-6-stabilize-mobile-external-signer-return-flow-for-amber-and-primal: in-progress
   1-7-minimize-startup-permissions-and-request-additional-permissions-just-in-time: in-progress
-  1-8-add-accessible-auth-loading-and-anti-duplicate-submit-behavior: ready-for-dev
+  1-8-add-accessible-auth-loading-and-anti-duplicate-submit-behavior: review
   1-9-sign-out-and-clear-auth-artifacts: backlog
   epic-1-retrospective: optional
   epic-2: backlog

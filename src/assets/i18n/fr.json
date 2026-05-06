@@ -16,6 +16,7 @@
       "title": "Extension du navigateur",
       "body": "Recommandé sur ordinateur. Connecte-toi avec ton extension du navigateur.",
       "cta": "Avec l'extension",
+      "loading": "En attente d'approbation de l'extension...",
       "recommendedDesktop": "Recommandé sur ordinateur"
     },
     "external": {

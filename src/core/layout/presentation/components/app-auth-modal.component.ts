@@ -97,10 +97,15 @@ import type { ConnectionMethodId } from '../../../nostr-connection/domain/connec
                 <button
                   type="button"
                   class="btn btn-primary h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                  [disabled]="!session.extensionAvailable() || session.connecting()"
+                  [disabled]="!session.extensionAvailable() || extensionActionDisabled()"
                   (click)="loginWithExtension()"
                 >
-                  {{ 'authModal.extension.cta' | transloco }}
+                  {{
+                    (extensionActionLoading()
+                      ? 'authModal.extension.loading'
+                      : 'authModal.extension.cta'
+                    ) | transloco
+                  }}
                 </button>
               </section>
 
@@ -178,7 +183,7 @@ import type { ConnectionMethodId } from '../../../nostr-connection/domain/connec
                   <button
                     type="button"
                     class="btn btn-outline h-auto w-full px-4 py-3 text-sm whitespace-normal text-center sm:text-base sm:whitespace-nowrap"
-                    [disabled]="session.connecting()"
+                    [disabled]="externalActionDisabled()"
                     (click)="startExternalApp()"
                   >
                     {{ 'authModal.external.cta' | transloco }}
@@ -252,7 +257,7 @@ import type { ConnectionMethodId } from '../../../nostr-connection/domain/connec
                         <button
                           type="button"
                           class="btn btn-outline flex-shrink-0 text-sm sm:text-base"
-                          [disabled]="session.connecting() || bunkerTokenControl.invalid"
+                          [disabled]="bunkerActionDisabled() || bunkerTokenControl.invalid"
                           (click)="submitBunker()"
                         >
                           {{ 'authModal.bunker.cta' | transloco }}
@@ -278,7 +283,7 @@ import type { ConnectionMethodId } from '../../../nostr-connection/domain/connec
                       <button
                         type="button"
                         class="btn btn-primary flex-shrink-0 text-sm sm:text-base"
-                        [disabled]="session.connecting() || privateKeyControl.invalid"
+                        [disabled]="privateKeyActionDisabled() || privateKeyControl.invalid"
                         (click)="loginWithPrivateKey()"
                       >
                         {{ 'authModal.privateKey.cta' | transloco }}
@@ -319,6 +324,12 @@ export class AppAuthModalComponent {
   protected readonly copied = signal(false);
   protected readonly externalAuthQr = signal<string | null>(null);
   protected readonly advancedOptionsOpen = signal(false);
+  private readonly actionInFlight = signal<Record<AuthActionId, boolean>>({
+    extension: false,
+    external: false,
+    bunker: false,
+    privateKey: false,
+  });
   private readonly lastAttemptedMethod = signal<AuthRetryMethod | null>(null);
   private readonly lastBunkerToken = signal('');
   protected readonly modalStatus = computed(() =>
@@ -326,6 +337,26 @@ export class AppAuthModalComponent {
   );
   protected readonly showRawError = computed(
     () => this.session.error() !== null && this.modalStatus() === null
+  );
+  protected readonly extensionActionLoading = computed(() => {
+    if (this.isActionInFlight('extension')) {
+      return true;
+    }
+
+    const state = this.session.authSessionState();
+    return state.status === 'awaitingPermission' && state.methodId === 'nip07';
+  });
+  protected readonly extensionActionDisabled = computed(
+    () => this.session.connecting() || this.extensionActionLoading()
+  );
+  protected readonly externalActionDisabled = computed(
+    () => this.session.connecting() || this.isActionInFlight('external')
+  );
+  protected readonly bunkerActionDisabled = computed(
+    () => this.session.connecting() || this.isActionInFlight('bunker')
+  );
+  protected readonly privateKeyActionDisabled = computed(
+    () => this.session.connecting() || this.isActionInFlight('privateKey')
   );
   private externalAuthQrRequestId = 0;
 
@@ -369,28 +400,34 @@ export class AppAuthModalComponent {
   }
 
   protected async loginWithExtension(): Promise<void> {
-    this.lastAttemptedMethod.set('nip07');
-    await this.session.connectWithExtension();
-    this.privateKeyControl.setValue('');
-    this.privateKeyControl.markAsPristine();
+    await this.runActionOnce('extension', async () => {
+      this.lastAttemptedMethod.set('nip07');
+      await this.session.connectWithExtension();
+      this.privateKeyControl.setValue('');
+      this.privateKeyControl.markAsPristine();
+    });
   }
 
   protected async loginWithPrivateKey(): Promise<void> {
-    await this.session.connectWithPrivateKey(this.privateKeyControl.getRawValue());
-    this.privateKeyControl.setValue('');
-    this.privateKeyControl.markAsPristine();
+    await this.runActionOnce('privateKey', async () => {
+      await this.session.connectWithPrivateKey(this.privateKeyControl.getRawValue());
+      this.privateKeyControl.setValue('');
+      this.privateKeyControl.markAsPristine();
+    });
   }
 
   protected async startExternalApp(): Promise<void> {
-    this.lastAttemptedMethod.set('nip46-nostrconnect');
-    const uri = await this.session.beginExternalAppLogin();
-    this.copied.set(false);
+    await this.runActionOnce('external', async () => {
+      this.lastAttemptedMethod.set('nip46-nostrconnect');
+      const uri = await this.session.beginExternalAppLogin();
+      this.copied.set(false);
 
-    if (!uri) {
-      return;
-    }
+      if (!uri) {
+        return;
+      }
 
-    this.openExternalUri(uri);
+      this.openExternalUri(uri);
+    });
   }
 
   protected cancelExternalApp(): void {
@@ -400,12 +437,14 @@ export class AppAuthModalComponent {
   }
 
   protected async submitBunker(): Promise<void> {
-    const token = this.bunkerTokenControl.getRawValue();
-    this.lastAttemptedMethod.set('nip46-bunker');
-    this.lastBunkerToken.set(token);
-    this.bunkerTokenControl.setValue('');
-    this.bunkerTokenControl.markAsPristine();
-    await this.session.beginBunkerLogin(token);
+    await this.runActionOnce('bunker', async () => {
+      const token = this.bunkerTokenControl.getRawValue();
+      this.lastAttemptedMethod.set('nip46-bunker');
+      this.lastBunkerToken.set(token);
+      this.bunkerTokenControl.setValue('');
+      this.bunkerTokenControl.markAsPristine();
+      await this.session.beginBunkerLogin(token);
+    });
   }
 
   protected cancelBunker(options: { clearToken?: boolean } = { clearToken: true }): void {
@@ -476,8 +515,10 @@ export class AppAuthModalComponent {
         return;
       }
 
-      this.lastAttemptedMethod.set('nip46-bunker');
-      await this.session.beginBunkerLogin(token);
+      await this.runActionOnce('bunker', async () => {
+        this.lastAttemptedMethod.set('nip46-bunker');
+        await this.session.beginBunkerLogin(token);
+      });
     }
   }
 
@@ -517,10 +558,35 @@ export class AppAuthModalComponent {
 
     this.externalAuthQr.set(qr);
   }
+
+  private isActionInFlight(actionId: AuthActionId): boolean {
+    return this.actionInFlight()[actionId];
+  }
+
+  private setActionInFlight(actionId: AuthActionId, isActive: boolean): void {
+    this.actionInFlight.update((current) => ({
+      ...current,
+      [actionId]: isActive,
+    }));
+  }
+
+  private async runActionOnce(actionId: AuthActionId, action: () => Promise<void>): Promise<void> {
+    if (this.isActionInFlight(actionId)) {
+      return;
+    }
+
+    this.setActionInFlight(actionId, true);
+    try {
+      await action();
+    } finally {
+      this.setActionInFlight(actionId, false);
+    }
+  }
 }
 
 type ModalStatusAction = 'retry-current' | 'reconnect' | 'choose-method';
 type AuthRetryMethod = 'nip07' | 'nip46-nostrconnect' | 'nip46-bunker';
+type AuthActionId = 'extension' | 'external' | 'bunker' | 'privateKey';
 
 interface ModalStatus {
   titleKey: string;

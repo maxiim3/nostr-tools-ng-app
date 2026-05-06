@@ -16,6 +16,7 @@
       "title": "Extensión del navegador",
       "body": "Recomendado en escritorio. Conéctate con la extensión del navegador.",
       "cta": "Usar extensión",
+      "loading": "Esperando la aprobación de la extensión...",
       "recommendedDesktop": "Recomendado en escritorio"
     },
     "external": {
