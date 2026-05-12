@@ -107,6 +107,7 @@
     "menu": "Menu",
     "home": "Home",
     "request": "Request",
+    "packManager": "Pack Manager",
     "adminRequests": "Admin members",
     "openExternal": "External app",
     "support": "Support ⚡"
@@ -168,11 +169,11 @@
           "description": "The entry point for quickly following active Francophone profiles and knowing who to listen to at the start.",
           "cta": "Request access"
         },
-        "listMerge": {
-          "title": "List merge",
-          "status": "Soon",
-          "description": "A tool to merge multiple Nostr lists and build a useful selection faster.",
-          "cta": "In progress"
+        "packManager": {
+          "title": "Pack Manager",
+          "status": "Available",
+          "description": "Manage the starter packs you own, inspect members, copy npubs, and remove profiles when needed.",
+          "cta": "Manage packs"
         },
         "onboarding": {
           "title": "Nostr onboarding",
@@ -214,6 +215,36 @@
   "profile": {
     "unknownUser": "Unknown user",
     "noDescription": "No description published on this Nostr profile yet."
+  },
+  "packManager": {
+    "title": "Pack Manager",
+    "subtitle": "Pick one of your starter packs, review its members, copy npubs, and remove profiles from the pack.",
+    "authRequired": "Connect with Nostr to load the packs authored by your account.",
+    "selectLabel": "Your packs",
+    "loadingPacks": "Loading your packs...",
+    "connectFirst": "Connect to load your packs",
+    "noPacks": "No pack found",
+    "membersCount": "members",
+    "noDescription": "No description",
+    "openPack": "Open pack",
+    "emptyMembers": "This pack has no public members yet.",
+    "copyNpub": "Copy npub",
+    "copiedNpub": "Copied",
+    "remove": "Remove",
+    "confirmRemove": "Confirm",
+    "deleting": "Deleting...",
+    "memberRemoved": "Member removed from the pack.",
+    "columns": {
+      "member": "Member",
+      "copy": "Copy",
+      "action": "Action"
+    },
+    "errors": {
+      "copyFailed": "Unable to copy this npub.",
+      "loadPacksFailed": "Unable to load your packs right now.",
+      "loadMembersFailed": "Unable to load this pack's members right now.",
+      "removeFailed": "Unable to remove this member right now."
+    }
   },
   "footer": {
     "contact": "Contact",

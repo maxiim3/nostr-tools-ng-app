@@ -99,26 +99,26 @@
           @for (entry of sortedEntries(); track entry.pubkey) {
             <tr class="border-[#0a0a0a]/20 align-top hover:bg-transparent">
               <td>
-                  <a
-                    [href]="entry.primalUrl"
-                    target="_blank"
-                    rel="noreferrer"
-                    [aria-label]="'adminRequests.primal' | transloco"
-                  >
-                    @if (entry.avatarUrl) {
+                <a
+                  [href]="entry.primalUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  [aria-label]="'adminRequests.primal' | transloco"
+                >
+                  @if (entry.avatarUrl) {
                     <img
                       [src]="entry.avatarUrl"
                       [alt]="entry.username"
                       class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
                     />
-                    } @else {
-                      <div
-                        class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
-                      >
-                        {{ entry.username.slice(0, 2).toUpperCase() }}
-                      </div>
-                    }
-                  </a>
+                  } @else {
+                    <div
+                      class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
+                    >
+                      {{ entry.username.slice(0, 2).toUpperCase() }}
+                    </div>
+                  }
+                </a>
               </td>
               <td class="min-w-48">
                 <p class="font-bold text-[#0a0a0a] [overflow-wrap:anywhere]">

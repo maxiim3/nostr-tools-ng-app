@@ -29,6 +29,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'packs/manager',
+    loadComponent: () =>
+      import('../features/packs/presentation/pages/pack-manager.page').then(
+        (module) => module.PackManagerPage
+      ),
+  },
+  {
     path: 'packs/francophone/admin/requests',
     canMatch: [francophoneAdminGuard],
     loadComponent: () =>

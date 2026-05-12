@@ -107,6 +107,7 @@
     "menu": "Menú",
     "home": "Inicio",
     "request": "Solicitud",
+    "packManager": "Pack Manager",
     "adminRequests": "Miembros admin",
     "openExternal": "App externa",
     "support": "Apoyar ⚡"
@@ -168,11 +169,11 @@
           "description": "El punto de entrada para seguir rápidamente perfiles francófonos activos y saber a quién escuchar desde el principio.",
           "cta": "Solicitar acceso"
         },
-        "listMerge": {
-          "title": "Fusión de listas",
-          "status": "Próximamente",
-          "description": "Una herramienta para fusionar varias listas de Nostr y construir más rápido una selección útil.",
-          "cta": "En construcción"
+        "packManager": {
+          "title": "Pack Manager",
+          "status": "Disponible",
+          "description": "Gestiona los starter packs que posees, revisa miembros, copia npubs y elimina perfiles cuando sea necesario.",
+          "cta": "Gestionar packs"
         },
         "onboarding": {
           "title": "Onboarding Nostr",
@@ -214,6 +215,36 @@
   "profile": {
     "unknownUser": "Usuario desconocido",
     "noDescription": "No hay descripción publicada en este perfil de Nostr aún."
+  },
+  "packManager": {
+    "title": "Pack Manager",
+    "subtitle": "Elige uno de tus starter packs, revisa sus miembros, copia npubs y elimina perfiles del pack.",
+    "authRequired": "Conéctate con Nostr para cargar los packs publicados por tu cuenta.",
+    "selectLabel": "Tus packs",
+    "loadingPacks": "Cargando tus packs...",
+    "connectFirst": "Conéctate para cargar tus packs",
+    "noPacks": "No se encontró ningún pack",
+    "membersCount": "miembros",
+    "noDescription": "Sin descripción",
+    "openPack": "Abrir pack",
+    "emptyMembers": "Este pack aún no tiene miembros públicos.",
+    "copyNpub": "Copiar npub",
+    "copiedNpub": "Copiado",
+    "remove": "Eliminar",
+    "confirmRemove": "Confirmar",
+    "deleting": "Eliminando...",
+    "memberRemoved": "Miembro eliminado del pack.",
+    "columns": {
+      "member": "Miembro",
+      "copy": "Copiar",
+      "action": "Acción"
+    },
+    "errors": {
+      "copyFailed": "No se puede copiar este npub.",
+      "loadPacksFailed": "No se pueden cargar tus packs ahora mismo.",
+      "loadMembersFailed": "No se pueden cargar los miembros de este pack ahora mismo.",
+      "removeFailed": "No se puede eliminar este miembro ahora mismo."
+    }
   },
   "footer": {
     "contact": "Contacto",

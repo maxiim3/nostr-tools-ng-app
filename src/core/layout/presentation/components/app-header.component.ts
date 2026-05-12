@@ -28,6 +28,12 @@ import { ZapService } from '../../../zap/zap.service';
           >
             {{ 'header.request' | transloco }}
           </a>
+          <a
+            routerLink="/packs/manager"
+            class="text-sm font-bold text-white decoration-white/30 decoration-[3px] underline underline-offset-4 transition-all hover:decoration-white"
+          >
+            {{ 'header.packManager' | transloco }}
+          </a>
 
           @if (session.isAdmin()) {
             <a
@@ -181,6 +187,13 @@ import { ZapService } from '../../../zap/zap.service';
               (click)="closeMobileMenu()"
             >
               {{ 'header.request' | transloco }}
+            </a>
+            <a
+              routerLink="/packs/manager"
+              class="mt-1 block border-[3px] border-[#0a0a0a] bg-white px-6 py-4 text-center text-lg font-bold text-[#0a0a0a] transition-colors hover:bg-[#FFE600]"
+              (click)="closeMobileMenu()"
+            >
+              {{ 'header.packManager' | transloco }}
             </a>
             @if (session.isAdmin()) {
               <a

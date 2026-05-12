@@ -3,7 +3,7 @@ import { francophoneAdminGuard } from '../features/packs/presentation/guards/fra
 
 describe('app.routes', () => {
   it('should define the correct number of active routes', () => {
-    expect(routes.length).toBe(7);
+    expect(routes.length).toBe(8);
   });
 
   it('should load the landing page on root path', () => {
@@ -28,6 +28,12 @@ describe('app.routes', () => {
 
   it('should have the francophone request route', () => {
     const route = routes.find((r) => r.path === 'packs/francophone/request');
+    expect(route).toBeDefined();
+    expect(route!.loadComponent).toBeDefined();
+  });
+
+  it('should have a pack manager route', () => {
+    const route = routes.find((r) => r.path === 'packs/manager');
     expect(route).toBeDefined();
     expect(route!.loadComponent).toBeDefined();
   });

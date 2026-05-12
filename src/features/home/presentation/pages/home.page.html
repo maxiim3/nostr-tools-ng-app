@@ -40,19 +40,20 @@
       <article class="border-[3px] border-[#0a0a0a] bg-white p-6">
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-2xl font-extrabold">
-            {{ 'home.landing.tools.listMerge.title' | transloco }}
+            {{ 'home.landing.tools.packManager.title' | transloco }}
           </h2>
           <span
             class="border-[2px] border-[#0a0a0a] bg-white px-2 py-1 text-xs font-bold uppercase"
-            >{{ 'home.landing.tools.listMerge.status' | transloco }}</span
           >
+            {{ 'home.landing.tools.packManager.status' | transloco }}
+          </span>
         </div>
         <p class="mt-4 text-sm leading-7 text-[#0a0a0a]/75 md:text-base">
-          {{ 'home.landing.tools.listMerge.description' | transloco }}
+          {{ 'home.landing.tools.packManager.description' | transloco }}
         </p>
-        <button type="button" disabled class="btn btn-sm mt-6 h-auto min-h-11 px-6 py-3 text-sm">
-          {{ 'home.landing.tools.listMerge.cta' | transloco }}
-        </button>
+        <a routerLink="/packs/manager" class="btn btn-sm mt-6 h-auto min-h-11 px-6 py-3 text-sm">
+          {{ 'home.landing.tools.packManager.cta' | transloco }}
+        </a>
       </article>
 
       <article class="border-[3px] border-[#0a0a0a] bg-[#f4f4f4] p-6 md:col-span-2 xl:col-span-1">
