@@ -68,19 +68,6 @@
               </button>
             </th>
             <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
-            <th scope="col">{{ 'adminRequests.columns.profile' | transloco }}</th>
-            <th scope="col">
-              <button
-                type="button"
-                class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
-                (click)="toggleSort('accountCreatedAt')"
-              >
-                <span>{{ 'adminRequests.columns.accountCreatedAt' | transloco }}</span>
-                @if (sortIndicator('accountCreatedAt')) {
-                  <span aria-hidden="true">{{ sortIndicator('accountCreatedAt') }}</span>
-                }
-              </button>
-            </th>
             <th scope="col">
               <button
                 type="button"
@@ -105,26 +92,33 @@
                 }
               </button>
             </th>
-            <th scope="col" class="text-right">{{ 'adminRequests.columns.remove' | transloco }}</th>
+            <th scope="col" class="text-right">{{ 'adminRequests.columns.action' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
           @for (entry of sortedEntries(); track entry.pubkey) {
             <tr class="border-[#0a0a0a]/20 align-top hover:bg-transparent">
               <td>
-                @if (entry.avatarUrl) {
-                  <img
-                    [src]="entry.avatarUrl"
-                    [alt]="entry.username"
-                    class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
-                  />
-                } @else {
-                  <div
-                    class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
+                  <a
+                    [href]="entry.primalUrl"
+                    target="_blank"
+                    rel="noreferrer"
+                    [aria-label]="'adminRequests.primal' | transloco"
                   >
-                    {{ entry.username.slice(0, 2).toUpperCase() }}
-                  </div>
-                }
+                    @if (entry.avatarUrl) {
+                    <img
+                      [src]="entry.avatarUrl"
+                      [alt]="entry.username"
+                      class="h-12 w-12 border-[3px] border-[#0a0a0a] object-cover"
+                    />
+                    } @else {
+                      <div
+                        class="flex h-12 w-12 items-center justify-center border-[3px] border-[#0a0a0a] bg-[#FFE600] text-base font-bold text-[#0a0a0a]"
+                      >
+                        {{ entry.username.slice(0, 2).toUpperCase() }}
+                      </div>
+                    }
+                  </a>
               </td>
               <td class="min-w-48">
                 <p class="font-bold text-[#0a0a0a] [overflow-wrap:anywhere]">
@@ -137,35 +131,16 @@
               <td class="min-w-64 max-w-sm text-sm text-[#0a0a0a]/70 [overflow-wrap:anywhere]">
                 {{ entry.description || ('adminRequests.unknown' | transloco) }}
               </td>
-              <td class="min-w-32">
-                <a
-                  [href]="entry.primalUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="btn btn-outline btn-sm h-auto px-3 py-2 text-sm whitespace-nowrap"
-                >
-                  {{ 'adminRequests.primal' | transloco }}
-                </a>
-              </td>
-              <td class="min-w-40 text-sm text-[#0a0a0a]/70">
-                {{ entry.accountCreatedAtLabel }}
-              </td>
               <td class="min-w-36 text-sm text-[#0a0a0a]/70">
                 {{ sourceLabelKey(entry) | transloco }}
               </td>
               <td class="min-w-48 text-sm text-[#0a0a0a]/70">
                 <p>{{ entry.joinedAtLabel }}</p>
-                @if (entry.requestedAt) {
-                  <p class="text-xs text-[#0a0a0a]/50">
-                    {{ 'adminRequests.requestedAtPrefix' | transloco }}
-                    {{ entry.requestedAtLabel }}
-                  </p>
-                }
               </td>
               <td class="text-right">
                 <button
                   type="button"
-                  class="btn btn-sm min-h-9 min-w-9 px-3 py-2 whitespace-nowrap border-red-600"
+                  class="btn btn-sm min-h-9 px-3 py-2 whitespace-nowrap border-red-600"
                   [class.btn-outline]="confirmingRemovalPubkey() !== entry.pubkey"
                   [class.text-red-600]="confirmingRemovalPubkey() !== entry.pubkey"
                   [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
@@ -185,7 +160,7 @@
                   } @else if (confirmingRemovalPubkey() === entry.pubkey) {
                     {{ 'adminRequests.confirmRemove' | transloco }}
                   } @else {
-                    <span aria-hidden="true">X</span>
+                    {{ 'adminRequests.remove' | transloco }}
                   }
                 </button>
               </td>
