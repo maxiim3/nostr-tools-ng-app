@@ -130,6 +130,7 @@
       "idle": "Tu peux rejoindre le pack maintenant.",
       "pending": "Ton admission est en cours.",
       "approved": "Ta demande est approuvée.",
+      "added": "Tu as été ajouté au pack !",
       "alreadyMember": "Tu fais déjà partie du pack !"
     },
     "submitError": {

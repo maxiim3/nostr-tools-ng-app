@@ -60,6 +60,35 @@ describe('PackRequestPage auth gating', () => {
     expect(requestService.submitRequest).toHaveBeenCalledTimes(1);
     expect(session.openAuthModal).not.toHaveBeenCalled();
   });
+
+  it('marks membership as coming from the completed join request', async () => {
+    const session = {
+      isAuthenticated: signal(true),
+      user: signal({
+        pubkey: 'f'.repeat(64),
+        npub: 'npub1activeprofile',
+        displayName: 'Active Profile',
+        imageUrl: null,
+        description: null,
+        nip05: null,
+      }),
+      openAuthModal: vi.fn(),
+    };
+    const requestService = createRequestServiceMock();
+    const packMembership = {
+      isCurrentUserMember: vi
+        .fn<() => Promise<boolean>>()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true),
+    };
+    const page = createPage(session, requestService, packMembership);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    await page.requestJoin();
+
+    expect(page.isPackMember()).toBe(true);
+    expect(page.joinedFromRequest()).toBe(true);
+  });
 });
 
 describe('PackRequestPage pure helpers', () => {
@@ -122,7 +151,10 @@ describe('PackRequestPage pure helpers', () => {
 
 function createPage(
   session: Partial<NostrSessionService>,
-  requestService = createRequestServiceMock()
+  requestService = createRequestServiceMock(),
+  packMembership = {
+    isCurrentUserMember: vi.fn<() => Promise<boolean>>().mockResolvedValue(false),
+  }
 ): PackRequestPage {
   TestBed.configureTestingModule({
     providers: [
@@ -130,9 +162,7 @@ function createPage(
       { provide: StarterPackRequestService, useValue: requestService },
       {
         provide: FrancophonePackMembershipService,
-        useValue: {
-          isCurrentUserMember: vi.fn<() => Promise<boolean>>().mockResolvedValue(false),
-        },
+        useValue: packMembership,
       },
     ],
   });

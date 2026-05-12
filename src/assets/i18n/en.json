@@ -130,6 +130,7 @@
       "idle": "You can join the pack now.",
       "pending": "Your join is being processed.",
       "approved": "Your request is approved.",
+      "added": "You have been added to the pack!",
       "alreadyMember": "You are already part of the pack!"
     },
     "submitError": {

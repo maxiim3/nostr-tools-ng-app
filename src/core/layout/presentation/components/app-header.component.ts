@@ -105,7 +105,7 @@ import { ZapService } from '../../../zap/zap.service';
             </button>
           }
 
-          @if (session.user()) {
+          <!-- @if (session.user()) {
             <button
               type="button"
               class="text-sm font-semibold text-white/80 transition hover:text-white"
@@ -113,7 +113,7 @@ import { ZapService } from '../../../zap/zap.service';
             >
               {{ 'header.support' | transloco }}
             </button>
-          }
+          } -->
 
           <div
             class="inline-flex items-center border-[3px] border-[#0a0a0a] bg-white"

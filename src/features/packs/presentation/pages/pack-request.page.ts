@@ -40,6 +40,7 @@ export class PackRequestPage implements OnDestroy {
   readonly isAuthenticated = this.session.isAuthenticated;
   readonly requestStatus = signal<UserRequestStatus>('idle');
   readonly isPackMember = signal(false);
+  readonly joinedFromRequest = signal(false);
   readonly packFRUrl = PROJECT_INFO.packFRUrl;
   readonly loading = signal(false);
 
@@ -55,6 +56,7 @@ export class PackRequestPage implements OnDestroy {
       } else {
         this.requestStatus.set('idle');
         this.isPackMember.set(false);
+        this.joinedFromRequest.set(false);
       }
     });
   }
@@ -101,12 +103,14 @@ export class PackRequestPage implements OnDestroy {
     }
 
     this.submitError.set(null);
+    this.joinedFromRequest.set(false);
     this.loading.set(true);
     this.startLoadingMessageRotation();
 
     try {
       await this.requestService.submitRequest();
       await this.loadStatus();
+      this.joinedFromRequest.set(this.isPackMember());
     } catch (error: unknown) {
       this.submitError.set(resolveSubmitErrorKey(error));
     } finally {

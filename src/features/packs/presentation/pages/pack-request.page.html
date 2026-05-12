@@ -23,7 +23,12 @@
       </button>
     } @else if (isPackMember()) {
       <div class="alert alert-success">
-        <span class="font-bold">{{ 'request.status.alreadyMember' | transloco }}</span>
+        <span class="font-bold">
+          {{
+            (joinedFromRequest() ? 'request.status.added' : 'request.status.alreadyMember')
+              | transloco
+          }}
+        </span>
       </div>
       <a
         [href]="packFRUrl"
