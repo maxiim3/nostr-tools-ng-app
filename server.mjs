@@ -147,13 +147,14 @@ async function handleRequest(request) {
       const auth = await requireNostrAuth(request, undefined, false, requestUrl);
       const member = await memberStorage.findByPubkey(auth.pubkey);
       const isStoredMember = Boolean(member && !member.removedAt);
+      const wasRemovedMember = Boolean(member?.removedAt);
       const isPublicPackMember = isStoredMember
         ? true
         : await packPublisher.hasMember(auth.pubkey).catch(() => false);
 
       return jsonResponse(
         {
-          status: isStoredMember || isPublicPackMember ? 'joined' : 'idle',
+          status: isStoredMember || (!wasRemovedMember && isPublicPackMember) ? 'joined' : 'idle',
           member: isStoredMember ? mapMemberRecord(member) : null,
           publicPackMember: isPublicPackMember,
         },

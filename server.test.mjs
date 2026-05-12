@@ -274,6 +274,56 @@ describe('server.mjs integration', () => {
       expect(body.publicPackMember).toBe(true);
     });
 
+    it('lets a removed stored member rejoin when the public pack still lists them', async () => {
+      const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
+      record.removed_at = '2025-01-20T00:00:00.000Z';
+
+      const stateUrl = `${baseUrl}/api/pack-members/me`;
+      const stateAuthorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url: stateUrl,
+        method: 'GET',
+      });
+
+      const stateResponse = await fetch(stateUrl, {
+        headers: { Authorization: stateAuthorization },
+      });
+
+      expect(stateResponse.status).toBe(200);
+      const stateBody = await stateResponse.json();
+      expect(stateBody.status).toBe('idle');
+      expect(stateBody.member).toBeNull();
+      expect(stateBody.publicPackMember).toBe(true);
+
+      const joinUrl = `${baseUrl}/api/pack-members`;
+      const joinBody = {
+        username: 'Alice rejoined',
+      };
+      const joinAuthorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url: joinUrl,
+        method: 'POST',
+        body: joinBody,
+      });
+
+      const joinResponse = await fetch(joinUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: joinAuthorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(joinBody),
+      });
+
+      expect(joinResponse.status).toBe(201);
+      const joinResponseBody = await joinResponse.json();
+      expect(joinResponseBody.packChanged).toBe(false);
+      expect(joinResponseBody.removedAt).toBeNull();
+      const updatedRecord = memberRows.find((row) => row.pubkey === USER_PUBKEY);
+      expect(updatedRecord.removed_at).toBeNull();
+      expect(updatedRecord.username).toBe('Alice rejoined');
+    });
+
     it('lists public pack members from the configured publisher', async () => {
       const response = await fetch(
         `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
