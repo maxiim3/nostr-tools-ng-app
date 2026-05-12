@@ -8,13 +8,15 @@ import { getToken } from 'nostr-tools/nip98';
 const TEST_DIR = path.join(os.tmpdir(), `nostr-test-${Date.now()}`);
 const USER_SECRET_KEY = generateSecretKey();
 const ADMIN_SECRET_KEY = generateSecretKey();
+const INVALID_BODY_SECRET_KEY = generateSecretKey();
 const USER_PUBKEY = getPublicKey(USER_SECRET_KEY);
-const USER_NPUB = nip19.npubEncode(USER_PUBKEY);
+const INVALID_BODY_PUBKEY = getPublicKey(INVALID_BODY_SECRET_KEY);
 const ADMIN_NPUB = nip19.npubEncode(getPublicKey(ADMIN_SECRET_KEY));
 
 process.env.ADMIN_NPUBS = ADMIN_NPUB;
 process.env.DATA_DIR = TEST_DIR;
 process.env.SUPABASE_SECRET_KEY = 'test-secret-key';
+process.env.FRANCOPHONE_PACK_PUBLISHER_MODE = 'memory';
 
 let baseUrl;
 
@@ -134,6 +136,39 @@ describe('server.mjs integration', () => {
   });
 
   describe('Pack member lifecycle', () => {
+    it('does not publish the pack event when member payload validation fails', async () => {
+      const url = `${baseUrl}/api/pack-members`;
+      const body = {
+        username: 'Invalid',
+        followerCount: -1,
+      };
+      const authorization = await createAuthHeader({
+        secretKey: INVALID_BODY_SECRET_KEY,
+        url,
+        method: 'POST',
+        body,
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      expect(response.status).toBe(400);
+
+      const publicMembersResponse = await fetch(
+        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
+          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
+        )}`
+      );
+      const publicMembers = await publicMembersResponse.json();
+      expect(publicMembers.some((entry) => entry.pubkey === INVALID_BODY_PUBKEY)).toBe(false);
+    });
+
     it('auto-admits a user and persists the member in Supabase', async () => {
       const url = `${baseUrl}/api/pack-members`;
       const body = {
@@ -167,6 +202,8 @@ describe('server.mjs integration', () => {
       expect(responseBody.pubkey).toBe(USER_PUBKEY);
       expect(responseBody.username).toBe('Alice');
       expect(responseBody.requestedFromApp).toBe(true);
+      expect(responseBody.packEventId).toBe('memory-1');
+      expect(responseBody.packChanged).toBe(true);
       expect(responseBody.removedAt).toBeNull();
 
       const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
@@ -209,6 +246,8 @@ describe('server.mjs integration', () => {
       });
 
       expect(response.status).toBe(201);
+      const responseBody = await response.json();
+      expect(responseBody.packChanged).toBe(false);
       const matchingRows = memberRows.filter((row) => row.pubkey === USER_PUBKEY);
       expect(matchingRows).toHaveLength(1);
       expect(matchingRows[0].username).toBe('Alice updated');
@@ -232,6 +271,19 @@ describe('server.mjs integration', () => {
       const body = await response.json();
       expect(body.status).toBe('joined');
       expect(body.member.pubkey).toBe(USER_PUBKEY);
+      expect(body.publicPackMember).toBe(true);
+    });
+
+    it('lists public pack members from the configured publisher', async () => {
+      const response = await fetch(
+        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
+          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
+        )}`
+      );
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.some((entry) => entry.pubkey === USER_PUBKEY)).toBe(true);
     });
 
     it('lists current members for authenticated admin', async () => {
@@ -291,6 +343,14 @@ describe('server.mjs integration', () => {
       const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
       expect(record).toBeTruthy();
       expect(record.removed_at).toBeTruthy();
+
+      const publicMembersResponse = await fetch(
+        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
+          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
+        )}`
+      );
+      const publicMembers = await publicMembersResponse.json();
+      expect(publicMembers.some((entry) => entry.pubkey === USER_PUBKEY)).toBe(false);
     });
   });
 

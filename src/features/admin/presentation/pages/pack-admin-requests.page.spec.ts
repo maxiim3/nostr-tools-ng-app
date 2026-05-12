@@ -39,12 +39,14 @@ interface PageAccess {
   actingOn: () => string | null;
   confirmingRemovalPubkey: () => string | null;
   actionError: () => string | null;
+  actionSuccess: () => string | null;
   loadWarnings: () => string[];
   toggleSort: (field: 'username' | 'accountCreatedAt' | 'requestedFromApp' | 'joinedAt') => void;
   sortIndicator: (
     field: 'username' | 'accountCreatedAt' | 'requestedFromApp' | 'joinedAt'
   ) => string;
   sortedEntries: () => AdminPackMemberEntry[];
+  sourceLabelKey: (entry: AdminPackMemberEntry) => string;
   remove: (entry: AdminPackMemberEntry) => Promise<void>;
 }
 
@@ -56,7 +58,6 @@ function createMocks() {
   const listAdminRequestsMock = vi.fn().mockResolvedValue(FAKE_ENTRIES);
   const removeMemberMock = vi.fn().mockResolvedValue(undefined);
   const listPublicPackMembersMock = vi.fn().mockResolvedValue([]);
-  const removeMemberFromPackMock = vi.fn().mockResolvedValue(undefined);
 
   TestBed.configureTestingModule({
     providers: [
@@ -72,7 +73,6 @@ function createMocks() {
         provide: FrancophonePackMembershipService,
         useValue: {
           listPublicPackMembers: listPublicPackMembersMock,
-          removeMemberFromPack: removeMemberFromPackMock,
         },
       },
     ],
@@ -82,7 +82,6 @@ function createMocks() {
     listAdminRequests: listAdminRequestsMock,
     removeMember: removeMemberMock,
     listPublicPackMembers: listPublicPackMembersMock,
-    removeMemberFromPack: removeMemberFromPackMock,
   };
 }
 
@@ -181,13 +180,12 @@ describe('PackAdminRequestsPage', () => {
     await page.remove(FAKE_ENTRIES[0]);
 
     expect(page.confirmingRemovalPubkey()).toBe('abc123');
-    expect(mocks.removeMemberFromPack).not.toHaveBeenCalled();
     expect(mocks.removeMember).not.toHaveBeenCalled();
   });
 
   it('clears the confirmation state after 3 seconds', async () => {
     vi.useFakeTimers();
-    const mocks = createMocks();
+    createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
@@ -198,30 +196,28 @@ describe('PackAdminRequestsPage', () => {
     await vi.advanceTimersByTimeAsync(3000);
 
     expect(page.confirmingRemovalPubkey()).toBeNull();
-    expect(mocks.removeMemberFromPack).not.toHaveBeenCalled();
   });
 
-  it('remove updates the pack and then removes the DB record when confirmed', async () => {
+  it('remove delegates pack and DB deletion to the backend when confirmed', async () => {
     const mocks = createMocks();
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
     mocks.listAdminRequests.mockClear();
     mocks.removeMember.mockClear();
-    mocks.removeMemberFromPack.mockClear();
 
     await page.remove(FAKE_ENTRIES[0]);
     await page.remove(FAKE_ENTRIES[0]);
 
-    expect(mocks.removeMemberFromPack).toHaveBeenCalledWith('abc123');
     expect(mocks.removeMember).toHaveBeenCalledWith('abc123');
     expect(mocks.listAdminRequests).toHaveBeenCalled();
     expect(page.confirmingRemovalPubkey()).toBeNull();
     expect(page.actingOn()).toBeNull();
     expect(page.actionError()).toBeNull();
+    expect(page.actionSuccess()).toBe('adminRequests.removed');
   });
 
-  it('remove only updates the pack when the member is not in DB', async () => {
+  it('remove uses the same backend action when the member is not in DB', async () => {
     const mocks = createMocks();
     mocks.listPublicPackMembers.mockResolvedValue([
       {
@@ -235,19 +231,17 @@ describe('PackAdminRequestsPage', () => {
 
     await vi.dynamicImportSettled();
     mocks.removeMember.mockClear();
-    mocks.removeMemberFromPack.mockClear();
 
     const packOnlyEntry = page.entries()[1];
     await page.remove(packOnlyEntry);
     await page.remove(packOnlyEntry);
 
-    expect(mocks.removeMemberFromPack).toHaveBeenCalledWith('def456');
-    expect(mocks.removeMember).not.toHaveBeenCalled();
+    expect(mocks.removeMember).toHaveBeenCalledWith('def456');
   });
 
   it('remove sets actionError on failure', async () => {
     const mocks = createMocks();
-    mocks.removeMemberFromPack.mockRejectedValue(new Error('fail'));
+    mocks.removeMember.mockRejectedValue(new Error('fail'));
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
@@ -257,6 +251,21 @@ describe('PackAdminRequestsPage', () => {
 
     expect(page.actionError()).toBe('adminRequests.errors.removeFailed');
     expect(page.actingOn()).toBeNull();
+  });
+
+  it('labels members by source', async () => {
+    createMocks();
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+
+    expect(page.sourceLabelKey(FAKE_ENTRIES[0])).toBe('adminRequests.sources.app');
+    expect(page.sourceLabelKey({ ...FAKE_ENTRIES[0], requestedFromApp: false })).toBe(
+      'adminRequests.sources.db'
+    );
+    expect(page.sourceLabelKey({ ...FAKE_ENTRIES[0], isStored: false })).toBe(
+      'adminRequests.sources.publicPack'
+    );
   });
 
   it('cycles username sort from current to asc to desc to current', async () => {

@@ -12,6 +12,13 @@ const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
 const MAX_JSON_BODY_BYTES = 50 * 1024;
 const MEMBERS_TABLE =
   process.env.SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE ?? 'francophone_pack_members';
+const FRANCOPHONE_PACK_URL =
+  process.env.FRANCOPHONE_PACK_URL ??
+  'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900';
+const FRANCOPHONE_PACK_SIGNER_MODE = process.env.FRANCOPHONE_PACK_SIGNER_MODE ?? '';
+const FRANCOPHONE_PACK_BUNKER_URL = process.env.FRANCOPHONE_PACK_BUNKER_URL ?? '';
+const FRANCOPHONE_PACK_OWNER_NSEC = process.env.FRANCOPHONE_PACK_OWNER_NSEC ?? '';
+const FRANCOPHONE_PACK_PUBLISHER_MODE = process.env.FRANCOPHONE_PACK_PUBLISHER_MODE ?? 'nostr';
 const ADMIN_NPUBS = new Set(
   (process.env.ADMIN_NPUBS ?? 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du')
     .split(',')
@@ -33,9 +40,14 @@ const PUBLIC_PACK_RELAY_URLS = [
   'wss://relay.primal.net',
 ];
 const PUBLIC_PACK_EVENT_KIND = 39089;
+const PUBLIC_PACK_UPDATE_ATTEMPTS = 3;
+const PUBLIC_PACK_CONFIRM_ATTEMPTS = 5;
+const PUBLIC_PACK_CONFIRM_DELAY_MS = 1000;
+const PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS = 120_000;
 const ndkModulePromise = import('@nostr-dev-kit/ndk');
 
 const memberStorage = createFrancophonePackMemberStorage();
+const packPublisher = createFrancophonePackPublisher();
 let publicPackNdkPromise = null;
 
 const server = Bun.serve({
@@ -120,7 +132,10 @@ async function handleRequest(request) {
         throw createHttpError(400, 'Missing packUrl query parameter.');
       }
 
-      const members = await listPublicPackMembers(packUrl);
+      const members =
+        packUrl === FRANCOPHONE_PACK_URL && typeof packPublisher.listMembers === 'function'
+          ? await packPublisher.listMembers()
+          : await listPublicPackMembers(packUrl);
       return jsonResponse(members, { headers: corsHeaders });
     } catch (error) {
       return handleApiError(error, corsHeaders);
@@ -131,11 +146,16 @@ async function handleRequest(request) {
     try {
       const auth = await requireNostrAuth(request, undefined, false, requestUrl);
       const member = await memberStorage.findByPubkey(auth.pubkey);
+      const isStoredMember = Boolean(member && !member.removedAt);
+      const isPublicPackMember = isStoredMember
+        ? true
+        : await packPublisher.hasMember(auth.pubkey).catch(() => false);
 
       return jsonResponse(
         {
-          status: member && !member.removedAt ? 'joined' : 'idle',
-          member: member && !member.removedAt ? mapMemberRecord(member) : null,
+          status: isStoredMember || isPublicPackMember ? 'joined' : 'idle',
+          member: isStoredMember ? mapMemberRecord(member) : null,
+          publicPackMember: isPublicPackMember,
         },
         { headers: corsHeaders }
       );
@@ -150,24 +170,42 @@ async function handleRequest(request) {
       const auth = await requireNostrAuth(request, body, false, requestUrl);
       const now = new Date().toISOString();
       const existingMember = await memberStorage.findByPubkey(auth.pubkey);
-
-      const member = await memberStorage.upsert({
-        pubkey: auth.pubkey,
+      const memberProfile = {
         username: readProfileName(body, auth.npub),
         description: readOptionalString(body?.description),
         avatarUrl: readOptionalString(body?.avatarUrl) ?? readOptionalString(body?.imageUrl),
-        joinedAt: existingMember && !existingMember.removedAt ? existingMember.joinedAt : now,
         followerCount: readOptionalNumber(body?.followerCount, 'followerCount'),
         followingCount: readOptionalNumber(body?.followingCount, 'followingCount'),
         accountCreatedAt: readOptionalIsoString(body?.accountCreatedAt, 'accountCreatedAt'),
         postCount: readOptionalNumber(body?.postCount, 'postCount'),
         zapCount: readOptionalNumber(body?.zapCount, 'zapCount'),
+      };
+      const packUpdate = await packPublisher.addMember(auth.pubkey);
+
+      const member = await memberStorage.upsert({
+        pubkey: auth.pubkey,
+        username: memberProfile.username,
+        description: memberProfile.description,
+        avatarUrl: memberProfile.avatarUrl,
+        joinedAt: existingMember && !existingMember.removedAt ? existingMember.joinedAt : now,
+        followerCount: memberProfile.followerCount,
+        followingCount: memberProfile.followingCount,
+        accountCreatedAt: memberProfile.accountCreatedAt,
+        postCount: memberProfile.postCount,
+        zapCount: memberProfile.zapCount,
         requestedFromApp: true,
         requestedAt: existingMember && !existingMember.removedAt ? existingMember.requestedAt : now,
         removedAt: null,
       });
 
-      return jsonResponse(mapMemberRecord(member), { status: 201, headers: corsHeaders });
+      return jsonResponse(
+        {
+          ...mapMemberRecord(member),
+          packEventId: packUpdate.eventId,
+          packChanged: packUpdate.changed,
+        },
+        { status: 201, headers: corsHeaders }
+      );
     } catch (error) {
       return handleApiError(error, corsHeaders);
     }
@@ -190,7 +228,8 @@ async function handleRequest(request) {
     try {
       const body = await readJsonBody(request);
       await requireNostrAuth(request, body, true, requestUrl);
-      await memberStorage.remove(removeMatch.pubkey, new Date().toISOString());
+      await packPublisher.removeMember(removeMatch.pubkey);
+      await memberStorage.removeIfExists(removeMatch.pubkey, new Date().toISOString());
 
       return new Response(null, { status: 204, headers: corsHeaders });
     } catch (error) {
@@ -441,6 +480,318 @@ function matchAdminMemberRemoveRoute(pathname) {
   };
 }
 
+function createFrancophonePackPublisher() {
+  const packReference = parsePackReference(FRANCOPHONE_PACK_URL);
+
+  if (FRANCOPHONE_PACK_PUBLISHER_MODE === 'memory') {
+    return createMemoryPackPublisher(packReference);
+  }
+
+  return createNostrPackPublisher(packReference);
+}
+
+function createMemoryPackPublisher(packReference) {
+  let tags = [['d', packReference.dTag]];
+  let revision = 0;
+
+  return {
+    async addMember(pubkey) {
+      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
+      if (hasMemberTag(tags, memberPubkey)) {
+        return { changed: false, eventId: `memory-${revision}` };
+      }
+
+      revision += 1;
+      tags = addMemberTag(tags, memberPubkey, packReference.dTag);
+      return { changed: true, eventId: `memory-${revision}` };
+    },
+
+    async removeMember(pubkey) {
+      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
+      const nextTags = removeMemberTag(tags, memberPubkey);
+
+      if (nextTags.length === tags.length) {
+        return { changed: false, eventId: `memory-${revision}` };
+      }
+
+      revision += 1;
+      tags = nextTags;
+      return { changed: true, eventId: `memory-${revision}` };
+    },
+
+    async hasMember(pubkey) {
+      const memberPubkey = normalizeHexPubkey(pubkey);
+      return Boolean(memberPubkey && hasMemberTag(tags, memberPubkey));
+    },
+
+    async listMembers() {
+      return uniquePublicMemberPubkeys(tags).map((pubkey) => ({
+        pubkey,
+        username: `${pubkey.slice(0, 12)}...`,
+        description: null,
+        avatarUrl: null,
+      }));
+    },
+  };
+}
+
+function createNostrPackPublisher(packReference) {
+  let signerPromise = null;
+
+  const resolveSigner = () => {
+    signerPromise ??= createPackOwnerSigner(packReference).catch((error) => {
+      signerPromise = null;
+      throw error;
+    });
+
+    return signerPromise;
+  };
+
+  return {
+    async addMember(pubkey) {
+      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
+
+      for (let attempt = 0; attempt < PUBLIC_PACK_UPDATE_ATTEMPTS; attempt += 1) {
+        const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
+
+        if (hasMemberTag(currentPackEvent.tags, memberPubkey)) {
+          return { changed: attempt > 0, eventId: currentPackEvent.id ?? null };
+        }
+
+        const tags = addMemberTag(currentPackEvent.tags, memberPubkey, packReference.dTag);
+        const eventId = await publishPackEvent(
+          packReference,
+          tags,
+          currentPackEvent.content,
+          resolveSigner
+        );
+        const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, true);
+
+        if (confirmed) {
+          return { changed: true, eventId };
+        }
+      }
+
+      throw createHttpError(502, 'Unable to confirm public pack member addition.');
+    },
+
+    async removeMember(pubkey) {
+      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
+
+      for (let attempt = 0; attempt < PUBLIC_PACK_UPDATE_ATTEMPTS; attempt += 1) {
+        const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
+        const tags = removeMemberTag(currentPackEvent.tags, memberPubkey);
+
+        if (tags.length === currentPackEvent.tags.length) {
+          return { changed: attempt > 0, eventId: currentPackEvent.id ?? null };
+        }
+
+        const eventId = await publishPackEvent(
+          packReference,
+          tags,
+          currentPackEvent.content,
+          resolveSigner
+        );
+        const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, false);
+
+        if (confirmed) {
+          return { changed: true, eventId };
+        }
+      }
+
+      throw createHttpError(502, 'Unable to confirm public pack member removal.');
+    },
+
+    async hasMember(pubkey) {
+      const memberPubkey = normalizeHexPubkey(pubkey);
+      if (!memberPubkey) {
+        return false;
+      }
+
+      const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
+      return hasMemberTag(currentPackEvent.tags, memberPubkey);
+    },
+  };
+}
+
+async function loadCurrentPublicPackEvent(packReference) {
+  const currentPackEvent = await findCurrentPackEvent(packReference);
+
+  if (!currentPackEvent) {
+    throw createHttpError(502, 'Public pack event not found.');
+  }
+
+  return currentPackEvent;
+}
+
+async function publishPackEvent(packReference, tags, content, resolveSigner) {
+  const ndk = await ensurePublicPackNdk();
+  const signer = await resolveSigner();
+  const { NDKEvent } = await ndkModulePromise;
+  const event = new NDKEvent(ndk);
+  ndk.signer = signer;
+  event.kind = PUBLIC_PACK_EVENT_KIND;
+  event.tags = tags;
+  event.content = typeof content === 'string' ? content : '';
+  event.created_at = Math.floor(Date.now() / 1000);
+
+  await event.sign(signer);
+  await event.publish();
+
+  return event.id ?? `${packReference.authorPubkey}:${event.created_at}`;
+}
+
+async function confirmPublicPackMemberState(packReference, memberPubkey, expectedMembership) {
+  for (let attempt = 0; attempt < PUBLIC_PACK_CONFIRM_ATTEMPTS; attempt += 1) {
+    const currentPackEvent = await findCurrentPackEvent(packReference).catch(() => null);
+
+    if (
+      currentPackEvent &&
+      hasMemberTag(currentPackEvent.tags, memberPubkey) === expectedMembership
+    ) {
+      return true;
+    }
+
+    if (attempt < PUBLIC_PACK_CONFIRM_ATTEMPTS - 1) {
+      await delay(PUBLIC_PACK_CONFIRM_DELAY_MS);
+    }
+  }
+
+  return false;
+}
+
+async function createPackOwnerSigner(packReference) {
+  const signerMode = readPackSignerMode();
+
+  if (signerMode === 'nip46') {
+    return createPackOwnerBunkerSigner(packReference);
+  }
+
+  if (signerMode !== 'nsec') {
+    throw createHttpError(503, 'Pack signer mode is invalid.');
+  }
+
+  return createPackOwnerPrivateKeySigner(packReference);
+}
+
+async function createPackOwnerPrivateKeySigner(packReference) {
+  const privateKey = readOptionalString(FRANCOPHONE_PACK_OWNER_NSEC);
+  if (!privateKey) {
+    throw createHttpError(503, 'Automatic pack publishing is not configured.');
+  }
+
+  const ndk = await ensurePublicPackNdk();
+  const { NDKPrivateKeySigner } = await ndkModulePromise;
+  const signer = new NDKPrivateKeySigner(privateKey, ndk);
+  const user = await signer.user();
+  assertPackSignerPubkey(user.pubkey, packReference);
+
+  return signer;
+}
+
+async function createPackOwnerBunkerSigner(packReference) {
+  const connectionToken = readOptionalString(FRANCOPHONE_PACK_BUNKER_URL);
+  if (!connectionToken) {
+    throw createHttpError(503, 'Pack bunker signer is not configured.');
+  }
+
+  const ndk = await ensurePublicPackNdk();
+  const { NDKNip46Signer } = await ndkModulePromise;
+  let signer;
+
+  try {
+    signer = NDKNip46Signer.bunker(ndk, connectionToken);
+  } catch {
+    throw createHttpError(503, 'Pack bunker signer is misconfigured.');
+  }
+
+  try {
+    const user = await waitForPackBunkerSignerReady(signer);
+    assertPackSignerPubkey(user.pubkey, packReference);
+  } catch (error) {
+    signer.stop();
+
+    if (typeof error?.status === 'number') {
+      throw error;
+    }
+
+    throw createHttpError(503, 'Pack bunker signer is unavailable.');
+  }
+
+  return signer;
+}
+
+function readPackSignerMode() {
+  const configuredMode = readOptionalString(FRANCOPHONE_PACK_SIGNER_MODE)?.toLowerCase();
+
+  if (!configuredMode) {
+    return readOptionalString(FRANCOPHONE_PACK_BUNKER_URL) ? 'nip46' : 'nsec';
+  }
+
+  if (configuredMode === 'nip46' || configuredMode === 'nsec') {
+    return configuredMode;
+  }
+
+  return configuredMode;
+}
+
+async function waitForPackBunkerSignerReady(signer) {
+  let timeoutId;
+
+  try {
+    return await Promise.race([
+      signer.blockUntilReady(),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(createHttpError(503, 'Pack bunker signer connection timed out.'));
+        }, PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function assertPackSignerPubkey(pubkey, packReference) {
+  const signerPubkey = normalizeHexPubkey(pubkey);
+
+  if (signerPubkey !== packReference.authorPubkey) {
+    throw createHttpError(500, 'Pack publisher key does not match the configured pack owner.');
+  }
+}
+
+function requireHexPubkey(pubkey, message) {
+  const normalizedPubkey = normalizeHexPubkey(pubkey);
+  if (!normalizedPubkey) {
+    throw createHttpError(400, message);
+  }
+
+  return normalizedPubkey;
+}
+
+function hasMemberTag(tags, memberPubkey) {
+  return tags.some((tag) => tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey);
+}
+
+function addMemberTag(tags, memberPubkey, dTag) {
+  const nextTags = tags.map((tag) => [...tag]);
+
+  if (!nextTags.some((tag) => tag[0] === 'd' && readOptionalString(tag[1]))) {
+    nextTags.unshift(['d', dTag]);
+  }
+
+  nextTags.push(['p', memberPubkey]);
+  return nextTags;
+}
+
+function removeMemberTag(tags, memberPubkey) {
+  return tags.filter(
+    (tag) => !(tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey)
+  );
+}
+
 function createFrancophonePackMemberStorage() {
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/+$/, '');
   const serverKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -493,10 +844,10 @@ function createFrancophonePackMemberStorage() {
       return rows[0] ? mapSupabaseRow(rows[0]) : member;
     },
 
-    async remove(pubkey, removedAt) {
+    async removeIfExists(pubkey, removedAt) {
       const existingMember = await this.findByPubkey(pubkey);
       if (!existingMember || existingMember.removedAt) {
-        throw createHttpError(404, 'Member not found.');
+        return false;
       }
 
       const url = new URL(tableUrl);
@@ -511,6 +862,8 @@ function createFrancophonePackMemberStorage() {
         },
         body: JSON.stringify({ removed_at: removedAt }),
       });
+
+      return true;
     },
   };
 }
@@ -596,17 +949,21 @@ async function findCurrentPackEvent(packReference) {
     new Promise((resolve) => setTimeout(() => resolve(new Set()), 10_000)),
   ]);
 
-  return [...events].find((event) => {
-    if (event.kind !== PUBLIC_PACK_EVENT_KIND) {
-      return false;
-    }
+  return (
+    [...events]
+      .filter((event) => {
+        if (event.kind !== PUBLIC_PACK_EVENT_KIND) {
+          return false;
+        }
 
-    if (event.pubkey !== packReference.authorPubkey) {
-      return false;
-    }
+        if (event.pubkey !== packReference.authorPubkey) {
+          return false;
+        }
 
-    return event.tags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag);
-  });
+        return event.tags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag);
+      })
+      .sort((left, right) => (right.created_at ?? 0) - (left.created_at ?? 0))[0] ?? null
+  );
 }
 
 async function loadPublicPackProfile(pubkey) {
@@ -699,6 +1056,10 @@ function uniquePublicMemberPubkeys(tags) {
 function normalizeHexPubkey(pubkey) {
   const trimmedPubkey = String(pubkey).trim().toLowerCase();
   return /^[0-9a-f]{64}$/.test(trimmedPubkey) ? trimmedPubkey : null;
+}
+
+function delay(timeoutMs) {
+  return new Promise((resolve) => setTimeout(resolve, timeoutMs));
 }
 
 async function withTimeout(promise, timeoutMs, fallbackValue) {

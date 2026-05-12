@@ -72,8 +72,12 @@ Variables d'environnement requises :
 - `SUPABASE_SECRET_KEY=<secret-key>` pour le serveur Bun uniquement
 - `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE=francophone_pack_members` optionnel
 - `ADMIN_NPUBS=npub1...,npub1...` pour les actions admin NIP-98
+- `FRANCOPHONE_PACK_URL=https://following.space/d/...` optionnel, par defaut le pack FR
+- `FRANCOPHONE_PACK_SIGNER_MODE=nip46` pour signer via un bunker NIP-46
+- `FRANCOPHONE_PACK_BUNKER_URL=bunker://...` server-only, utilise par le Bun API pour signer les add/remove du pack
+- `FRANCOPHONE_PACK_OWNER_NSEC=nsec1...` fallback direct si `FRANCOPHONE_PACK_SIGNER_MODE=nsec`
 
-La cle necessaire pour cette feature est `SUPABASE_SECRET_KEY`, configuree uniquement cote serveur. Angular ne parle pas directement a Supabase : Angular appelle `server.mjs`, puis `server.mjs` ecrit dans Supabase apres verification NIP-98. Ne jamais exposer `SUPABASE_SECRET_KEY` ou `SUPABASE_SERVICE_ROLE_KEY` dans Angular.
+Les cles necessaires a cette feature sont configurees uniquement cote serveur. Angular ne parle pas directement a Supabase et ne signe pas le pack du proprietaire : Angular appelle `server.mjs`, puis `server.mjs` verifie le NIP-98 utilisateur, fait signer l'evenement du pack via `FRANCOPHONE_PACK_BUNKER_URL` (ou via `FRANCOPHONE_PACK_OWNER_NSEC` en fallback), et ecrit dans Supabase quand l'ajout est confirme. Ne jamais exposer `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FRANCOPHONE_PACK_BUNKER_URL` ou `FRANCOPHONE_PACK_OWNER_NSEC` dans Angular.
 
 Si le projet Supabase affiche encore les legacy keys, `SUPABASE_SERVICE_ROLE_KEY` reste accepte comme fallback cote serveur.
 

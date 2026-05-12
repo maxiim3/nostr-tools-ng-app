@@ -20,6 +20,10 @@ import {
 
 type SortField = 'username' | 'accountCreatedAt' | 'requestedFromApp' | 'joinedAt';
 type SortDirection = 'asc' | 'desc';
+type SourceLabelKey =
+  | 'adminRequests.sources.app'
+  | 'adminRequests.sources.db'
+  | 'adminRequests.sources.publicPack';
 
 interface SortState {
   field: SortField;
@@ -42,6 +46,7 @@ export class PackAdminRequestsPage implements OnDestroy {
   protected readonly actingOn = signal<string | null>(null);
   protected readonly confirmingRemovalPubkey = signal<string | null>(null);
   protected readonly actionError = signal<string | null>(null);
+  protected readonly actionSuccess = signal<string | null>(null);
   protected readonly loadWarnings = signal<string[]>([]);
   protected readonly sortState = signal<SortState | null>(null);
   protected readonly packFRUrl = PROJECT_INFO.packFRUrl;
@@ -56,22 +61,20 @@ export class PackAdminRequestsPage implements OnDestroy {
   }
 
   protected async remove(entry: AdminPackMemberEntry): Promise<void> {
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
+
     if (this.confirmingRemovalPubkey() !== entry.pubkey) {
       this.armRemovalConfirmation(entry.pubkey);
       return;
     }
 
     this.clearRemovalConfirmation();
-    this.actionError.set(null);
     this.actingOn.set(entry.pubkey);
 
     try {
-      await this.packMembership.removeMemberFromPack(entry.pubkey);
-
-      if (entry.isStored) {
-        await this.requests.removeMember(entry.pubkey);
-      }
-
+      await this.requests.removeMember(entry.pubkey);
+      this.actionSuccess.set('adminRequests.removed');
       await this.loadRequests();
     } catch {
       this.clearRemovalConfirmation();
@@ -79,6 +82,18 @@ export class PackAdminRequestsPage implements OnDestroy {
     } finally {
       this.actingOn.set(null);
     }
+  }
+
+  protected sourceLabelKey(entry: AdminPackMemberEntry): SourceLabelKey {
+    if (entry.isStored && entry.requestedFromApp) {
+      return 'adminRequests.sources.app';
+    }
+
+    if (entry.isStored) {
+      return 'adminRequests.sources.db';
+    }
+
+    return 'adminRequests.sources.publicPack';
   }
 
   private async loadRequests(): Promise<void> {

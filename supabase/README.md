@@ -18,7 +18,11 @@ Copy [.env.example](../.env.example) to `.env` locally and set:
 - `SUPABASE_SECRET_KEY`
 - `SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE` optional, defaults to `francophone_pack_members`
 - `ADMIN_NPUBS`
+- `FRANCOPHONE_PACK_URL` optional, defaults to the configured francophone pack
+- `FRANCOPHONE_PACK_SIGNER_MODE=nip46` to sign pack add/remove events via a NIP-46 bunker
+- `FRANCOPHONE_PACK_BUNKER_URL` server-only, used by the Bun API to request pack signatures from the bunker
+- `FRANCOPHONE_PACK_OWNER_NSEC` direct fallback only when `FRANCOPHONE_PACK_SIGNER_MODE=nsec`
 
 Deployment must define the same server-side environment variables.
 
-No browser Supabase key is needed for this feature. Angular calls `server.mjs`; the server performs NIP-98 authorization and writes to Supabase.
+No browser Supabase key, bunker URL, or pack-owner signing key is needed in Angular. Angular calls `server.mjs`; the server performs NIP-98 authorization, publishes the public pack update through the configured server-only signer, and writes to Supabase after confirmed joins.

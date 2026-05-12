@@ -107,7 +107,7 @@
     "menu": "Menu",
     "home": "Home",
     "request": "Request",
-    "adminRequests": "Admin requests",
+    "adminRequests": "Admin members",
     "openExternal": "External app",
     "support": "Support ⚡"
   },
@@ -116,7 +116,7 @@
     "subtitle": "Connect with Nostr to join the francophone pack immediately.",
     "loading": {
       "1": "This can take a few seconds...",
-      "2": "Fetching from the database...",
+      "2": "Updating the pack...",
       "3": "Almost there...",
       "4": "Don't reload, it's taking longer than usual...",
       "5": "Still working on it..."
@@ -127,7 +127,7 @@
     "externalLogin": "Open external app",
     "requestJoin": "Join pack",
     "status": {
-      "idle": "You can submit a request now.",
+      "idle": "You can join the pack now.",
       "pending": "Your join is being processed.",
       "approved": "Your request is approved.",
       "alreadyMember": "You are already part of the pack!"
@@ -318,7 +318,9 @@
     "empty": "No members yet.",
     "primal": "Open on Primal",
     "remove": "Remove",
-    "confirmRemove": "Confirm X",
+    "confirmRemove": "Confirm",
+    "deleting": "Deleting...",
+    "removed": "Member removed from the pack.",
     "packOnly": "Pack only",
     "yes": "Yes",
     "no": "No",
@@ -329,10 +331,18 @@
       "avatar": "Avatar",
       "username": "Username",
       "description": "Description profile",
+      "profile": "Profile",
       "accountCreatedAt": "Account creation",
-      "requestedFromApp": "From app",
+      "requestedFromApp": "Source",
+      "source": "Source",
       "joinedAt": "Requested/joined at",
-      "action": "Action"
+      "action": "Action",
+      "remove": "Delete"
+    },
+    "sources": {
+      "app": "App / DB",
+      "db": "DB",
+      "publicPack": "Public pack"
     },
     "errors": {
       "removeFailed": "Unable to remove this member right now."

@@ -33,6 +33,12 @@
     </div>
   }
 
+  @if (actionSuccess()) {
+    <div role="status" class="alert alert-success mb-6">
+      <span class="font-bold">{{ actionSuccess()! | transloco }}</span>
+    </div>
+  }
+
   @if (loading()) {
     <div class="flex justify-center py-12">
       <span class="loading loading-spinner loading-lg text-[#0a0a0a]"></span>
@@ -62,6 +68,7 @@
               </button>
             </th>
             <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.profile' | transloco }}</th>
             <th scope="col">
               <button
                 type="button"
@@ -80,7 +87,7 @@
                 class="inline-flex cursor-pointer items-center gap-2 font-semibold underline decoration-2 underline-offset-4"
                 (click)="toggleSort('requestedFromApp')"
               >
-                <span>{{ 'adminRequests.columns.requestedFromApp' | transloco }}</span>
+                <span>{{ 'adminRequests.columns.source' | transloco }}</span>
                 @if (sortIndicator('requestedFromApp')) {
                   <span aria-hidden="true">{{ sortIndicator('requestedFromApp') }}</span>
                 }
@@ -98,7 +105,7 @@
                 }
               </button>
             </th>
-            <th scope="col" class="text-right">{{ 'adminRequests.columns.action' | transloco }}</th>
+            <th scope="col" class="text-right">{{ 'adminRequests.columns.remove' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
@@ -120,14 +127,9 @@
                 }
               </td>
               <td class="min-w-48">
-                <a
-                  [href]="entry.primalUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="font-bold text-[#0a0a0a] underline decoration-2 underline-offset-4 [overflow-wrap:anywhere]"
-                >
+                <p class="font-bold text-[#0a0a0a] [overflow-wrap:anywhere]">
                   {{ entry.username }}
-                </a>
+                </p>
                 <p class="mt-1 text-xs text-[#0a0a0a]/50 [overflow-wrap:anywhere]">
                   {{ entry.pubkey }}
                 </p>
@@ -135,15 +137,21 @@
               <td class="min-w-64 max-w-sm text-sm text-[#0a0a0a]/70 [overflow-wrap:anywhere]">
                 {{ entry.description || ('adminRequests.unknown' | transloco) }}
               </td>
+              <td class="min-w-32">
+                <a
+                  [href]="entry.primalUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="btn btn-outline btn-sm h-auto px-3 py-2 text-sm whitespace-nowrap"
+                >
+                  {{ 'adminRequests.primal' | transloco }}
+                </a>
+              </td>
               <td class="min-w-40 text-sm text-[#0a0a0a]/70">
                 {{ entry.accountCreatedAtLabel }}
               </td>
               <td class="min-w-36 text-sm text-[#0a0a0a]/70">
-                @if (entry.requestedFromApp) {
-                  {{ 'adminRequests.yes' | transloco }}
-                } @else {
-                  {{ 'adminRequests.no' | transloco }}
-                }
+                {{ sourceLabelKey(entry) | transloco }}
               </td>
               <td class="min-w-48 text-sm text-[#0a0a0a]/70">
                 <p>{{ entry.joinedAtLabel }}</p>
@@ -157,19 +165,27 @@
               <td class="text-right">
                 <button
                   type="button"
-                  class="btn btn-sm h-auto px-4 py-2 whitespace-nowrap border-red-600"
+                  class="btn btn-sm min-h-9 min-w-9 px-3 py-2 whitespace-nowrap border-red-600"
                   [class.btn-outline]="confirmingRemovalPubkey() !== entry.pubkey"
                   [class.text-red-600]="confirmingRemovalPubkey() !== entry.pubkey"
                   [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
                   [class.bg-red-600]="confirmingRemovalPubkey() === entry.pubkey"
                   [class.text-white]="confirmingRemovalPubkey() === entry.pubkey"
                   [disabled]="actingOn() === entry.pubkey"
+                  [attr.aria-label]="
+                    confirmingRemovalPubkey() === entry.pubkey
+                      ? ('adminRequests.confirmRemove' | transloco)
+                      : ('adminRequests.remove' | transloco)
+                  "
                   (click)="remove(entry)"
                 >
-                  @if (confirmingRemovalPubkey() === entry.pubkey) {
+                  @if (actingOn() === entry.pubkey) {
+                    <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                    <span class="sr-only">{{ 'adminRequests.deleting' | transloco }}</span>
+                  } @else if (confirmingRemovalPubkey() === entry.pubkey) {
                     {{ 'adminRequests.confirmRemove' | transloco }}
                   } @else {
-                    {{ 'adminRequests.remove' | transloco }}
+                    <span aria-hidden="true">X</span>
                   }
                 </button>
               </td>

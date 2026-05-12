@@ -107,7 +107,7 @@
     "menu": "Menú",
     "home": "Inicio",
     "request": "Solicitud",
-    "adminRequests": "Solicitudes admin",
+    "adminRequests": "Miembros admin",
     "openExternal": "App externa",
     "support": "Apoyar ⚡"
   },
@@ -116,7 +116,7 @@
     "subtitle": "Conéctate con Nostr para unirte al pack francófono inmediatamente.",
     "loading": {
       "1": "Esto puede tardar unos segundos...",
-      "2": "Consultando la base de datos...",
+      "2": "Actualizando el pack...",
       "3": "Ya casi llegamos...",
       "4": "No recargues, está tardando más de lo normal...",
       "5": "Seguimos trabajando en ello..."
@@ -318,7 +318,9 @@
     "empty": "Todavía no hay miembros.",
     "primal": "Abrir en Primal",
     "remove": "Eliminar",
-    "confirmRemove": "Confirmar X",
+    "confirmRemove": "Confirmar",
+    "deleting": "Eliminando...",
+    "removed": "Miembro eliminado del pack.",
     "packOnly": "Solo pack",
     "yes": "Sí",
     "no": "No",
@@ -329,10 +331,18 @@
       "avatar": "Avatar",
       "username": "Usuario",
       "description": "Descripción perfil",
+      "profile": "Perfil",
       "accountCreatedAt": "Creación de cuenta",
-      "requestedFromApp": "Desde la app",
+      "requestedFromApp": "Fuente",
+      "source": "Fuente",
       "joinedAt": "Solicitud/admisión",
-      "action": "Acción"
+      "action": "Acción",
+      "remove": "Eliminar"
+    },
+    "sources": {
+      "app": "App / DB",
+      "db": "DB",
+      "publicPack": "Pack público"
     },
     "errors": {
       "removeFailed": "No se puede eliminar este miembro en este momento."

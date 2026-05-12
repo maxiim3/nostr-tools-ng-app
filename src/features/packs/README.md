@@ -18,12 +18,15 @@ sequenceDiagram
   participant Service as StarterPackRequestService
   participant Auth as NostrHttpAuthService
   participant API as server.mjs
+  participant Pack as Nostr pack event
   participant DB as Supabase francophone_pack_members
 
   User->>Service: submitRequest()
   Service->>Auth: createAuthorizationHeader(NIP-98)
   Service->>API: POST /api/pack-members + Authorization
   API->>API: requireNostrAuth()
+  API->>Pack: publish updated pack event with server-only signer
+  Pack-->>API: event published or already present
   API->>DB: upsert active member
   API-->>Service: 201 member
 ```
@@ -34,6 +37,7 @@ sequenceDiagram
 sequenceDiagram
   participant Admin as PackAdminRequestsPage
   participant Service as StarterPackRequestService
+  participant Pack as Nostr pack event
   participant API as server.mjs
   participant DB as Supabase francophone_pack_members
 
@@ -44,6 +48,7 @@ sequenceDiagram
 
   Admin->>Service: removeMember(pubkey)
   Service->>API: POST /api/admin/pack-members/:pubkey/remove (NIP-98 admin)
+  API->>Pack: publish updated pack event without the member
   API->>DB: set removed_at
   API-->>Admin: 204
 ```
@@ -56,4 +61,5 @@ Supabase est la source persistante pour les champs `pubkey`, `username`, `descri
 
 - Le controle admin UI repose sur `NostrSessionService.isAdmin()` (npub dans la config pack).
 - Le backend revalide aussi le role admin via `ADMIN_NPUBS` dans [server.mjs](../../../server.mjs).
+- La publication automatique du pack repose sur `FRANCOPHONE_PACK_SIGNER_MODE=nip46` et `FRANCOPHONE_PACK_BUNKER_URL`, configures uniquement cote serveur. `FRANCOPHONE_PACK_OWNER_NSEC` reste un fallback direct si le mode `nsec` est explicitement choisi.
 - Le retrait admin conserve la ligne Supabase et renseigne `removedAt`.

@@ -107,7 +107,7 @@
     "menu": "Menu",
     "home": "Accueil",
     "request": "Demande",
-    "adminRequests": "Demandes admin",
+    "adminRequests": "Membres admin",
     "openExternal": "App externe",
     "support": "Soutenir ⚡"
   },
@@ -116,7 +116,7 @@
     "subtitle": "Connecte-toi avec Nostr pour rejoindre le pack francophone immédiatement.",
     "loading": {
       "1": "Cela peut prendre quelques secondes...",
-      "2": "Connexion à la base de données...",
+      "2": "Mise à jour du pack...",
       "3": "On y est presque...",
       "4": "Ne recharge pas, c'est plus long que d'habitude...",
       "5": "On travaille encore dessus..."
@@ -130,7 +130,7 @@
       "idle": "Tu peux rejoindre le pack maintenant.",
       "pending": "Ton admission est en cours.",
       "approved": "Ta demande est approuvée.",
-      "alreadyMember": "Vous faites deja parti du pack !"
+      "alreadyMember": "Tu fais déjà partie du pack !"
     },
     "submitError": {
       "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
@@ -318,7 +318,9 @@
     "empty": "Aucun membre pour le moment.",
     "primal": "Voir sur Primal",
     "remove": "Retirer",
-    "confirmRemove": "Confirmer X",
+    "confirmRemove": "Confirmer",
+    "deleting": "Suppression...",
+    "removed": "Membre supprimé du pack.",
     "packOnly": "Pack seulement",
     "yes": "Oui",
     "no": "Non",
@@ -329,10 +331,18 @@
       "avatar": "Avatar",
       "username": "Username",
       "description": "Description profile",
+      "profile": "Profil",
       "accountCreatedAt": "Creation du compte",
-      "requestedFromApp": "Depuis l'app",
+      "requestedFromApp": "Source",
+      "source": "Source",
       "joinedAt": "Demande/admission",
-      "action": "Action"
+      "action": "Action",
+      "remove": "Supprimer"
+    },
+    "sources": {
+      "app": "App / DB",
+      "db": "DB",
+      "publicPack": "Pack public"
     },
     "errors": {
       "removeFailed": "Impossible de retirer ce membre pour le moment."
