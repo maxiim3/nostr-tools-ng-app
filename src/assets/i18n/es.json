@@ -230,6 +230,8 @@
     "mergeOptions": "Opciones de merge",
     "mergeFromLabel": "Merge from pack",
     "mergeFromPlaceholder": "Pega una URL de pack",
+    "loadMerge": "Load",
+    "loadingMerge": "Cargando la fuente...",
     "mergePreviewTitle": "Vista previa del merge",
     "mergePreviewEmpty": "Pega una URL de pack arriba para previsualizar sus miembros aquí.",
     "emptyMembers": "Este pack aún no tiene miembros públicos.",
@@ -246,6 +248,7 @@
     },
     "errors": {
       "copyFailed": "No se puede copiar este npub.",
+      "invalidUrl": "Invalid URL",
       "loadPacksFailed": "No se pueden cargar tus packs ahora mismo.",
       "loadMembersFailed": "No se pueden cargar los miembros de este pack ahora mismo.",
       "removeFailed": "No se puede eliminar este miembro ahora mismo."

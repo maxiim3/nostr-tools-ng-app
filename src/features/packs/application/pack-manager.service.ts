@@ -39,6 +39,11 @@ interface PackEvent {
   created_at?: number;
 }
 
+interface PackReference {
+  authorPubkey: string;
+  dTag: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PackManagerService {
   private readonly client = inject(NostrClientService);
@@ -59,6 +64,19 @@ export class PackManagerService {
     const event = await this.findOwnedPackEvent(user.pubkey, packId);
     if (!event) {
       throw new Error('Selected pack was not found.');
+    }
+
+    const pubkeys = uniquePackMemberPubkeys(event.tags);
+    const members = await Promise.all(pubkeys.map((pubkey) => this.toPackMember(pubkey)));
+
+    return members.sort((left, right) => left.username.localeCompare(right.username));
+  }
+
+  async listPackMembersFromUrl(packUrl: string): Promise<PackMember[]> {
+    const packReference = parsePackReference(packUrl);
+    const event = await this.findPackEventByReference(packReference);
+    if (!event) {
+      throw new Error('Pack was not found.');
     }
 
     const pubkeys = uniquePackMemberPubkeys(event.tags);
@@ -126,6 +144,39 @@ export class PackManagerService {
     );
   }
 
+  private async findPackEventByReference(packReference: PackReference): Promise<PackEvent | null> {
+    const events = await this.client.fetchEvents([
+      {
+        kinds: [STARTER_PACK_KIND],
+        authors: [packReference.authorPubkey],
+        '#d': [packReference.dTag],
+        limit: 1,
+      },
+      {
+        '#d': [packReference.dTag],
+        limit: 20,
+      },
+    ]);
+
+    return (
+      events
+        .filter((event) => event.kind === STARTER_PACK_KIND)
+        .filter((event) => event.pubkey === packReference.authorPubkey)
+        .filter((event) =>
+          event.tags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag)
+        )
+        .sort((left, right) => (right.created_at ?? 0) - (left.created_at ?? 0))
+        .map((event) => ({
+          id: event.id,
+          pubkey: event.pubkey,
+          kind: event.kind,
+          tags: event.tags.map((tag) => [...tag]),
+          content: event.content,
+          created_at: event.created_at,
+        }))[0] ?? null
+    );
+  }
+
   private requireCurrentUser(): SessionUser {
     const user = this.session.user();
     if (!user || !this.session.isAuthenticated()) {
@@ -165,6 +216,36 @@ export function uniquePackMemberPubkeys(tags: string[][]): string[] {
   }
 
   return [...pubkeys];
+}
+
+export function parsePackReference(packUrl: string): PackReference {
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(packUrl);
+  } catch {
+    throw new Error('Invalid pack URL.');
+  }
+
+  if (parsedUrl.origin !== FOLLOWING_SPACE_ORIGIN) {
+    throw new Error('Invalid pack URL.');
+  }
+
+  const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
+  const dTag = pathSegments[0] === 'd' ? decodeURIComponent(pathSegments[1]?.trim() ?? '') : '';
+  if (!dTag) {
+    throw new Error('Invalid pack URL.');
+  }
+
+  const authorPubkey = normalizeHexPubkey(parsedUrl.searchParams.get('p') ?? '');
+  if (!authorPubkey) {
+    throw new Error('Invalid pack URL.');
+  }
+
+  return {
+    authorPubkey,
+    dTag,
+  };
 }
 
 function toOwnedPackSummary(event: PackEvent, ownerPubkey: string): OwnedPackSummary | null {

@@ -33,6 +33,10 @@ export class PackManagerPage implements OnDestroy {
   protected readonly members = signal<PackMember[]>([]);
   protected readonly loadingPacks = signal(false);
   protected readonly loadingMembers = signal(false);
+  protected readonly mergeSourceUrl = signal('');
+  protected readonly loadingMergeMembers = signal(false);
+  protected readonly mergeMembers = signal<PackMember[]>([]);
+  protected readonly mergeError = signal<string | null>(null);
   protected readonly actingOn = signal<string | null>(null);
   protected readonly copiedPubkey = signal<string | null>(null);
   protected readonly confirmingRemovalPubkey = signal<string | null>(null);
@@ -44,6 +48,12 @@ export class PackManagerPage implements OnDestroy {
   );
   protected readonly packSelectDisabled = computed(
     () => !this.session.isAuthenticated() || this.loadingPacks() || this.packs().length === 0
+  );
+  protected readonly mergeLoadDisabled = computed(
+    () =>
+      !this.session.isAuthenticated() ||
+      this.loadingMergeMembers() ||
+      this.mergeSourceUrl().trim().length === 0
   );
 
   constructor() {
@@ -68,6 +78,31 @@ export class PackManagerPage implements OnDestroy {
   protected onPackSelectionChange(event: Event): void {
     const select = event.target as HTMLSelectElement | null;
     this.selectPack(select?.value ?? '');
+  }
+
+  protected onMergeSourceUrlInput(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.mergeSourceUrl.set(input?.value ?? '');
+    this.mergeError.set(null);
+  }
+
+  protected async loadMergeSource(): Promise<void> {
+    const packUrl = this.mergeSourceUrl().trim();
+    if (!packUrl) {
+      return;
+    }
+
+    this.loadingMergeMembers.set(true);
+    this.mergeError.set(null);
+    this.mergeMembers.set([]);
+
+    try {
+      this.mergeMembers.set(await this.packManager.listPackMembersFromUrl(packUrl));
+    } catch {
+      this.mergeError.set('packManager.errors.invalidUrl');
+    } finally {
+      this.loadingMergeMembers.set(false);
+    }
   }
 
   protected async copyNpub(member: PackMember): Promise<void> {
@@ -144,6 +179,9 @@ export class PackManagerPage implements OnDestroy {
   private selectPack(packId: string): void {
     this.selectedPackId.set(packId);
     this.members.set([]);
+    this.mergeSourceUrl.set('');
+    this.mergeMembers.set([]);
+    this.mergeError.set(null);
     this.clearRemovalConfirmation();
 
     if (!packId) {
@@ -171,6 +209,10 @@ export class PackManagerPage implements OnDestroy {
     this.packs.set([]);
     this.selectedPackId.set('');
     this.members.set([]);
+    this.mergeSourceUrl.set('');
+    this.mergeMembers.set([]);
+    this.mergeError.set(null);
+    this.loadingMergeMembers.set(false);
     this.loadingPacks.set(false);
     this.loadingMembers.set(false);
     this.actingOn.set(null);

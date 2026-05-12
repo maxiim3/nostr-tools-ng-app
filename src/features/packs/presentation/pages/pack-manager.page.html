@@ -78,12 +78,34 @@
             <label for="pack-manager-merge-source" class="block text-sm font-extrabold">
               {{ 'packManager.mergeFromLabel' | transloco }}
             </label>
-            <input
-              id="pack-manager-merge-source"
-              type="url"
-              class="input mt-3 w-full border-[3px] border-[#0a0a0a] bg-white text-[#0a0a0a]"
-              [placeholder]="'packManager.mergeFromPlaceholder' | transloco"
-            />
+            <div class="mt-3 flex gap-2">
+              <input
+                id="pack-manager-merge-source"
+                type="url"
+                class="input w-full border-[3px] border-[#0a0a0a] bg-white text-[#0a0a0a]"
+                [placeholder]="'packManager.mergeFromPlaceholder' | transloco"
+                [value]="mergeSourceUrl()"
+                (input)="onMergeSourceUrlInput($event)"
+              />
+              <button
+                type="button"
+                class="btn btn-primary min-h-12 px-4"
+                [disabled]="mergeLoadDisabled()"
+                (click)="loadMergeSource()"
+              >
+                @if (loadingMergeMembers()) {
+                  <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                  <span class="sr-only">{{ 'packManager.loadingMerge' | transloco }}</span>
+                } @else {
+                  {{ 'packManager.loadMerge' | transloco }}
+                }
+              </button>
+            </div>
+            @if (mergeError()) {
+              <p class="mt-2 text-sm font-bold text-error">
+                {{ mergeError()! | transloco }}
+              </p>
+            }
           </div>
         </details>
       }
@@ -174,9 +196,51 @@
           <h2 id="pack-manager-merge-preview-title" class="text-sm font-extrabold">
             {{ 'packManager.mergePreviewTitle' | transloco }}
           </h2>
-          <p class="mt-4 text-sm leading-6 text-[#0a0a0a]/60">
-            {{ 'packManager.mergePreviewEmpty' | transloco }}
-          </p>
+          @if (loadingMergeMembers()) {
+            <div class="flex justify-center py-10">
+              <span class="loading loading-spinner loading-md text-[#0a0a0a]"></span>
+            </div>
+          } @else if (mergeMembers().length > 0) {
+            <table class="table table-sm mt-3 w-full">
+              <tbody>
+                @for (member of mergeMembers(); track member.pubkey) {
+                  <tr class="border-[#0a0a0a]/20 hover:bg-transparent">
+                    <td class="max-w-0">
+                      <a
+                        [href]="member.primalUrl"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="flex min-w-0 items-center gap-2"
+                      >
+                        @if (member.avatarUrl) {
+                          <img
+                            [src]="member.avatarUrl"
+                            [alt]="member.username"
+                            class="h-5 w-5 shrink-0 border-[2px] border-[#0a0a0a] object-cover"
+                            loading="lazy"
+                          />
+                        } @else {
+                          <span
+                            class="flex h-5 w-5 shrink-0 items-center justify-center border-[2px] border-[#0a0a0a] bg-[#FFE600] text-[10px] font-bold"
+                            aria-hidden="true"
+                          >
+                            {{ member.username.slice(0, 1).toUpperCase() }}
+                          </span>
+                        }
+                        <span class="truncate text-sm font-bold text-[#0a0a0a]">
+                          {{ member.username }}
+                        </span>
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="mt-4 text-sm leading-6 text-[#0a0a0a]/60">
+              {{ 'packManager.mergePreviewEmpty' | transloco }}
+            </p>
+          }
         </aside>
       </div>
     }

@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NostrClientService } from '../../../core/nostr/application/nostr-client.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
-import { PackManagerService, uniquePackMemberPubkeys } from './pack-manager.service';
+import {
+  PackManagerService,
+  parsePackReference,
+  uniquePackMemberPubkeys,
+} from './pack-manager.service';
 
 const OWNER_PUBKEY = '0000000000000000000000000000000000000000000000000000000000000001';
 const MEMBER_PUBKEY = '0000000000000000000000000000000000000000000000000000000000000002';
@@ -129,6 +133,53 @@ describe('PackManagerService', () => {
     expect(fetchProfileMock).toHaveBeenCalledWith(MEMBER_PUBKEY);
   });
 
+  it('loads members from a public pack URL', async () => {
+    const { service, fetchEventsMock, fetchProfileMock } = createMocks();
+    fetchEventsMock.mockResolvedValue([
+      {
+        id: 'pack-event',
+        kind: 39089,
+        pubkey: OWNER_PUBKEY,
+        tags: [
+          ['d', 'source-pack'],
+          ['p', MEMBER_PUBKEY],
+        ],
+      },
+    ]);
+    fetchProfileMock.mockResolvedValue({
+      pubkey: MEMBER_PUBKEY,
+      npub: 'npub-member',
+      displayName: 'Alice',
+      imageUrl: 'alice.png',
+      description: null,
+      nip05: null,
+    });
+
+    await expect(
+      service.listPackMembersFromUrl(`https://following.space/d/source-pack?p=${OWNER_PUBKEY}`)
+    ).resolves.toEqual([
+      {
+        pubkey: MEMBER_PUBKEY,
+        npub: 'npub-member',
+        username: 'Alice',
+        avatarUrl: 'alice.png',
+        primalUrl: 'https://primal.net/p/npub-member',
+      },
+    ]);
+    expect(fetchEventsMock).toHaveBeenCalledWith([
+      {
+        kinds: [39089],
+        authors: [OWNER_PUBKEY],
+        '#d': ['source-pack'],
+        limit: 1,
+      },
+      {
+        '#d': ['source-pack'],
+        limit: 20,
+      },
+    ]);
+  });
+
   it('publishes a selected pack without the removed member', async () => {
     const { service, fetchEventsMock, publishEventMock } = createMocks();
     fetchEventsMock.mockResolvedValue([
@@ -165,6 +216,21 @@ describe('PackManagerService', () => {
 
     await expect(service.listOwnedPacks()).rejects.toThrow(
       'Authentication is required before managing packs.'
+    );
+  });
+});
+
+describe('parsePackReference', () => {
+  it('parses following.space pack URLs', () => {
+    expect(parsePackReference(`https://following.space/d/source-pack?p=${OWNER_PUBKEY}`)).toEqual({
+      authorPubkey: OWNER_PUBKEY,
+      dTag: 'source-pack',
+    });
+  });
+
+  it('rejects unsupported URLs', () => {
+    expect(() => parsePackReference(`https://example.com/d/source-pack?p=${OWNER_PUBKEY}`)).toThrow(
+      'Invalid pack URL.'
     );
   });
 });

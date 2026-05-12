@@ -230,6 +230,8 @@
     "mergeOptions": "Merge options",
     "mergeFromLabel": "Merge from pack",
     "mergeFromPlaceholder": "Paste a pack URL",
+    "loadMerge": "Load",
+    "loadingMerge": "Loading merge source...",
     "mergePreviewTitle": "Merge preview",
     "mergePreviewEmpty": "Paste a pack URL above to preview its members here.",
     "emptyMembers": "This pack has no public members yet.",
@@ -246,6 +248,7 @@
     },
     "errors": {
       "copyFailed": "Unable to copy this npub.",
+      "invalidUrl": "Invalid URL",
       "loadPacksFailed": "Unable to load your packs right now.",
       "loadMembersFailed": "Unable to load this pack's members right now.",
       "removeFailed": "Unable to remove this member right now."
