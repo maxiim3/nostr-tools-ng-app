@@ -234,6 +234,10 @@
     "loadingMerge": "Chargement de la source...",
     "mergePreviewTitle": "Aperçu du merge",
     "mergePreviewEmpty": "Colle une URL de pack ci-dessus pour prévisualiser ses membres ici.",
+    "addAll": "Add all",
+    "addMember": "Ajouter le membre",
+    "adding": "Ajout...",
+    "alreadyInPack": "Déjà dans le pack",
     "emptyMembers": "Ce pack n'a pas encore de membres publics.",
     "copyNpub": "Copier npub",
     "copiedNpub": "Copié",
@@ -249,6 +253,7 @@
     "errors": {
       "copyFailed": "Impossible de copier cet npub.",
       "invalidUrl": "Invalid URL",
+      "addFailed": "Impossible d'ajouter ce membre pour le moment.",
       "loadPacksFailed": "Impossible de charger tes packs pour le moment.",
       "loadMembersFailed": "Impossible de charger les membres de ce pack pour le moment.",
       "removeFailed": "Impossible de supprimer ce membre pour le moment."

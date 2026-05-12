@@ -170,12 +170,20 @@
                       [class.btn-error]="confirmingRemovalPubkey() === member.pubkey"
                       [class.bg-red-600]="confirmingRemovalPubkey() === member.pubkey"
                       [class.text-white]="confirmingRemovalPubkey() === member.pubkey"
-                      [disabled]="actingOn() === member.pubkey"
+                      [disabled]="
+                        actingOn() === member.pubkey || pendingAddPubkeys().has(member.pubkey)
+                      "
                       (click)="removeMember(member)"
                     >
-                      @if (actingOn() === member.pubkey) {
+                      @if (actingOn() === member.pubkey || pendingAddPubkeys().has(member.pubkey)) {
                         <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-                        <span class="sr-only">{{ 'packManager.deleting' | transloco }}</span>
+                        <span class="sr-only">
+                          @if (pendingAddPubkeys().has(member.pubkey)) {
+                            {{ 'packManager.adding' | transloco }}
+                          } @else {
+                            {{ 'packManager.deleting' | transloco }}
+                          }
+                        </span>
                       } @else if (confirmingRemovalPubkey() === member.pubkey) {
                         {{ 'packManager.confirmRemove' | transloco }}
                       } @else {
@@ -196,6 +204,16 @@
           <h2 id="pack-manager-merge-preview-title" class="text-sm font-extrabold">
             {{ 'packManager.mergePreviewTitle' | transloco }}
           </h2>
+          @if (mergeMembers().length > 0) {
+            <button
+              type="button"
+              class="btn btn-primary btn-xs mt-3 min-h-8 px-3 py-1"
+              [disabled]="addAllMergeDisabled()"
+              (click)="addAllMergeMembers()"
+            >
+              {{ 'packManager.addAll' | transloco }}
+            </button>
+          }
           @if (loadingMergeMembers()) {
             <div class="flex justify-center py-10">
               <span class="loading loading-spinner loading-md text-[#0a0a0a]"></span>
@@ -203,19 +221,19 @@
           } @else if (mergeMembers().length > 0) {
             <table class="table table-sm mt-3 w-full">
               <tbody>
-                @for (member of mergeMembers(); track member.pubkey) {
+                @for (row of mergePreviewRows(); track row.member.pubkey) {
                   <tr class="border-[#0a0a0a]/20 hover:bg-transparent">
                     <td class="max-w-0">
                       <a
-                        [href]="member.primalUrl"
+                        [href]="row.member.primalUrl"
                         target="_blank"
                         rel="noreferrer"
                         class="flex min-w-0 items-center gap-2"
                       >
-                        @if (member.avatarUrl) {
+                        @if (row.member.avatarUrl) {
                           <img
-                            [src]="member.avatarUrl"
-                            [alt]="member.username"
+                            [src]="row.member.avatarUrl"
+                            [alt]="row.member.username"
                             class="h-5 w-5 shrink-0 border-[2px] border-[#0a0a0a] object-cover"
                             loading="lazy"
                           />
@@ -224,13 +242,43 @@
                             class="flex h-5 w-5 shrink-0 items-center justify-center border-[2px] border-[#0a0a0a] bg-[#FFE600] text-[10px] font-bold"
                             aria-hidden="true"
                           >
-                            {{ member.username.slice(0, 1).toUpperCase() }}
+                            {{ row.member.username.slice(0, 1).toUpperCase() }}
                           </span>
                         }
                         <span class="truncate text-sm font-bold text-[#0a0a0a]">
-                          {{ member.username }}
+                          {{ row.member.username }}
                         </span>
                       </a>
+                    </td>
+                    <td class="w-10 text-right">
+                      @if (row.pendingAdd) {
+                        <span
+                          class="inline-flex h-7 w-7 items-center justify-center border-[2px] border-[#0a0a0a] text-[#0a0a0a]"
+                          [attr.aria-label]="'packManager.adding' | transloco"
+                        >
+                          <span
+                            class="loading loading-spinner loading-xs"
+                            aria-hidden="true"
+                          ></span>
+                        </span>
+                      } @else if (row.inCurrentPack) {
+                        <span
+                          class="inline-flex h-7 w-7 items-center justify-center border-[2px] border-[#0a0a0a] bg-[#00c853]/15 text-xs font-extrabold text-[#0a0a0a]"
+                          [attr.aria-label]="'packManager.alreadyInPack' | transloco"
+                        >
+                          ✓
+                        </span>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-xs h-7 min-h-7 w-7 px-0 text-base"
+                          [attr.aria-label]="'packManager.addMember' | transloco"
+                          [disabled]="pendingAddPubkeys().size > 0"
+                          (click)="addMergeMember(row.member)"
+                        >
+                          +
+                        </button>
+                      }
                     </td>
                   </tr>
                 }

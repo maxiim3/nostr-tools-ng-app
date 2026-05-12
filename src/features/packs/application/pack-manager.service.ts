@@ -85,6 +85,28 @@ export class PackManagerService {
     return members.sort((left, right) => left.username.localeCompare(right.username));
   }
 
+  async addPackMembers(packId: string, pubkeys: readonly string[]): Promise<void> {
+    const user = this.requireCurrentUser();
+    const memberPubkeys = uniqueNormalizedPubkeys(pubkeys);
+    if (memberPubkeys.length === 0) {
+      throw new Error('Invalid member pubkey.');
+    }
+
+    const event = await this.findOwnedPackEvent(user.pubkey, packId);
+    if (!event) {
+      throw new Error('Selected pack was not found.');
+    }
+
+    const existingPubkeys = new Set(uniquePackMemberPubkeys(event.tags));
+    const tagsToAdd = memberPubkeys.filter((pubkey) => !existingPubkeys.has(pubkey));
+    if (tagsToAdd.length === 0) {
+      return;
+    }
+
+    const nextTags = [...event.tags, ...tagsToAdd.map((pubkey) => ['p', pubkey])];
+    await this.client.publishEvent(STARTER_PACK_KIND, nextTags, event.content ?? '');
+  }
+
   async removePackMember(packId: string, pubkey: string): Promise<void> {
     const user = this.requireCurrentUser();
     const memberPubkey = normalizeHexPubkey(pubkey);
@@ -216,6 +238,19 @@ export function uniquePackMemberPubkeys(tags: string[][]): string[] {
   }
 
   return [...pubkeys];
+}
+
+function uniqueNormalizedPubkeys(pubkeys: readonly string[]): string[] {
+  const normalizedPubkeys = new Set<string>();
+
+  for (const pubkey of pubkeys) {
+    const normalizedPubkey = normalizeHexPubkey(pubkey);
+    if (normalizedPubkey) {
+      normalizedPubkeys.add(normalizedPubkey);
+    }
+  }
+
+  return [...normalizedPubkeys];
 }
 
 export function parsePackReference(packUrl: string): PackReference {

@@ -210,6 +210,41 @@ describe('PackManagerService', () => {
     );
   });
 
+  it('publishes a selected pack with added missing members', async () => {
+    const { service, fetchEventsMock, publishEventMock } = createMocks();
+    fetchEventsMock.mockResolvedValue([
+      {
+        id: 'pack-event',
+        kind: 39089,
+        pubkey: OWNER_PUBKEY,
+        content: 'pack content',
+        tags: [
+          ['d', 'my-pack'],
+          ['title', 'My Pack'],
+          ['p', MEMBER_PUBKEY],
+        ],
+      },
+    ]);
+
+    await service.addPackMembers(`${OWNER_PUBKEY}:my-pack`, [
+      MEMBER_PUBKEY,
+      OTHER_MEMBER_PUBKEY,
+      OTHER_MEMBER_PUBKEY,
+      'invalid',
+    ]);
+
+    expect(publishEventMock).toHaveBeenCalledWith(
+      39089,
+      [
+        ['d', 'my-pack'],
+        ['title', 'My Pack'],
+        ['p', MEMBER_PUBKEY],
+        ['p', OTHER_MEMBER_PUBKEY],
+      ],
+      'pack content'
+    );
+  });
+
   it('requires an authenticated user', async () => {
     const { service, userMock } = createMocks();
     userMock.mockReturnValue(null);
