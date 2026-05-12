@@ -65,10 +65,27 @@
           [href]="pack.url"
           target="_blank"
           rel="noreferrer"
-          class=" btn btn-ghost font-bold text-[#0a0a0a] decoration-[3px] underline-offset-4"
+          class="btn btn-ghost font-bold text-[#0a0a0a] decoration-[3px] underline-offset-4"
         >
           {{ 'packManager.openPack' | transloco }}
         </a>
+
+        <details class="mt-4 hidden border-t-[3px] border-[#0a0a0a] pt-4 md:block">
+          <summary class="cursor-pointer text-sm font-extrabold text-[#0a0a0a]">
+            {{ 'packManager.mergeOptions' | transloco }}
+          </summary>
+          <div class="mt-4 max-w-xl">
+            <label for="pack-manager-merge-source" class="block text-sm font-extrabold">
+              {{ 'packManager.mergeFromLabel' | transloco }}
+            </label>
+            <input
+              id="pack-manager-merge-source"
+              type="url"
+              class="input mt-3 w-full border-[3px] border-[#0a0a0a] bg-white text-[#0a0a0a]"
+              [placeholder]="'packManager.mergeFromPlaceholder' | transloco"
+            />
+          </div>
+        </details>
       }
     </section>
 
@@ -81,70 +98,86 @@
         {{ 'packManager.emptyMembers' | transloco }}
       </div>
     } @else if (members().length > 0) {
-      <div class="w-full max-w-[500px] overflow-x-auto border-[3px] border-black/10 bg-white">
-        <table class="table table-sm w-full">
-          <thead>
-            <tr class="border-[#0a0a0a] text-[#0a0a0a]">
-              <th scope="col" class="w-full">{{ 'packManager.columns.member' | transloco }}</th>
-              <th scope="col" class="text-right">{{ 'packManager.columns.action' | transloco }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (member of members(); track member.pubkey) {
-              <tr class="border-[#0a0a0a]/20 hover:bg-transparent">
-                <td class="max-w-0">
-                  <a
-                    [href]="member.primalUrl"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="flex min-w-0 items-center gap-2"
-                  >
-                    @if (member.avatarUrl) {
-                      <img
-                        [src]="member.avatarUrl"
-                        [alt]="member.username"
-                        class="h-5 w-5 shrink-0 border-[2px] border-[#0a0a0a] object-cover"
-                        loading="lazy"
-                      />
-                    } @else {
-                      <span
-                        class="flex h-5 w-5 shrink-0 items-center justify-center border-[2px] border-[#0a0a0a] bg-[#FFE600] text-[10px] font-bold"
-                        aria-hidden="true"
-                      >
-                        {{ member.username.slice(0, 1).toUpperCase() }}
-                      </span>
-                    }
-                    <span class="truncate text-sm font-bold text-[#0a0a0a]">
-                      {{ member.username }}
-                    </span>
-                  </a>
-                </td>
-                <td class="text-right">
-                  <button
-                    type="button"
-                    class="btn btn-outline btn-xs min-h-8 border-red-600 px-2 py-1 whitespace-nowrap"
-                    [class.btn-outline]="confirmingRemovalPubkey() !== member.pubkey"
-                    [class.text-red-600]="confirmingRemovalPubkey() !== member.pubkey"
-                    [class.btn-error]="confirmingRemovalPubkey() === member.pubkey"
-                    [class.bg-red-600]="confirmingRemovalPubkey() === member.pubkey"
-                    [class.text-white]="confirmingRemovalPubkey() === member.pubkey"
-                    [disabled]="actingOn() === member.pubkey"
-                    (click)="removeMember(member)"
-                  >
-                    @if (actingOn() === member.pubkey) {
-                      <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-                      <span class="sr-only">{{ 'packManager.deleting' | transloco }}</span>
-                    } @else if (confirmingRemovalPubkey() === member.pubkey) {
-                      {{ 'packManager.confirmRemove' | transloco }}
-                    } @else {
-                      {{ 'packManager.remove' | transloco }}
-                    }
-                  </button>
-                </td>
+      <div class="grid gap-4 md:grid-cols-[minmax(0,500px)_minmax(0,500px)]">
+        <div class="w-full max-w-[500px] overflow-x-auto border-[3px] border-black/10 bg-white">
+          <table class="table table-sm w-full">
+            <thead>
+              <tr class="border-[#0a0a0a] text-[#0a0a0a]">
+                <th scope="col" class="w-full">{{ 'packManager.columns.member' | transloco }}</th>
+                <th scope="col" class="text-right">
+                  {{ 'packManager.columns.action' | transloco }}
+                </th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (member of members(); track member.pubkey) {
+                <tr class="border-[#0a0a0a]/20 hover:bg-transparent">
+                  <td class="max-w-0">
+                    <a
+                      [href]="member.primalUrl"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="flex min-w-0 items-center gap-2"
+                    >
+                      @if (member.avatarUrl) {
+                        <img
+                          [src]="member.avatarUrl"
+                          [alt]="member.username"
+                          class="h-5 w-5 shrink-0 border-[2px] border-[#0a0a0a] object-cover"
+                          loading="lazy"
+                        />
+                      } @else {
+                        <span
+                          class="flex h-5 w-5 shrink-0 items-center justify-center border-[2px] border-[#0a0a0a] bg-[#FFE600] text-[10px] font-bold"
+                          aria-hidden="true"
+                        >
+                          {{ member.username.slice(0, 1).toUpperCase() }}
+                        </span>
+                      }
+                      <span class="truncate text-sm font-bold text-[#0a0a0a]">
+                        {{ member.username }}
+                      </span>
+                    </a>
+                  </td>
+                  <td class="text-right">
+                    <button
+                      type="button"
+                      class="btn btn-outline btn-xs min-h-8 border-red-600 px-2 py-1 whitespace-nowrap"
+                      [class.btn-outline]="confirmingRemovalPubkey() !== member.pubkey"
+                      [class.text-red-600]="confirmingRemovalPubkey() !== member.pubkey"
+                      [class.btn-error]="confirmingRemovalPubkey() === member.pubkey"
+                      [class.bg-red-600]="confirmingRemovalPubkey() === member.pubkey"
+                      [class.text-white]="confirmingRemovalPubkey() === member.pubkey"
+                      [disabled]="actingOn() === member.pubkey"
+                      (click)="removeMember(member)"
+                    >
+                      @if (actingOn() === member.pubkey) {
+                        <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                        <span class="sr-only">{{ 'packManager.deleting' | transloco }}</span>
+                      } @else if (confirmingRemovalPubkey() === member.pubkey) {
+                        {{ 'packManager.confirmRemove' | transloco }}
+                      } @else {
+                        {{ 'packManager.remove' | transloco }}
+                      }
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <aside
+          class="hidden min-h-80 w-full max-w-[500px] border-[3px] border-[#0a0a0a] bg-white p-4 md:block"
+          aria-labelledby="pack-manager-merge-preview-title"
+        >
+          <h2 id="pack-manager-merge-preview-title" class="text-sm font-extrabold">
+            {{ 'packManager.mergePreviewTitle' | transloco }}
+          </h2>
+          <p class="mt-4 text-sm leading-6 text-[#0a0a0a]/60">
+            {{ 'packManager.mergePreviewEmpty' | transloco }}
+          </p>
+        </aside>
       </div>
     }
   </div>
