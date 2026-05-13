@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -9,7 +10,7 @@ import { ZapService } from '../../../zap/zap.service';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [NgOptimizedImage, RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="border-t-[3px] border-[#0a0a0a] bg-[#0a0a0a] text-white">
@@ -96,12 +97,21 @@ import { ZapService } from '../../../zap/zap.service';
           </nav>
         </div>
 
-        <div class="mt-10 border-t border-white/10 pt-6 text-center">
-          <span
-            data-title="TOOLSTR"
-            class="text-2xl font-extrabold text-white/30 uppercase tracking-tight"
-            >TOOLSTR</span
-          >
+        <div class="mt-10 border-t border-white/10 pt-6">
+          <div class="flex items-center gap-1">
+            <img
+              ngSrc="/brand/logo-picto.png"
+              width="130"
+              height="130"
+              alt=""
+              class="h-7 w-7 shrink-0"
+            />
+            <span
+              data-title="TOOLSTR"
+              class="text-2xl font-extrabold text-white/30 uppercase tracking-tight"
+              >TOOLSTR</span
+            >
+          </div>
         </div>
       </div>
     </footer>

@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -9,15 +10,25 @@ import { ZapService } from '../../../zap/zap.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [NgOptimizedImage, RouterLink, TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="sticky top-0 z-20 w-full border-b-[3px] border-[#0a0a0a] bg-[#FF5C00]">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <a
           routerLink=""
-          class="shrink-0 text-3xl font-extrabold uppercase text-white tracking-tight"
+          class="flex shrink-0 items-center gap-2 text-3xl font-extrabold uppercase text-white tracking-tight"
         >
+          <span class="bg-white rounded-sm">
+          <img
+            ngSrc="/brand/logo-alone.png"
+            width="130"
+            height="130"
+            alt=""
+            priority
+            class="h-6 w-6 shrink-0"
+          />
+          </span>
           <span data-title="TOOLSTR">{{ project.name }}</span>
         </a>
 
