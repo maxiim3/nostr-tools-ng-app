@@ -84,7 +84,9 @@ export class PackManagerPage implements OnDestroy {
 
   constructor() {
     effect(() => {
-      if (this.session.isAuthenticated()) {
+      const user = this.session.user();
+
+      if (this.session.isAuthenticated() && user) {
         void this.loadOwnedPacks();
       } else {
         this.resetState();

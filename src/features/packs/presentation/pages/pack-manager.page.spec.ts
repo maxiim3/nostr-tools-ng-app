@@ -4,6 +4,7 @@ import { signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
+import type { SessionUser } from '../../../../core/nostr/application/nostr-client.service';
 import { PackManagerService } from '../../application/pack-manager.service';
 import { PackManagerPage } from './pack-manager.page';
 
@@ -21,6 +22,22 @@ describe('PackManagerPage', () => {
     const page = createPage(createSessionMock(false));
 
     expect(page['packSelectDisabled']()).toBe(true);
+  });
+
+  it('waits for the authenticated user before loading owned packs', async () => {
+    const session = createSessionMock(false);
+    const packManager = createPackManagerMock();
+    createPage(session, packManager);
+
+    session.isAuthenticated.set(true);
+    TestBed.tick();
+
+    expect(packManager.listOwnedPacks).not.toHaveBeenCalled();
+
+    session.user.set(createSessionUser());
+    TestBed.tick();
+
+    expect(packManager.listOwnedPacks).toHaveBeenCalledOnce();
   });
 
   it('adds a merge member optimistically while publishing it', async () => {
@@ -89,7 +106,7 @@ function createPage(
 function createSessionMock(isAuthenticated: boolean) {
   return {
     isAuthenticated: signal(isAuthenticated),
-    user: signal(null),
+    user: signal<SessionUser | null>(null),
     openAuthModal: vi.fn(),
   };
 }
@@ -123,4 +140,15 @@ function createDeferred<T>() {
   });
 
   return { promise, resolve, reject };
+}
+
+function createSessionUser(): SessionUser {
+  return {
+    pubkey: '0000000000000000000000000000000000000000000000000000000000000009',
+    npub: 'npub-owner',
+    displayName: 'Owner',
+    imageUrl: null,
+    description: null,
+    nip05: null,
+  };
 }

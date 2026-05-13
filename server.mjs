@@ -8,7 +8,7 @@ if (typeof Bun === 'undefined') {
   throw new Error('server.mjs must run with Bun.');
 }
 
-const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
+const PORT = Number.parseInt(process.env.PORT ?? '4444', 10);
 const MAX_JSON_BODY_BYTES = 50 * 1024;
 const MEMBERS_TABLE =
   process.env.SUPABASE_FRANCOPHONE_PACK_MEMBERS_TABLE ?? 'francophone_pack_members';
