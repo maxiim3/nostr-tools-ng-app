@@ -5,7 +5,7 @@ import { of } from 'rxjs';
 
 import { NostrHttpAuthService } from '../../../core/nostr/application/nostr-http-auth.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
-import { StarterPackRequestService } from './starter-pack-request.service';
+import { PackApiTimeoutError, StarterPackRequestService } from './starter-pack-request.service';
 
 describe('StarterPackRequestService', () => {
   let service: StarterPackRequestService;
@@ -38,6 +38,11 @@ describe('StarterPackRequestService', () => {
     service = TestBed.inject(StarterPackRequestService);
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+    TestBed.resetTestingModule();
+  });
+
   describe('submitRequest', () => {
     it('throws when no user is authenticated', async () => {
       userMock.mockReturnValue(null);
@@ -49,8 +54,9 @@ describe('StarterPackRequestService', () => {
       userMock.mockReturnValue({ displayName: 'Alice', imageUrl: 'img.png' });
       httpPostMock.mockReturnValue(of(undefined));
 
-      await service.submitRequest();
+      const result = await service.submitRequest();
 
+      expect(result).toEqual({ status: 'joined' });
       expect(httpPostMock).toHaveBeenCalledTimes(1);
       const [, body] = httpPostMock.mock.calls[0] as [string, Record<string, unknown>];
       expect(body).toEqual({
@@ -65,6 +71,24 @@ describe('StarterPackRequestService', () => {
       });
       expect(body).not.toHaveProperty('questionId');
       expect(body).not.toHaveProperty('choiceId');
+    });
+
+    it('times out when signing or posting the request never resolves', async () => {
+      vi.useFakeTimers();
+      userMock.mockReturnValue({ displayName: 'Alice', imageUrl: 'img.png' });
+      createAuthorizationHeaderMock.mockReturnValue(
+        new Promise<string>(() => {
+          // Keep the auth promise pending to exercise the timeout.
+        })
+      );
+
+      const requestPromise = service.submitRequest();
+      const rejectionExpectation =
+        expect(requestPromise).rejects.toBeInstanceOf(PackApiTimeoutError);
+      await vi.advanceTimersByTimeAsync(35_000);
+
+      await rejectionExpectation;
+      expect(httpPostMock).not.toHaveBeenCalled();
     });
   });
 

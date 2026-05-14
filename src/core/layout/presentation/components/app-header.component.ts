@@ -20,14 +20,14 @@ import { ZapService } from '../../../zap/zap.service';
           class="flex shrink-0 items-center gap-2 text-3xl font-extrabold uppercase text-white tracking-tight"
         >
           <span class="bg-white rounded-sm">
-          <img
-            ngSrc="/brand/logo-alone.png"
-            width="130"
-            height="130"
-            alt=""
-            priority
-            class="h-6 w-6 shrink-0"
-          />
+            <img
+              ngSrc="/brand/logo-alone.png"
+              width="130"
+              height="130"
+              alt=""
+              priority
+              class="h-6 w-6 shrink-0"
+            />
           </span>
           <span data-title="TOOLSTR">{{ project.name }}</span>
         </a>

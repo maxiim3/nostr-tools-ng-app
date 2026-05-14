@@ -43,7 +43,20 @@ const PUBLIC_PACK_EVENT_KIND = 39089;
 const PUBLIC_PACK_UPDATE_ATTEMPTS = 3;
 const PUBLIC_PACK_CONFIRM_ATTEMPTS = 5;
 const PUBLIC_PACK_CONFIRM_DELAY_MS = 1000;
-const PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS = 120_000;
+const PUBLIC_PACK_OPERATION_TIMEOUT_MS = readPositiveIntegerEnv(
+  'PUBLIC_PACK_OPERATION_TIMEOUT_MS',
+  25_000
+);
+const PUBLIC_PACK_FETCH_TIMEOUT_MS = readPositiveIntegerEnv('PUBLIC_PACK_FETCH_TIMEOUT_MS', 8_000);
+const PUBLIC_PACK_SIGN_TIMEOUT_MS = readPositiveIntegerEnv('PUBLIC_PACK_SIGN_TIMEOUT_MS', 15_000);
+const PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS = readPositiveIntegerEnv(
+  'PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS',
+  5_000
+);
+const PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS = readPositiveIntegerEnv(
+  'PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS',
+  15_000
+);
 const ndkModulePromise = import('@nostr-dev-kit/ndk');
 
 const memberStorage = createFrancophonePackMemberStorage();
@@ -181,7 +194,7 @@ async function handleRequest(request) {
         postCount: readOptionalNumber(body?.postCount, 'postCount'),
         zapCount: readOptionalNumber(body?.zapCount, 'zapCount'),
       };
-      const packUpdate = await packPublisher.addMember(auth.pubkey);
+      const packUpdate = await runPublicPackUpdate(() => packPublisher.addMember(auth.pubkey));
 
       const member = await memberStorage.upsert({
         pubkey: auth.pubkey,
@@ -229,7 +242,7 @@ async function handleRequest(request) {
     try {
       const body = await readJsonBody(request);
       await requireNostrAuth(request, body, true, requestUrl);
-      await packPublisher.removeMember(removeMatch.pubkey);
+      await runPublicPackUpdate(() => packPublisher.removeMember(removeMatch.pubkey));
       await memberStorage.removeIfExists(removeMatch.pubkey, new Date().toISOString());
 
       return new Response(null, { status: 204, headers: corsHeaders });
@@ -365,6 +378,16 @@ function readOptionalString(value) {
   }
 
   return value.trim();
+}
+
+function readPositiveIntegerEnv(name, fallbackValue) {
+  const rawValue = readOptionalString(process.env[name]);
+  if (!rawValue) {
+    return fallbackValue;
+  }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallbackValue;
 }
 
 function readOptionalNumber(value, fieldName) {
@@ -547,6 +570,9 @@ function createNostrPackPublisher(packReference) {
 
     return signerPromise;
   };
+  const resetSigner = () => {
+    signerPromise = null;
+  };
 
   return {
     async addMember(pubkey) {
@@ -564,7 +590,8 @@ function createNostrPackPublisher(packReference) {
           packReference,
           tags,
           currentPackEvent.content,
-          resolveSigner
+          resolveSigner,
+          resetSigner
         );
         const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, true);
 
@@ -591,7 +618,8 @@ function createNostrPackPublisher(packReference) {
           packReference,
           tags,
           currentPackEvent.content,
-          resolveSigner
+          resolveSigner,
+          resetSigner
         );
         const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, false);
 
@@ -615,6 +643,14 @@ function createNostrPackPublisher(packReference) {
   };
 }
 
+async function runPublicPackUpdate(operation) {
+  return withTimeoutReject(
+    operation(),
+    PUBLIC_PACK_OPERATION_TIMEOUT_MS,
+    'Public pack publisher did not respond in time.'
+  );
+}
+
 async function loadCurrentPublicPackEvent(packReference) {
   const currentPackEvent = await findCurrentPackEvent(packReference);
 
@@ -625,7 +661,7 @@ async function loadCurrentPublicPackEvent(packReference) {
   return currentPackEvent;
 }
 
-async function publishPackEvent(packReference, tags, content, resolveSigner) {
+async function publishPackEvent(packReference, tags, content, resolveSigner, resetSigner) {
   const ndk = await ensurePublicPackNdk();
   const signer = await resolveSigner();
   const { NDKEvent } = await ndkModulePromise;
@@ -636,8 +672,28 @@ async function publishPackEvent(packReference, tags, content, resolveSigner) {
   event.content = typeof content === 'string' ? content : '';
   event.created_at = Math.floor(Date.now() / 1000);
 
-  await event.sign(signer);
-  await event.publish();
+  try {
+    await withTimeoutReject(
+      event.sign(signer),
+      PUBLIC_PACK_SIGN_TIMEOUT_MS,
+      'Public pack signer did not respond in time.'
+    );
+  } catch (error) {
+    resetSigner();
+    signer.stop?.();
+
+    if (typeof error?.status === 'number') {
+      throw error;
+    }
+
+    throw createHttpError(503, 'Public pack signer is unavailable.');
+  }
+
+  try {
+    await event.publish(undefined, PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS, 1);
+  } catch {
+    throw createHttpError(503, 'Unable to publish public pack event.');
+  }
 
   return event.id ?? `${packReference.authorPubkey}:${event.created_at}`;
 }
@@ -947,7 +1003,7 @@ async function findCurrentPackEvent(packReference) {
         limit: 20,
       },
     ]),
-    new Promise((resolve) => setTimeout(() => resolve(new Set()), 10_000)),
+    new Promise((resolve) => setTimeout(() => resolve(new Set()), PUBLIC_PACK_FETCH_TIMEOUT_MS)),
   ]);
 
   return (
@@ -1068,6 +1124,25 @@ async function withTimeout(promise, timeoutMs, fallbackValue) {
     promise,
     new Promise((resolve) => setTimeout(() => resolve(fallbackValue), timeoutMs)),
   ]);
+}
+
+async function withTimeoutReject(promise, timeoutMs, message) {
+  let timeoutId;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(createHttpError(503, message));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 async function serveClientApp(pathname) {

@@ -10,6 +10,19 @@ interface UserStateResponse {
   status: UserRequestStatus;
 }
 
+const PACK_API_TIMEOUT_MS = 35_000;
+
+export class PackApiTimeoutError extends Error {
+  constructor(message = 'Pack API request timed out.') {
+    super(message);
+    this.name = 'PackApiTimeoutError';
+  }
+}
+
+export function isPackApiTimeoutError(error: unknown): boolean {
+  return error instanceof PackApiTimeoutError;
+}
+
 interface AdminMemberRecord {
   pubkey: string;
   username: string;
@@ -61,7 +74,7 @@ export class StarterPackRequestService {
     return this.get<UserStateResponse>('/api/pack-members/me');
   }
 
-  async submitRequest(): Promise<void> {
+  async submitRequest(): Promise<UserRequestState> {
     const currentUser = this.session.user();
     if (!currentUser) {
       throw new Error('Authentication is required.');
@@ -77,6 +90,8 @@ export class StarterPackRequestService {
       postCount: null,
       zapCount: null,
     });
+
+    return { status: 'joined' };
   }
 
   async listAdminRequests(): Promise<AdminPackMemberEntry[]> {
@@ -113,20 +128,30 @@ export class StarterPackRequestService {
   }
 
   private async get<T>(path: string): Promise<T> {
+    return withTimeout(this.getSigned<T>(path), PACK_API_TIMEOUT_MS);
+  }
+
+  private async getSigned<T>(path: string): Promise<T> {
     const url = buildApiUrl(path);
     const headers = await this.createSignedHeaders(url, 'GET');
-
     return firstValueFrom(this.http.get<T>(url, { headers }));
   }
 
   private async post<TBody extends Record<string, unknown>>(
     path: string,
     body: TBody
-  ): Promise<void> {
+  ): Promise<unknown> {
+    return withTimeout(this.postSigned(path, body), PACK_API_TIMEOUT_MS);
+  }
+
+  private async postSigned<TBody extends Record<string, unknown>>(
+    path: string,
+    body: TBody
+  ): Promise<unknown> {
     const url = buildApiUrl(path);
     const headers = await this.createSignedHeaders(url, 'POST', body);
 
-    await firstValueFrom(this.http.post(url, body, { headers }));
+    return firstValueFrom(this.http.post(url, body, { headers }));
   }
 
   private async createSignedHeaders(
@@ -156,6 +181,25 @@ function buildApiUrl(path: string): string {
   const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
 
   return `${origin}${path}`;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new PackApiTimeoutError());
+    }, timeoutMs);
+
+    void promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    );
+  });
 }
 
 function formatDate(date: Date): string {

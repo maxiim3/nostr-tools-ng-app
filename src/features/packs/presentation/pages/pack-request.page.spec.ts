@@ -7,8 +7,10 @@ import { TestBed } from '@angular/core/testing';
 import { resolveRequestStatus, resolveSubmitErrorKey } from './pack-request.page';
 import { PackRequestPage } from './pack-request.page';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
-import { FrancophonePackMembershipService } from '../../application/francophone-pack-membership.service';
-import { StarterPackRequestService } from '../../application/starter-pack-request.service';
+import {
+  PackApiTimeoutError,
+  StarterPackRequestService,
+} from '../../application/starter-pack-request.service';
 import type { UserRequestState } from '../../application/starter-pack-request.service';
 
 describe('PackRequestPage auth gating', () => {
@@ -31,6 +33,7 @@ describe('PackRequestPage auth gating', () => {
     };
     const requestService = createRequestServiceMock();
     const page = createPage(session, requestService);
+    await waitForIdle(page);
 
     await page.requestJoin();
 
@@ -54,6 +57,7 @@ describe('PackRequestPage auth gating', () => {
     };
     const requestService = createRequestServiceMock();
     const page = createPage(session, requestService);
+    await waitForIdle(page);
 
     await page.requestJoin();
 
@@ -75,19 +79,68 @@ describe('PackRequestPage auth gating', () => {
       openAuthModal: vi.fn(),
     };
     const requestService = createRequestServiceMock();
-    const packMembership = {
-      isCurrentUserMember: vi
-        .fn<() => Promise<boolean>>()
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(true),
-    };
-    const page = createPage(session, requestService, packMembership);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    const page = createPage(session, requestService);
+    await waitForIdle(page);
 
     await page.requestJoin();
 
     expect(page.isPackMember()).toBe(true);
     expect(page.joinedFromRequest()).toBe(true);
+  });
+
+  it('uses the join response without making a second signed status request', async () => {
+    const session = {
+      isAuthenticated: signal(true),
+      user: signal({
+        pubkey: 'f'.repeat(64),
+        npub: 'npub1activeprofile',
+        displayName: 'Active Profile',
+        imageUrl: null,
+        description: null,
+        nip05: null,
+      }),
+      openAuthModal: vi.fn(),
+    };
+    const requestService = createRequestServiceMock();
+    const page = createPage(session, requestService);
+    await waitForIdle(page);
+
+    expect(requestService.getUserState).toHaveBeenCalledTimes(1);
+
+    await page.requestJoin();
+
+    expect(requestService.submitRequest).toHaveBeenCalledTimes(1);
+    expect(requestService.getUserState).toHaveBeenCalledTimes(1);
+    expect(page.isPackMember()).toBe(true);
+  });
+
+  it('ignores duplicate join attempts while a join request is loading', async () => {
+    const session = {
+      isAuthenticated: signal(true),
+      user: signal({
+        pubkey: 'f'.repeat(64),
+        npub: 'npub1activeprofile',
+        displayName: 'Active Profile',
+        imageUrl: null,
+        description: null,
+        nip05: null,
+      }),
+      openAuthModal: vi.fn(),
+    };
+    const submitDeferred = createDeferred<UserRequestState>();
+    const requestService = createRequestServiceMock();
+    requestService.submitRequest.mockReturnValue(submitDeferred.promise);
+    const page = createPage(session, requestService);
+    await waitForIdle(page);
+
+    const firstSubmit = page.requestJoin();
+    await page.requestJoin();
+    submitDeferred.resolve({ status: 'joined' });
+    await firstSubmit;
+
+    expect(requestService.submitRequest).toHaveBeenCalledTimes(1);
+    expect(page.loading()).toBe(false);
+    expect(page.isPackMember()).toBe(true);
   });
 });
 
@@ -137,6 +190,19 @@ describe('PackRequestPage pure helpers', () => {
       expect(resolveSubmitErrorKey(error)).toBe('request.submitError.invalidRequest');
     });
 
+    it('returns packPublisherUnavailable for pack publisher backend failures', () => {
+      expect(resolveSubmitErrorKey(new HttpErrorResponse({ status: 502 }))).toBe(
+        'request.submitError.packPublisherUnavailable'
+      );
+      expect(resolveSubmitErrorKey(new HttpErrorResponse({ status: 503 }))).toBe(
+        'request.submitError.packPublisherUnavailable'
+      );
+    });
+
+    it('returns timeout for pack API timeout errors', () => {
+      expect(resolveSubmitErrorKey(new PackApiTimeoutError())).toBe('request.submitError.timeout');
+    });
+
     it('returns generic submitError for other HttpErrorResponse', () => {
       const error = new HttpErrorResponse({ status: 500 });
 
@@ -151,19 +217,12 @@ describe('PackRequestPage pure helpers', () => {
 
 function createPage(
   session: Partial<NostrSessionService>,
-  requestService = createRequestServiceMock(),
-  packMembership = {
-    isCurrentUserMember: vi.fn<() => Promise<boolean>>().mockResolvedValue(false),
-  }
+  requestService = createRequestServiceMock()
 ): PackRequestPage {
   TestBed.configureTestingModule({
     providers: [
       { provide: NostrSessionService, useValue: session },
       { provide: StarterPackRequestService, useValue: requestService },
-      {
-        provide: FrancophonePackMembershipService,
-        useValue: packMembership,
-      },
     ],
   });
 
@@ -173,6 +232,22 @@ function createPage(
 function createRequestServiceMock() {
   return {
     getUserState: vi.fn<() => Promise<UserRequestState>>().mockResolvedValue({ status: 'idle' }),
-    submitRequest: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    submitRequest: vi.fn<() => Promise<UserRequestState>>().mockResolvedValue({ status: 'joined' }),
   };
+}
+
+async function waitForIdle(page: PackRequestPage): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(page.loading()).toBe(false);
+}
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
 }

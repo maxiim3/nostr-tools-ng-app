@@ -138,6 +138,8 @@
       "authError": "La firma de la solicitud fue rechazada. Vuelve a conectarte e inténtalo de nuevo.",
       "forbidden": "No tienes permiso para realizar esta acción.",
       "invalidRequest": "La solicitud enviada no es válida.",
+      "packPublisherUnavailable": "El servicio de publicación del pack no responde. Inténtalo de nuevo en breve.",
+      "timeout": "El firmante o el servidor no respondió. Inténtalo de nuevo.",
       "generic": "No se puede unir al pack ahora mismo. Vuelve a intentarlo en breve."
     },
     "followup": {

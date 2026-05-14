@@ -138,6 +138,8 @@
       "authError": "The request signature was rejected. Reconnect and try again.",
       "forbidden": "You are not allowed to perform this action.",
       "invalidRequest": "The submitted request is invalid.",
+      "packPublisherUnavailable": "The pack publisher is not responding. Please try again shortly.",
+      "timeout": "The signer or server did not respond. Please retry.",
       "generic": "Unable to join the pack right now. Please try again shortly."
     },
     "followup": {

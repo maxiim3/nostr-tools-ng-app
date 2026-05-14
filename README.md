@@ -76,6 +76,11 @@ Variables d'environnement requises :
 - `FRANCOPHONE_PACK_SIGNER_MODE=nip46` pour signer via un bunker NIP-46
 - `FRANCOPHONE_PACK_BUNKER_URL=bunker://...` server-only, utilise par le Bun API pour signer les add/remove du pack
 - `FRANCOPHONE_PACK_OWNER_NSEC=nsec1...` fallback direct si `FRANCOPHONE_PACK_SIGNER_MODE=nsec`
+- `PUBLIC_PACK_OPERATION_TIMEOUT_MS=25000` optionnel, borne globale de l'ajout/retrait du pack public
+- `PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS=15000` optionnel, attente maximum du signer bunker serveur
+- `PUBLIC_PACK_SIGN_TIMEOUT_MS=15000` optionnel, attente maximum de signature du pack public
+- `PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS=5000` optionnel, attente maximum de publication relay
+- `PUBLIC_PACK_FETCH_TIMEOUT_MS=8000` optionnel, attente maximum de lecture relay pendant la confirmation
 
 Les cles necessaires a cette feature sont configurees uniquement cote serveur. Angular ne parle pas directement a Supabase et ne signe pas le pack du proprietaire : Angular appelle `server.mjs`, puis `server.mjs` verifie le NIP-98 utilisateur, fait signer l'evenement du pack via `FRANCOPHONE_PACK_BUNKER_URL` (ou via `FRANCOPHONE_PACK_OWNER_NSEC` en fallback), et ecrit dans Supabase quand l'ajout est confirme. Ne jamais exposer `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `FRANCOPHONE_PACK_BUNKER_URL` ou `FRANCOPHONE_PACK_OWNER_NSEC` dans Angular.
 

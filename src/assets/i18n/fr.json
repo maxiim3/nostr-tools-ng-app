@@ -138,6 +138,8 @@
       "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
       "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
       "invalidRequest": "La demande envoyée est invalide.",
+      "packPublisherUnavailable": "Le service de publication du pack ne répond pas. Réessaie dans un instant.",
+      "timeout": "Le signer ou le serveur n'a pas répondu. Réessaie.",
       "generic": "Impossible de rejoindre le pack pour le moment. Réessaie dans un instant."
     },
     "followup": {

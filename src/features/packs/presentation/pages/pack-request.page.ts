@@ -6,12 +6,13 @@ import {
   inject,
   OnDestroy,
   signal,
+  untracked,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
-import { FrancophonePackMembershipService } from '../../application/francophone-pack-membership.service';
 import {
+  isPackApiTimeoutError,
   StarterPackRequestService,
   type UserRequestState,
 } from '../../application/starter-pack-request.service';
@@ -35,7 +36,6 @@ const LOADING_MESSAGES = [
 export class PackRequestPage implements OnDestroy {
   private readonly session = inject(NostrSessionService);
   private readonly requestService = inject(StarterPackRequestService);
-  private readonly packMembership = inject(FrancophonePackMembershipService);
 
   readonly isAuthenticated = this.session.isAuthenticated;
   readonly requestStatus = signal<UserRequestStatus>('idle');
@@ -52,7 +52,9 @@ export class PackRequestPage implements OnDestroy {
   constructor() {
     effect(() => {
       if (this.isAuthenticated()) {
-        this.loadStatus();
+        untracked(() => {
+          void this.loadStatus();
+        });
       } else {
         this.requestStatus.set('idle');
         this.isPackMember.set(false);
@@ -72,24 +74,27 @@ export class PackRequestPage implements OnDestroy {
   }
 
   async loadStatus(): Promise<void> {
+    if (this.loading()) {
+      return;
+    }
+
     this.loading.set(true);
     this.startLoadingMessageRotation();
+    this.submitError.set(null);
 
     try {
       const user = this.session.user();
       if (!user) return;
 
       const state = await this.requestService.getUserState();
-      let isPackMember = false;
-
-      try {
-        isPackMember = await this.packMembership.isCurrentUserMember();
-      } catch {
-        isPackMember = false;
-      }
+      const isPackMember = state.status === 'joined';
 
       this.isPackMember.set(isPackMember);
       this.requestStatus.set(resolveRequestStatus(state, isPackMember));
+    } catch (error: unknown) {
+      this.isPackMember.set(false);
+      this.requestStatus.set('idle');
+      this.submitError.set(resolveSubmitErrorKey(error));
     } finally {
       this.loading.set(false);
       this.stopLoadingMessageRotation();
@@ -102,15 +107,22 @@ export class PackRequestPage implements OnDestroy {
       return;
     }
 
+    if (this.loading()) {
+      return;
+    }
+
     this.submitError.set(null);
     this.joinedFromRequest.set(false);
     this.loading.set(true);
     this.startLoadingMessageRotation();
 
     try {
-      await this.requestService.submitRequest();
-      await this.loadStatus();
-      this.joinedFromRequest.set(this.isPackMember());
+      const state = await this.requestService.submitRequest();
+      const isPackMember = state.status === 'joined';
+
+      this.isPackMember.set(isPackMember);
+      this.requestStatus.set(resolveRequestStatus(state, isPackMember));
+      this.joinedFromRequest.set(isPackMember);
     } catch (error: unknown) {
       this.submitError.set(resolveSubmitErrorKey(error));
     } finally {
@@ -150,6 +162,10 @@ export function resolveRequestStatus(
 }
 
 export function resolveSubmitErrorKey(error: unknown): string {
+  if (isPackApiTimeoutError(error)) {
+    return 'request.submitError.timeout';
+  }
+
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401) {
       return 'request.submitError.authError';
@@ -161,6 +177,10 @@ export function resolveSubmitErrorKey(error: unknown): string {
 
     if (error.status === 400) {
       return 'request.submitError.invalidRequest';
+    }
+
+    if (error.status === 502 || error.status === 503 || error.status === 504) {
+      return 'request.submitError.packPublisherUnavailable';
     }
   }
 
