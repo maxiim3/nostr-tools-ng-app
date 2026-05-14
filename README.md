@@ -84,7 +84,7 @@ Si le projet Supabase affiche encore les legacy keys, `SUPABASE_SERVICE_ROLE_KEY
 
 Copier [.env.example](.env.example) vers `.env` en local, puis renseigner les valeurs Supabase.
 
-Schema SQL source : [supabase/migrations/001_francophone_pack_members.sql](supabase/migrations/001_francophone_pack_members.sql).
+Schema SQL source : [supabase/migrations/](supabase/migrations/). Appliquer toutes les migrations dans l'ordre des noms de fichiers.
 
 Appliquer le schema :
 
@@ -92,4 +92,6 @@ Appliquer le schema :
 bun run supabase:schema
 ```
 
-Puis coller le SQL dans l'editeur SQL Supabase, ou utiliser `bun run supabase:push` si le Supabase CLI est installe et lie au projet.
+Puis coller tout le SQL dans l'editeur SQL Supabase, ou utiliser `bun run supabase:push` si le Supabase CLI est installe et lie au projet.
+
+Si les demandes d'acces au pack echouent avec `PGRST204` et un message indiquant que la colonne `status` est introuvable dans `francophone_pack_members`, appliquer la migration [supabase/migrations/002_francophone_pack_member_status.sql](supabase/migrations/002_francophone_pack_member_status.sql), puis relancer la demande.

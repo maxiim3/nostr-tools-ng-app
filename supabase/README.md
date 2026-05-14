@@ -4,11 +4,13 @@ The Bun API uses Supabase REST with a server-side elevated key. Prefer `SUPABASE
 
 ## Create Schema
 
-Run [001_francophone_pack_members.sql](./migrations/001_francophone_pack_members.sql) in the Supabase SQL editor, or apply it with the Supabase CLI from this repo root:
+Run every SQL file in [migrations](./migrations/) in filename order in the Supabase SQL editor, or apply them with the Supabase CLI from this repo root:
 
 ```bash
 supabase db push
 ```
+
+If pack requests fail with `PGRST204` and a message about the missing `status` column, the database was created from the older initial schema only. Apply [002_francophone_pack_member_status.sql](./migrations/002_francophone_pack_member_status.sql), then retry the request.
 
 ## Environment
 
