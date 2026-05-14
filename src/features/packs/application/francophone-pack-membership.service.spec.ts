@@ -13,12 +13,24 @@ const USER_PUBKEY = '00000000000000000000000000000000000000000000000000000000000
 const OTHER_PUBKEY = '0000000000000000000000000000000000000000000000000000000000000002';
 const PACK_OWNER_PUBKEY = '15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900';
 
-function createMocks(status: 'idle' | 'joined' = 'idle') {
+function createMocks(status: 'idle' | 'success' = 'idle') {
   const userMock = vi.fn().mockReturnValue({ pubkey: USER_PUBKEY });
   const getUserStateMock = vi.fn().mockResolvedValue({ status });
   const fetchEventsMock = vi.fn().mockResolvedValue([]);
   const fetchProfileMock = vi.fn();
   const publishEventMock = vi.fn().mockResolvedValue('event-id');
+  const signEventMock = vi.fn().mockResolvedValue({
+    id: 'signed-event-id',
+    pubkey: PACK_OWNER_PUBKEY,
+    created_at: 1730000000,
+    kind: 39089,
+    tags: [
+      ['d', 'xd0520r38aua'],
+      ['p', USER_PUBKEY],
+    ],
+    content: '',
+    sig: 'f'.repeat(128),
+  });
   const httpGetMock = vi.fn().mockReturnValue(of([]));
 
   TestBed.configureTestingModule({
@@ -31,6 +43,7 @@ function createMocks(status: 'idle' | 'joined' = 'idle') {
           fetchEvents: fetchEventsMock,
           fetchProfile: fetchProfileMock,
           publishEvent: publishEventMock,
+          signEvent: signEventMock,
         },
       },
       { provide: NostrSessionService, useValue: { user: userMock } },
@@ -47,6 +60,7 @@ function createMocks(status: 'idle' | 'joined' = 'idle') {
     fetchEventsMock,
     fetchProfileMock,
     publishEventMock,
+    signEventMock,
     httpGetMock,
   };
 }
@@ -62,8 +76,8 @@ describe('FrancophonePackMembershipService', () => {
     expect(getUserStateMock).not.toHaveBeenCalled();
   });
 
-  it('returns true when the API reports the current user as joined', async () => {
-    const { service } = createMocks('joined');
+  it('returns true when the API reports the current user as success', async () => {
+    const { service } = createMocks('success');
 
     await expect(service.isCurrentUserMember()).resolves.toBe(true);
   });
@@ -75,7 +89,7 @@ describe('FrancophonePackMembershipService', () => {
   });
 
   it('only checks explicit membership for the current user', async () => {
-    const { service, getUserStateMock } = createMocks('joined');
+    const { service, getUserStateMock } = createMocks('success');
 
     await expect(service.isMember(OTHER_PUBKEY)).resolves.toBe(false);
     expect(getUserStateMock).not.toHaveBeenCalled();
@@ -133,6 +147,37 @@ describe('FrancophonePackMembershipService', () => {
       ],
       ''
     );
+  });
+
+  it('builds a signed pack event that includes the accepted member', async () => {
+    const { service, fetchEventsMock, signEventMock, userMock } = createMocks();
+    userMock.mockReturnValue({ pubkey: PACK_OWNER_PUBKEY });
+    fetchEventsMock.mockResolvedValue([
+      {
+        kind: 39089,
+        pubkey: PACK_OWNER_PUBKEY,
+        content: '',
+        tags: [
+          ['d', 'xd0520r38aua'],
+          ['p', OTHER_PUBKEY],
+        ],
+      },
+    ]);
+
+    await service.createSignedAddMemberEvent(USER_PUBKEY);
+
+    expect(signEventMock).toHaveBeenCalledTimes(1);
+    const [template] = signEventMock.mock.calls[0] as [
+      { kind: number; tags: string[][]; content: string; created_at: number },
+    ];
+    expect(template.kind).toBe(39089);
+    expect(template.tags).toEqual([
+      ['d', 'xd0520r38aua'],
+      ['p', OTHER_PUBKEY],
+      ['p', USER_PUBKEY],
+    ]);
+    expect(template.content).toBe('');
+    expect(typeof template.created_at).toBe('number');
   });
 
   it('falls back to Nostr when the server endpoint fails', async () => {

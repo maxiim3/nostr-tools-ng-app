@@ -65,7 +65,7 @@ describe('PackRequestPage auth gating', () => {
     expect(session.openAuthModal).not.toHaveBeenCalled();
   });
 
-  it('marks membership as coming from the completed join request', async () => {
+  it('marks the request as pending after a successful join submission', async () => {
     const session = {
       isAuthenticated: signal(true),
       user: signal({
@@ -84,8 +84,7 @@ describe('PackRequestPage auth gating', () => {
 
     await page.requestJoin();
 
-    expect(page.isPackMember()).toBe(true);
-    expect(page.joinedFromRequest()).toBe(true);
+    expect(page.requestStatus()).toBe('pending');
   });
 
   it('uses the join response without making a second signed status request', async () => {
@@ -111,7 +110,7 @@ describe('PackRequestPage auth gating', () => {
 
     expect(requestService.submitRequest).toHaveBeenCalledTimes(1);
     expect(requestService.getUserState).toHaveBeenCalledTimes(1);
-    expect(page.isPackMember()).toBe(true);
+    expect(page.requestStatus()).toBe('pending');
   });
 
   it('ignores duplicate join attempts while a join request is loading', async () => {
@@ -135,39 +134,33 @@ describe('PackRequestPage auth gating', () => {
 
     const firstSubmit = page.requestJoin();
     await page.requestJoin();
-    submitDeferred.resolve({ status: 'joined' });
+    submitDeferred.resolve({ status: 'pending' });
     await firstSubmit;
 
     expect(requestService.submitRequest).toHaveBeenCalledTimes(1);
     expect(page.loading()).toBe(false);
-    expect(page.isPackMember()).toBe(true);
+    expect(page.requestStatus()).toBe('pending');
   });
 });
 
 describe('PackRequestPage pure helpers', () => {
   describe('resolveRequestStatus', () => {
-    it('returns idle when user is a pack member', () => {
+    it('returns pending when state is pending', () => {
       const state: UserRequestState = { status: 'pending' };
 
-      expect(resolveRequestStatus(state, true)).toBe('idle');
+      expect(resolveRequestStatus(state)).toBe('pending');
     });
 
-    it('returns pending when state is pending and user is not a pack member', () => {
-      const state: UserRequestState = { status: 'pending' };
-
-      expect(resolveRequestStatus(state, false)).toBe('pending');
-    });
-
-    it('returns idle when state is idle and user is not a pack member', () => {
+    it('returns idle when state is idle', () => {
       const state: UserRequestState = { status: 'idle' };
 
-      expect(resolveRequestStatus(state, false)).toBe('idle');
+      expect(resolveRequestStatus(state)).toBe('idle');
     });
 
-    it('returns idle when state is approved but user is not a pack member', () => {
-      const state: UserRequestState = { status: 'approved' };
+    it('returns success when state is success', () => {
+      const state: UserRequestState = { status: 'success' };
 
-      expect(resolveRequestStatus(state, false)).toBe('idle');
+      expect(resolveRequestStatus(state)).toBe('success');
     });
   });
 
@@ -190,12 +183,12 @@ describe('PackRequestPage pure helpers', () => {
       expect(resolveSubmitErrorKey(error)).toBe('request.submitError.invalidRequest');
     });
 
-    it('returns packPublisherUnavailable for pack publisher backend failures', () => {
-      expect(resolveSubmitErrorKey(new HttpErrorResponse({ status: 502 }))).toBe(
-        'request.submitError.packPublisherUnavailable'
+    it('returns generic for backend 5xx failures', () => {
+      expect(resolveSubmitErrorKey(new HttpErrorResponse({ status: 500 }))).toBe(
+        'request.submitError.generic'
       );
       expect(resolveSubmitErrorKey(new HttpErrorResponse({ status: 503 }))).toBe(
-        'request.submitError.packPublisherUnavailable'
+        'request.submitError.generic'
       );
     });
 
@@ -204,7 +197,7 @@ describe('PackRequestPage pure helpers', () => {
     });
 
     it('returns generic submitError for other HttpErrorResponse', () => {
-      const error = new HttpErrorResponse({ status: 500 });
+      const error = new HttpErrorResponse({ status: 418 });
 
       expect(resolveSubmitErrorKey(error)).toBe('request.submitError.generic');
     });
@@ -232,7 +225,9 @@ function createPage(
 function createRequestServiceMock() {
   return {
     getUserState: vi.fn<() => Promise<UserRequestState>>().mockResolvedValue({ status: 'idle' }),
-    submitRequest: vi.fn<() => Promise<UserRequestState>>().mockResolvedValue({ status: 'joined' }),
+    submitRequest: vi
+      .fn<() => Promise<UserRequestState>>()
+      .mockResolvedValue({ status: 'pending' }),
   };
 }
 

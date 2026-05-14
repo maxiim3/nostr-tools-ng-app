@@ -9,7 +9,6 @@ import {
   untracked,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { PROJECT_INFO } from '../../../../core/config/project-info';
 import { NostrSessionService } from '../../../../core/nostr/application/nostr-session.service';
 import {
   isPackApiTimeoutError,
@@ -39,9 +38,6 @@ export class PackRequestPage implements OnDestroy {
 
   readonly isAuthenticated = this.session.isAuthenticated;
   readonly requestStatus = signal<UserRequestStatus>('idle');
-  readonly isPackMember = signal(false);
-  readonly joinedFromRequest = signal(false);
-  readonly packFRUrl = PROJECT_INFO.packFRUrl;
   readonly loading = signal(false);
 
   readonly loadingMessage = signal<string>(LOADING_MESSAGES[0]);
@@ -57,8 +53,6 @@ export class PackRequestPage implements OnDestroy {
         });
       } else {
         this.requestStatus.set('idle');
-        this.isPackMember.set(false);
-        this.joinedFromRequest.set(false);
       }
     });
   }
@@ -87,12 +81,8 @@ export class PackRequestPage implements OnDestroy {
       if (!user) return;
 
       const state = await this.requestService.getUserState();
-      const isPackMember = state.status === 'joined';
-
-      this.isPackMember.set(isPackMember);
-      this.requestStatus.set(resolveRequestStatus(state, isPackMember));
+      this.requestStatus.set(resolveRequestStatus(state));
     } catch (error: unknown) {
-      this.isPackMember.set(false);
       this.requestStatus.set('idle');
       this.submitError.set(resolveSubmitErrorKey(error));
     } finally {
@@ -112,17 +102,12 @@ export class PackRequestPage implements OnDestroy {
     }
 
     this.submitError.set(null);
-    this.joinedFromRequest.set(false);
     this.loading.set(true);
     this.startLoadingMessageRotation();
 
     try {
       const state = await this.requestService.submitRequest();
-      const isPackMember = state.status === 'joined';
-
-      this.isPackMember.set(isPackMember);
-      this.requestStatus.set(resolveRequestStatus(state, isPackMember));
-      this.joinedFromRequest.set(isPackMember);
+      this.requestStatus.set(resolveRequestStatus(state));
     } catch (error: unknown) {
       this.submitError.set(resolveSubmitErrorKey(error));
     } finally {
@@ -150,15 +135,8 @@ export class PackRequestPage implements OnDestroy {
   }
 }
 
-export function resolveRequestStatus(
-  state: UserRequestState,
-  isPackMember: boolean
-): UserRequestStatus {
-  if (isPackMember) {
-    return 'idle';
-  }
-
-  return state.status === 'pending' ? 'pending' : 'idle';
+export function resolveRequestStatus(state: UserRequestState): UserRequestStatus {
+  return state.status;
 }
 
 export function resolveSubmitErrorKey(error: unknown): string {
@@ -179,8 +157,13 @@ export function resolveSubmitErrorKey(error: unknown): string {
       return 'request.submitError.invalidRequest';
     }
 
-    if (error.status === 502 || error.status === 503 || error.status === 504) {
-      return 'request.submitError.packPublisherUnavailable';
+    if (
+      error.status === 500 ||
+      error.status === 502 ||
+      error.status === 503 ||
+      error.status === 504
+    ) {
+      return 'request.submitError.generic';
     }
   }
 

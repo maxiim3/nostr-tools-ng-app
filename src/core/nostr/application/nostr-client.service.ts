@@ -112,6 +112,17 @@ export class NostrClientService {
     return event.id;
   }
 
+  async signEvent(event: UnsignedNostrEvent): Promise<SignedNostrEvent> {
+    const ndk = await this.ensureNdk();
+
+    if (!ndk.signer || !ndk.activeUser) {
+      throw new Error('Nostr authentication is required before signing events.');
+    }
+
+    const signer = new NdkConnectionSignerAdapter(ndk, this.ndkModulePromise);
+    return signer.signEvent(event);
+  }
+
   async sendDirectMessage(recipientPubkey: string, message: string): Promise<string> {
     const ndk = await this.ensureNdk();
 

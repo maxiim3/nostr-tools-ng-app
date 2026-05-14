@@ -1,5 +1,5 @@
-export type UserRequestStatus = 'idle' | 'pending' | 'approved' | 'joined';
-export type AdminRequestStatus = 'pending' | 'approved' | 'rejected';
+export type UserRequestStatus = 'idle' | 'pending' | 'success';
+export type AdminRequestStatus = 'pending' | 'success' | 'rejected';
 
 export interface RequestStamp {
   createdAt: number;
@@ -15,10 +15,10 @@ export function resolveUserRequestStatus(
   latestDecision: DecisionStamp | null
 ): UserRequestStatus {
   if (
-    latestDecision?.status === 'approved' &&
+    latestDecision?.status === 'success' &&
     (!latestRequest || latestDecision.createdAt >= latestRequest.createdAt)
   ) {
-    return 'approved';
+    return 'success';
   }
 
   if (latestRequest && (!latestDecision || latestRequest.createdAt > latestDecision.createdAt)) {

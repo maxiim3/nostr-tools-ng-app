@@ -52,11 +52,11 @@ describe('StarterPackRequestService', () => {
 
     it('posts request data when user is authenticated', async () => {
       userMock.mockReturnValue({ displayName: 'Alice', imageUrl: 'img.png' });
-      httpPostMock.mockReturnValue(of(undefined));
+      httpPostMock.mockReturnValue(of({ status: 'pending' }));
 
       const result = await service.submitRequest();
 
-      expect(result).toEqual({ status: 'joined' });
+      expect(result).toEqual({ status: 'pending' });
       expect(httpPostMock).toHaveBeenCalledTimes(1);
       const [, body] = httpPostMock.mock.calls[0] as [string, Record<string, unknown>];
       expect(body).toEqual({
@@ -110,6 +110,7 @@ describe('StarterPackRequestService', () => {
             username: 'Bob',
             description: 'hello',
             avatarUrl: 'bob.png',
+            status: 'pending',
             joinedAt: '2025-01-15T10:30:00Z',
             followerCount: 1,
             followingCount: 2,
@@ -129,6 +130,7 @@ describe('StarterPackRequestService', () => {
       expect(result[0].pubkey).toBe('pk1');
       expect(result[0].username).toBe('Bob');
       expect(result[0].description).toBe('hello');
+      expect(result[0].status).toBe('pending');
       expect(result[0].primalUrl).toBe('https://primal.net/p/pk1');
       expect(result[0].requestedFromApp).toBe(true);
       expect(typeof result[0].joinedAt).toBe('number');

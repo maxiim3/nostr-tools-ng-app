@@ -84,6 +84,41 @@ export class PackAdminRequestsPage implements OnDestroy {
     }
   }
 
+  protected async accept(entry: AdminPackMemberEntry): Promise<void> {
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
+    this.clearRemovalConfirmation();
+    this.actingOn.set(entry.pubkey);
+
+    try {
+      const packEvent = await this.packMembership.createSignedAddMemberEvent(entry.pubkey);
+      await this.requests.acceptMember(entry.pubkey, packEvent);
+      this.actionSuccess.set('adminRequests.accepted');
+      await this.loadRequests();
+    } catch {
+      this.actionError.set('adminRequests.errors.acceptFailed');
+    } finally {
+      this.actingOn.set(null);
+    }
+  }
+
+  protected async reject(entry: AdminPackMemberEntry): Promise<void> {
+    this.actionError.set(null);
+    this.actionSuccess.set(null);
+    this.clearRemovalConfirmation();
+    this.actingOn.set(entry.pubkey);
+
+    try {
+      await this.requests.rejectMember(entry.pubkey);
+      this.actionSuccess.set('adminRequests.rejected');
+      await this.loadRequests();
+    } catch {
+      this.actionError.set('adminRequests.errors.rejectFailed');
+    } finally {
+      this.actingOn.set(null);
+    }
+  }
+
   protected sourceLabelKey(entry: AdminPackMemberEntry): SourceLabelKey {
     if (entry.isStored && entry.requestedFromApp) {
       return 'adminRequests.sources.app';
@@ -193,8 +228,9 @@ export function mergePackMembers(
       username: member.username,
       description: member.description,
       avatarUrl: member.avatarUrl,
+      status: 'success',
       primalUrl: `https://primal.net/p/${member.pubkey}`,
-      joinedAt: 0,
+      joinedAt: null,
       joinedAtLabel: '-',
       requestedFromApp: false,
       requestedAt: null,
@@ -206,24 +242,12 @@ export function mergePackMembers(
       postCount: null,
       zapCount: null,
       isStored: false,
-      canRemove: true,
+      canRemove: false,
     });
   }
 
   return [...membersByPubkey.values()].sort((left, right) => {
-    if (left.joinedAt && right.joinedAt) {
-      return right.joinedAt - left.joinedAt;
-    }
-
-    if (left.joinedAt) {
-      return -1;
-    }
-
-    if (right.joinedAt) {
-      return 1;
-    }
-
-    return left.username.localeCompare(right.username);
+    return compareStatusThenFreshness(left, right);
   });
 }
 
@@ -232,7 +256,7 @@ function sortEntries(
   sortState: SortState | null
 ): AdminPackMemberEntry[] {
   if (!sortState) {
-    return entries;
+    return [...entries].sort(compareStatusThenFreshness);
   }
 
   const sorted = [...entries];
@@ -262,6 +286,46 @@ function compareEntries(
   }
 }
 
+function compareStatusThenFreshness(
+  left: AdminPackMemberEntry,
+  right: AdminPackMemberEntry
+): number {
+  const statusOrder = statusPriority(left.status) - statusPriority(right.status);
+  if (statusOrder !== 0) {
+    return statusOrder;
+  }
+
+  const requestedOrder = compareNullableNumberDesc(
+    toNullableNumber(left.requestedAt),
+    toNullableNumber(right.requestedAt)
+  );
+  if (requestedOrder !== 0) {
+    return requestedOrder;
+  }
+
+  const joinedOrder = compareNullableNumberDesc(
+    toNullableNumber(left.joinedAt),
+    toNullableNumber(right.joinedAt)
+  );
+  if (joinedOrder !== 0) {
+    return joinedOrder;
+  }
+
+  return left.username.localeCompare(right.username);
+}
+
+function statusPriority(status: AdminPackMemberEntry['status']): number {
+  if (status === 'pending') {
+    return 0;
+  }
+
+  if (status === 'success') {
+    return 1;
+  }
+
+  return 2;
+}
+
 function compareNullableNumber(left: number | null, right: number | null): number {
   if (left === right) {
     return 0;
@@ -278,6 +342,22 @@ function compareNullableNumber(left: number | null, right: number | null): numbe
   return left - right;
 }
 
+function compareNullableNumberDesc(left: number | null, right: number | null): number {
+  if (left === right) {
+    return 0;
+  }
+
+  if (left === null) {
+    return 1;
+  }
+
+  if (right === null) {
+    return -1;
+  }
+
+  return right - left;
+}
+
 function compareBoolean(left: boolean, right: boolean): number {
   if (left === right) {
     return 0;
@@ -286,6 +366,6 @@ function compareBoolean(left: boolean, right: boolean): number {
   return left ? 1 : -1;
 }
 
-function toNullableNumber(value: number): number | null {
-  return value > 0 ? value : null;
+function toNullableNumber(value: number | null): number | null {
+  return typeof value === 'number' && value > 0 ? value : null;
 }

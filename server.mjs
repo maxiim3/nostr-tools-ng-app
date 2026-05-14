@@ -15,23 +15,27 @@ const MEMBERS_TABLE =
 const FRANCOPHONE_PACK_URL =
   process.env.FRANCOPHONE_PACK_URL ??
   'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900';
-const FRANCOPHONE_PACK_SIGNER_MODE = process.env.FRANCOPHONE_PACK_SIGNER_MODE ?? '';
-const FRANCOPHONE_PACK_BUNKER_URL = process.env.FRANCOPHONE_PACK_BUNKER_URL ?? '';
-const FRANCOPHONE_PACK_OWNER_NSEC = process.env.FRANCOPHONE_PACK_OWNER_NSEC ?? '';
-const FRANCOPHONE_PACK_PUBLISHER_MODE = process.env.FRANCOPHONE_PACK_PUBLISHER_MODE ?? 'nostr';
 const ADMIN_NPUBS = new Set(
   (process.env.ADMIN_NPUBS ?? 'npub1zkse38pvfqlkcmcc7tw6zqecj7sqxe5lgj0u9ldylghmdjfppyqqtsa4du')
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
 );
+const MEMBER_STATUS_PENDING = 'pending';
+const MEMBER_STATUS_SUCCESS = 'success';
+const MEMBER_STATUS_REJECTED = 'rejected';
+const MEMBER_STATUSES = new Set([
+  MEMBER_STATUS_PENDING,
+  MEMBER_STATUS_SUCCESS,
+  MEMBER_STATUS_REJECTED,
+]);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const browserDistDir = path.join(__dirname, 'dist', 'nostr-tools-ng-app', 'browser');
 const browserDistRoot = path.resolve(browserDistDir);
 const indexFilePath = path.join(browserDistDir, 'index.html');
-const PUBLIC_PACK_RELAY_URLS = [
+const DEFAULT_PUBLIC_PACK_RELAY_URLS = [
   'wss://relay.damus.io',
   'wss://relay.nostr.band',
   'wss://nostr.oxtr.dev',
@@ -39,28 +43,31 @@ const PUBLIC_PACK_RELAY_URLS = [
   'wss://nos.lol',
   'wss://relay.primal.net',
 ];
+const PUBLIC_PACK_RELAY_URLS = resolvePublicPackRelayUrls({
+  explicitRelayList:
+    readOptionalString(process.env.FRANCOPHONE_PACK_RELAYS) ??
+    readOptionalString(process.env.PUBLIC_PACK_RELAY_URLS),
+  bunkerUrl: readOptionalString(process.env.FRANCOPHONE_PACK_BUNKER_URL),
+  fallbackRelayUrls: DEFAULT_PUBLIC_PACK_RELAY_URLS,
+});
 const PUBLIC_PACK_EVENT_KIND = 39089;
-const PUBLIC_PACK_UPDATE_ATTEMPTS = 3;
-const PUBLIC_PACK_CONFIRM_ATTEMPTS = 5;
-const PUBLIC_PACK_CONFIRM_DELAY_MS = 1000;
-const PUBLIC_PACK_OPERATION_TIMEOUT_MS = readPositiveIntegerEnv(
-  'PUBLIC_PACK_OPERATION_TIMEOUT_MS',
-  25_000
-);
 const PUBLIC_PACK_FETCH_TIMEOUT_MS = readPositiveIntegerEnv('PUBLIC_PACK_FETCH_TIMEOUT_MS', 8_000);
-const PUBLIC_PACK_SIGN_TIMEOUT_MS = readPositiveIntegerEnv('PUBLIC_PACK_SIGN_TIMEOUT_MS', 15_000);
-const PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS = readPositiveIntegerEnv(
-  'PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS',
-  5_000
+const PUBLIC_PACK_PUBLISH_TIMEOUT_MS = readPositiveIntegerEnv(
+  'PUBLIC_PACK_PUBLISH_TIMEOUT_MS',
+  8_000
 );
-const PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS = readPositiveIntegerEnv(
-  'PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS',
-  15_000
+const PUBLIC_PACK_CONFIRM_ATTEMPTS = readPositiveIntegerEnv('PUBLIC_PACK_CONFIRM_ATTEMPTS', 5);
+const PUBLIC_PACK_CONFIRM_DELAY_MS = readPositiveIntegerEnv('PUBLIC_PACK_CONFIRM_DELAY_MS', 1_000);
+const PUBLIC_PACK_REQUIRED_RELAY_ACKS = readPositiveIntegerEnv(
+  'PUBLIC_PACK_REQUIRED_RELAY_ACKS',
+  1
 );
+const PUBLIC_PACK_ACCEPT_SKIP_NETWORK =
+  process.env.NODE_ENV === 'test' && process.env.PUBLIC_PACK_ACCEPT_SKIP_NETWORK === 'true';
 const ndkModulePromise = import('@nostr-dev-kit/ndk');
+const configuredPackReference = parsePackReference(FRANCOPHONE_PACK_URL);
 
 const memberStorage = createFrancophonePackMemberStorage();
-const packPublisher = createFrancophonePackPublisher();
 let publicPackNdkPromise = null;
 
 const server = Bun.serve({
@@ -69,6 +76,7 @@ const server = Bun.serve({
 });
 
 console.log(`Server listening on http://127.0.0.1:${server.port}`);
+console.log(`Public pack relays: ${PUBLIC_PACK_RELAY_URLS.join(', ')}`);
 
 export { server };
 
@@ -145,10 +153,7 @@ async function handleRequest(request) {
         throw createHttpError(400, 'Missing packUrl query parameter.');
       }
 
-      const members =
-        packUrl === FRANCOPHONE_PACK_URL && typeof packPublisher.listMembers === 'function'
-          ? await packPublisher.listMembers()
-          : await listPublicPackMembers(packUrl);
+      const members = await listPublicPackMembers(packUrl);
       return jsonResponse(members, { headers: corsHeaders });
     } catch (error) {
       return handleApiError(error, corsHeaders);
@@ -159,17 +164,12 @@ async function handleRequest(request) {
     try {
       const auth = await requireNostrAuth(request, undefined, false, requestUrl);
       const member = await memberStorage.findByPubkey(auth.pubkey);
-      const isStoredMember = Boolean(member && !member.removedAt);
-      const wasRemovedMember = Boolean(member?.removedAt);
-      const isPublicPackMember = isStoredMember
-        ? true
-        : await packPublisher.hasMember(auth.pubkey).catch(() => false);
+      const status = resolveUserMemberStatus(member);
 
       return jsonResponse(
         {
-          status: isStoredMember || (!wasRemovedMember && isPublicPackMember) ? 'joined' : 'idle',
-          member: isStoredMember ? mapMemberRecord(member) : null,
-          publicPackMember: isPublicPackMember,
+          status,
+          member: status === 'idle' ? null : mapMemberRecord(member),
         },
         { headers: corsHeaders }
       );
@@ -184,6 +184,7 @@ async function handleRequest(request) {
       const auth = await requireNostrAuth(request, body, false, requestUrl);
       const now = new Date().toISOString();
       const existingMember = await memberStorage.findByPubkey(auth.pubkey);
+      const existingStatus = resolveUserMemberStatus(existingMember);
       const memberProfile = {
         username: readProfileName(body, auth.npub),
         description: readOptionalString(body?.description),
@@ -194,31 +195,40 @@ async function handleRequest(request) {
         postCount: readOptionalNumber(body?.postCount, 'postCount'),
         zapCount: readOptionalNumber(body?.zapCount, 'zapCount'),
       };
-      const packUpdate = await runPublicPackUpdate(() => packPublisher.addMember(auth.pubkey));
+
+      if (existingStatus === MEMBER_STATUS_SUCCESS && existingMember) {
+        return jsonResponse(
+          {
+            status: MEMBER_STATUS_SUCCESS,
+            member: mapMemberRecord(existingMember),
+          },
+          { headers: corsHeaders }
+        );
+      }
 
       const member = await memberStorage.upsert({
         pubkey: auth.pubkey,
         username: memberProfile.username,
         description: memberProfile.description,
         avatarUrl: memberProfile.avatarUrl,
-        joinedAt: existingMember && !existingMember.removedAt ? existingMember.joinedAt : now,
+        joinedAt: existingMember?.joinedAt ?? now,
         followerCount: memberProfile.followerCount,
         followingCount: memberProfile.followingCount,
         accountCreatedAt: memberProfile.accountCreatedAt,
         postCount: memberProfile.postCount,
         zapCount: memberProfile.zapCount,
         requestedFromApp: true,
-        requestedAt: existingMember && !existingMember.removedAt ? existingMember.requestedAt : now,
+        requestedAt: now,
         removedAt: null,
+        status: MEMBER_STATUS_PENDING,
       });
 
       return jsonResponse(
         {
-          ...mapMemberRecord(member),
-          packEventId: packUpdate.eventId,
-          packChanged: packUpdate.changed,
+          status: MEMBER_STATUS_PENDING,
+          member: mapMemberRecord(member),
         },
-        { status: 201, headers: corsHeaders }
+        { status: 202, headers: corsHeaders }
       );
     } catch (error) {
       return handleApiError(error, corsHeaders);
@@ -242,10 +252,43 @@ async function handleRequest(request) {
     try {
       const body = await readJsonBody(request);
       await requireNostrAuth(request, body, true, requestUrl);
-      await runPublicPackUpdate(() => packPublisher.removeMember(removeMatch.pubkey));
       await memberStorage.removeIfExists(removeMatch.pubkey, new Date().toISOString());
 
       return new Response(null, { status: 204, headers: corsHeaders });
+    } catch (error) {
+      return handleApiError(error, corsHeaders);
+    }
+  }
+
+  const statusMatch = matchAdminMemberStatusRoute(requestUrl.pathname);
+  if (request.method === 'POST' && statusMatch) {
+    try {
+      const body = await readJsonBody(request);
+      const auth = await requireNostrAuth(request, body, true, requestUrl);
+
+      const nextStatus = statusMatch.status;
+      if (!MEMBER_STATUSES.has(nextStatus)) {
+        throw createHttpError(400, 'Invalid status update.');
+      }
+
+      if (nextStatus === MEMBER_STATUS_SUCCESS) {
+        assertPackOwnerAuth(auth.pubkey);
+        const signedPackEvent = readSignedPackEventInput(body?.packEvent);
+        assertValidPackAcceptanceEvent(signedPackEvent, statusMatch.pubkey);
+        await publishPackAcceptanceEvent(signedPackEvent, statusMatch.pubkey);
+      }
+
+      const updatedMember = await memberStorage.updateStatus(
+        statusMatch.pubkey,
+        nextStatus,
+        new Date().toISOString()
+      );
+
+      if (!updatedMember) {
+        throw createHttpError(404, 'Member not found.');
+      }
+
+      return jsonResponse(mapMemberRecord(updatedMember), { headers: corsHeaders });
     } catch (error) {
       return handleApiError(error, corsHeaders);
     }
@@ -364,7 +407,24 @@ function mapMemberRecord(record) {
     requestedFromApp: record.requestedFromApp,
     requestedAt: record.requestedAt,
     removedAt: record.removedAt,
+    status: record.status,
   };
+}
+
+function resolveUserMemberStatus(member) {
+  if (!member || member.removedAt) {
+    return 'idle';
+  }
+
+  if (member.status === MEMBER_STATUS_PENDING) {
+    return MEMBER_STATUS_PENDING;
+  }
+
+  if (member.status === MEMBER_STATUS_SUCCESS) {
+    return MEMBER_STATUS_SUCCESS;
+  }
+
+  return 'idle';
 }
 
 function readProfileName(body, fallbackNpub) {
@@ -388,6 +448,86 @@ function readPositiveIntegerEnv(name, fallbackValue) {
 
   const parsedValue = Number.parseInt(rawValue, 10);
   return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallbackValue;
+}
+
+function resolvePublicPackRelayUrls({ explicitRelayList, bunkerUrl, fallbackRelayUrls }) {
+  const relayUrls = [
+    ...readRelayUrlsFromList(explicitRelayList),
+    ...readRelayUrlsFromBunkerUrl(bunkerUrl),
+  ];
+  const dedupedRelayUrls = dedupeRelayUrls(relayUrls);
+
+  if (dedupedRelayUrls.length > 0) {
+    return dedupedRelayUrls;
+  }
+
+  return [...fallbackRelayUrls];
+}
+
+function readRelayUrlsFromList(value) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => normalizeRelayUrl(entry))
+    .filter((entry) => entry !== null);
+}
+
+function readRelayUrlsFromBunkerUrl(bunkerUrl) {
+  if (!bunkerUrl) {
+    return [];
+  }
+
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(bunkerUrl);
+  } catch {
+    return [];
+  }
+
+  return parsedUrl.searchParams
+    .getAll('relay')
+    .map((relayUrl) => normalizeRelayUrl(relayUrl))
+    .filter((relayUrl) => relayUrl !== null);
+}
+
+function normalizeRelayUrl(value) {
+  const trimmedValue = readOptionalString(value);
+  if (!trimmedValue) {
+    return null;
+  }
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(trimmedValue);
+  } catch {
+    return null;
+  }
+
+  if (parsedUrl.protocol !== 'wss:' && parsedUrl.protocol !== 'ws:') {
+    return null;
+  }
+
+  return parsedUrl.toString();
+}
+
+function dedupeRelayUrls(relayUrls) {
+  const dedupedRelayUrls = [];
+  const seenRelayUrls = new Set();
+
+  for (const relayUrl of relayUrls) {
+    if (!relayUrl || seenRelayUrls.has(relayUrl)) {
+      continue;
+    }
+
+    seenRelayUrls.add(relayUrl);
+    dedupedRelayUrls.push(relayUrl);
+  }
+
+  return dedupedRelayUrls;
 }
 
 function readOptionalNumber(value, fieldName) {
@@ -504,198 +644,171 @@ function matchAdminMemberRemoveRoute(pathname) {
   };
 }
 
-function createFrancophonePackPublisher() {
-  const packReference = parsePackReference(FRANCOPHONE_PACK_URL);
+function matchAdminMemberStatusRoute(pathname) {
+  const pattern = /^\/api\/admin\/pack-members\/([^/]+)\/(accept|reject)$/;
+  const match = pathname.match(pattern);
 
-  if (FRANCOPHONE_PACK_PUBLISHER_MODE === 'memory') {
-    return createMemoryPackPublisher(packReference);
+  if (!match) {
+    return null;
   }
 
-  return createNostrPackPublisher(packReference);
-}
-
-function createMemoryPackPublisher(packReference) {
-  let tags = [['d', packReference.dTag]];
-  let revision = 0;
-
   return {
-    async addMember(pubkey) {
-      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
-      if (hasMemberTag(tags, memberPubkey)) {
-        return { changed: false, eventId: `memory-${revision}` };
-      }
-
-      revision += 1;
-      tags = addMemberTag(tags, memberPubkey, packReference.dTag);
-      return { changed: true, eventId: `memory-${revision}` };
-    },
-
-    async removeMember(pubkey) {
-      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
-      const nextTags = removeMemberTag(tags, memberPubkey);
-
-      if (nextTags.length === tags.length) {
-        return { changed: false, eventId: `memory-${revision}` };
-      }
-
-      revision += 1;
-      tags = nextTags;
-      return { changed: true, eventId: `memory-${revision}` };
-    },
-
-    async hasMember(pubkey) {
-      const memberPubkey = normalizeHexPubkey(pubkey);
-      return Boolean(memberPubkey && hasMemberTag(tags, memberPubkey));
-    },
-
-    async listMembers() {
-      return uniquePublicMemberPubkeys(tags).map((pubkey) => ({
-        pubkey,
-        username: `${pubkey.slice(0, 12)}...`,
-        description: null,
-        avatarUrl: null,
-      }));
-    },
+    pubkey: decodeURIComponent(match[1]),
+    status: match[2] === 'accept' ? MEMBER_STATUS_SUCCESS : MEMBER_STATUS_REJECTED,
   };
 }
 
-function createNostrPackPublisher(packReference) {
-  let signerPromise = null;
-
-  const resolveSigner = () => {
-    signerPromise ??= createPackOwnerSigner(packReference).catch((error) => {
-      signerPromise = null;
-      throw error;
-    });
-
-    return signerPromise;
-  };
-  const resetSigner = () => {
-    signerPromise = null;
-  };
-
-  return {
-    async addMember(pubkey) {
-      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
-
-      for (let attempt = 0; attempt < PUBLIC_PACK_UPDATE_ATTEMPTS; attempt += 1) {
-        const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
-
-        if (hasMemberTag(currentPackEvent.tags, memberPubkey)) {
-          return { changed: attempt > 0, eventId: currentPackEvent.id ?? null };
-        }
-
-        const tags = addMemberTag(currentPackEvent.tags, memberPubkey, packReference.dTag);
-        const eventId = await publishPackEvent(
-          packReference,
-          tags,
-          currentPackEvent.content,
-          resolveSigner,
-          resetSigner
-        );
-        const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, true);
-
-        if (confirmed) {
-          return { changed: true, eventId };
-        }
-      }
-
-      throw createHttpError(502, 'Unable to confirm public pack member addition.');
-    },
-
-    async removeMember(pubkey) {
-      const memberPubkey = requireHexPubkey(pubkey, 'Invalid member pubkey.');
-
-      for (let attempt = 0; attempt < PUBLIC_PACK_UPDATE_ATTEMPTS; attempt += 1) {
-        const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
-        const tags = removeMemberTag(currentPackEvent.tags, memberPubkey);
-
-        if (tags.length === currentPackEvent.tags.length) {
-          return { changed: attempt > 0, eventId: currentPackEvent.id ?? null };
-        }
-
-        const eventId = await publishPackEvent(
-          packReference,
-          tags,
-          currentPackEvent.content,
-          resolveSigner,
-          resetSigner
-        );
-        const confirmed = await confirmPublicPackMemberState(packReference, memberPubkey, false);
-
-        if (confirmed) {
-          return { changed: true, eventId };
-        }
-      }
-
-      throw createHttpError(502, 'Unable to confirm public pack member removal.');
-    },
-
-    async hasMember(pubkey) {
-      const memberPubkey = normalizeHexPubkey(pubkey);
-      if (!memberPubkey) {
-        return false;
-      }
-
-      const currentPackEvent = await loadCurrentPublicPackEvent(packReference);
-      return hasMemberTag(currentPackEvent.tags, memberPubkey);
-    },
-  };
+function assertPackOwnerAuth(authPubkey) {
+  const normalizedPubkey = normalizeHexPubkey(authPubkey);
+  if (!normalizedPubkey || normalizedPubkey !== configuredPackReference.authorPubkey) {
+    throw createHttpError(403, 'Only the pack owner can approve pending requests.');
+  }
 }
 
-async function runPublicPackUpdate(operation) {
-  return withTimeoutReject(
-    operation(),
-    PUBLIC_PACK_OPERATION_TIMEOUT_MS,
-    'Public pack publisher did not respond in time.'
-  );
-}
-
-async function loadCurrentPublicPackEvent(packReference) {
-  const currentPackEvent = await findCurrentPackEvent(packReference);
-
-  if (!currentPackEvent) {
-    throw createHttpError(502, 'Public pack event not found.');
+function readSignedPackEventInput(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw createHttpError(400, 'A signed pack event is required to approve a request.');
   }
 
-  return currentPackEvent;
+  const id = readRequiredHex(value.id, 64, 'Invalid signed pack event id.');
+  const pubkey = readRequiredHex(value.pubkey, 64, 'Invalid signed pack event pubkey.');
+  const sig = readRequiredHex(value.sig, 128, 'Invalid signed pack event signature.');
+  const kind = readRequiredInteger(value.kind, 'Invalid signed pack event kind.');
+  const createdAt = readRequiredInteger(value.created_at, 'Invalid signed pack event created_at.');
+  const content = readRequiredEventContent(value.content);
+  const tags = readRequiredEventTags(value.tags);
+
+  const event = {
+    id,
+    pubkey,
+    sig,
+    kind,
+    created_at: createdAt,
+    content,
+    tags,
+  };
+
+  if (!verifyEvent(event)) {
+    throw createHttpError(400, 'Signed pack event signature verification failed.');
+  }
+
+  return event;
 }
 
-async function publishPackEvent(packReference, tags, content, resolveSigner, resetSigner) {
-  const ndk = await ensurePublicPackNdk();
-  const signer = await resolveSigner();
-  const { NDKEvent } = await ndkModulePromise;
-  const event = new NDKEvent(ndk);
-  ndk.signer = signer;
-  event.kind = PUBLIC_PACK_EVENT_KIND;
-  event.tags = tags;
-  event.content = typeof content === 'string' ? content : '';
-  event.created_at = Math.floor(Date.now() / 1000);
+function readRequiredHex(value, length, errorMessage) {
+  if (typeof value !== 'string') {
+    throw createHttpError(400, errorMessage);
+  }
 
-  try {
-    await withTimeoutReject(
-      event.sign(signer),
-      PUBLIC_PACK_SIGN_TIMEOUT_MS,
-      'Public pack signer did not respond in time.'
-    );
-  } catch (error) {
-    resetSigner();
-    signer.stop?.();
+  const normalized = value.trim().toLowerCase();
+  if (!new RegExp(`^[0-9a-f]{${length}}$`).test(normalized)) {
+    throw createHttpError(400, errorMessage);
+  }
 
-    if (typeof error?.status === 'number') {
-      throw error;
+  return normalized;
+}
+
+function readRequiredInteger(value, errorMessage) {
+  if (!Number.isInteger(value) || value <= 0) {
+    throw createHttpError(400, errorMessage);
+  }
+
+  return value;
+}
+
+function readRequiredEventContent(value) {
+  if (typeof value !== 'string') {
+    throw createHttpError(400, 'Invalid signed pack event content.');
+  }
+
+  return value;
+}
+
+function readRequiredEventTags(value) {
+  if (!Array.isArray(value)) {
+    throw createHttpError(400, 'Invalid signed pack event tags.');
+  }
+
+  return value.map((tag) => {
+    if (!Array.isArray(tag)) {
+      throw createHttpError(400, 'Invalid signed pack event tags.');
     }
 
-    throw createHttpError(503, 'Public pack signer is unavailable.');
+    if (!tag.every((entry) => typeof entry === 'string')) {
+      throw createHttpError(400, 'Invalid signed pack event tags.');
+    }
+
+    return [...tag];
+  });
+}
+
+function assertValidPackAcceptanceEvent(event, memberPubkey) {
+  const normalizedMemberPubkey = normalizeHexPubkey(memberPubkey);
+  if (!normalizedMemberPubkey) {
+    throw createHttpError(400, 'Invalid member pubkey.');
   }
+
+  if (event.kind !== PUBLIC_PACK_EVENT_KIND) {
+    throw createHttpError(400, 'Signed pack event kind does not match the configured pack kind.');
+  }
+
+  if (event.pubkey !== configuredPackReference.authorPubkey) {
+    throw createHttpError(403, 'Signed pack event must be authored by the pack owner.');
+  }
+
+  const hasPackDTag = event.tags.some(
+    (tag) => tag[0] === 'd' && readOptionalString(tag[1]) === configuredPackReference.dTag
+  );
+  if (!hasPackDTag) {
+    throw createHttpError(400, 'Signed pack event does not target the configured pack.');
+  }
+
+  if (!hasMemberTag(event.tags, normalizedMemberPubkey)) {
+    throw createHttpError(400, 'Signed pack event must include the accepted member pubkey.');
+  }
+}
+
+async function publishPackAcceptanceEvent(event, memberPubkey) {
+  if (PUBLIC_PACK_ACCEPT_SKIP_NETWORK) {
+    return;
+  }
+
+  const ndk = await ensurePublicPackNdk();
+  const { NDKEvent, NDKRelaySet } = await ndkModulePromise;
+  const relaySet = NDKRelaySet.fromRelayUrls(PUBLIC_PACK_RELAY_URLS, ndk, true);
+  const ndkEvent = new NDKEvent(ndk, event);
 
   try {
-    await event.publish(undefined, PUBLIC_PACK_RELAY_PUBLISH_TIMEOUT_MS, 1);
+    await ndkEvent.publish(
+      relaySet,
+      PUBLIC_PACK_PUBLISH_TIMEOUT_MS,
+      resolveRequiredRelayAcks(PUBLIC_PACK_RELAY_URLS.length)
+    );
   } catch {
-    throw createHttpError(503, 'Unable to publish public pack event.');
+    throw createHttpError(503, 'Unable to publish the signed pack event.');
   }
 
-  return event.id ?? `${packReference.authorPubkey}:${event.created_at}`;
+  const normalizedMemberPubkey = normalizeHexPubkey(memberPubkey);
+  if (!normalizedMemberPubkey) {
+    throw createHttpError(400, 'Invalid member pubkey.');
+  }
+
+  const confirmed = await confirmPublicPackMemberState(
+    configuredPackReference,
+    normalizedMemberPubkey,
+    true
+  );
+  if (!confirmed) {
+    throw createHttpError(502, 'Unable to confirm the public pack update.');
+  }
+}
+
+function resolveRequiredRelayAcks(relayCount) {
+  return Math.max(1, Math.min(PUBLIC_PACK_REQUIRED_RELAY_ACKS, relayCount));
+}
+
+function hasMemberTag(tags, memberPubkey) {
+  return tags.some((tag) => tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey);
 }
 
 async function confirmPublicPackMemberState(packReference, memberPubkey, expectedMembership) {
@@ -715,138 +828,6 @@ async function confirmPublicPackMemberState(packReference, memberPubkey, expecte
   }
 
   return false;
-}
-
-async function createPackOwnerSigner(packReference) {
-  const signerMode = readPackSignerMode();
-
-  if (signerMode === 'nip46') {
-    return createPackOwnerBunkerSigner(packReference);
-  }
-
-  if (signerMode !== 'nsec') {
-    throw createHttpError(503, 'Pack signer mode is invalid.');
-  }
-
-  return createPackOwnerPrivateKeySigner(packReference);
-}
-
-async function createPackOwnerPrivateKeySigner(packReference) {
-  const privateKey = readOptionalString(FRANCOPHONE_PACK_OWNER_NSEC);
-  if (!privateKey) {
-    throw createHttpError(503, 'Automatic pack publishing is not configured.');
-  }
-
-  const ndk = await ensurePublicPackNdk();
-  const { NDKPrivateKeySigner } = await ndkModulePromise;
-  const signer = new NDKPrivateKeySigner(privateKey, ndk);
-  const user = await signer.user();
-  assertPackSignerPubkey(user.pubkey, packReference);
-
-  return signer;
-}
-
-async function createPackOwnerBunkerSigner(packReference) {
-  const connectionToken = readOptionalString(FRANCOPHONE_PACK_BUNKER_URL);
-  if (!connectionToken) {
-    throw createHttpError(503, 'Pack bunker signer is not configured.');
-  }
-
-  const ndk = await ensurePublicPackNdk();
-  const { NDKNip46Signer } = await ndkModulePromise;
-  let signer;
-
-  try {
-    signer = NDKNip46Signer.bunker(ndk, connectionToken);
-  } catch {
-    throw createHttpError(503, 'Pack bunker signer is misconfigured.');
-  }
-
-  try {
-    const user = await waitForPackBunkerSignerReady(signer);
-    assertPackSignerPubkey(user.pubkey, packReference);
-  } catch (error) {
-    signer.stop();
-
-    if (typeof error?.status === 'number') {
-      throw error;
-    }
-
-    throw createHttpError(503, 'Pack bunker signer is unavailable.');
-  }
-
-  return signer;
-}
-
-function readPackSignerMode() {
-  const configuredMode = readOptionalString(FRANCOPHONE_PACK_SIGNER_MODE)?.toLowerCase();
-
-  if (!configuredMode) {
-    return readOptionalString(FRANCOPHONE_PACK_BUNKER_URL) ? 'nip46' : 'nsec';
-  }
-
-  if (configuredMode === 'nip46' || configuredMode === 'nsec') {
-    return configuredMode;
-  }
-
-  return configuredMode;
-}
-
-async function waitForPackBunkerSignerReady(signer) {
-  let timeoutId;
-
-  try {
-    return await Promise.race([
-      signer.blockUntilReady(),
-      new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(createHttpError(503, 'Pack bunker signer connection timed out.'));
-        }, PUBLIC_PACK_SIGNER_READY_TIMEOUT_MS);
-      }),
-    ]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
-}
-
-function assertPackSignerPubkey(pubkey, packReference) {
-  const signerPubkey = normalizeHexPubkey(pubkey);
-
-  if (signerPubkey !== packReference.authorPubkey) {
-    throw createHttpError(500, 'Pack publisher key does not match the configured pack owner.');
-  }
-}
-
-function requireHexPubkey(pubkey, message) {
-  const normalizedPubkey = normalizeHexPubkey(pubkey);
-  if (!normalizedPubkey) {
-    throw createHttpError(400, message);
-  }
-
-  return normalizedPubkey;
-}
-
-function hasMemberTag(tags, memberPubkey) {
-  return tags.some((tag) => tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey);
-}
-
-function addMemberTag(tags, memberPubkey, dTag) {
-  const nextTags = tags.map((tag) => [...tag]);
-
-  if (!nextTags.some((tag) => tag[0] === 'd' && readOptionalString(tag[1]))) {
-    nextTags.unshift(['d', dTag]);
-  }
-
-  nextTags.push(['p', memberPubkey]);
-  return nextTags;
-}
-
-function removeMemberTag(tags, memberPubkey) {
-  return tags.filter(
-    (tag) => !(tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey)
-  );
 }
 
 function createFrancophonePackMemberStorage() {
@@ -899,6 +880,37 @@ function createFrancophonePackMemberStorage() {
       });
 
       return rows[0] ? mapSupabaseRow(rows[0]) : member;
+    },
+
+    async updateStatus(pubkey, status, changedAt) {
+      const existingMember = await this.findByPubkey(pubkey);
+      if (!existingMember) {
+        return null;
+      }
+
+      const updates = {
+        status,
+        removed_at: null,
+      };
+
+      if (status === MEMBER_STATUS_SUCCESS) {
+        updates.joined_at = changedAt;
+      }
+
+      const url = new URL(tableUrl);
+      url.searchParams.set('pubkey', `eq.${pubkey}`);
+
+      const rows = await supabaseRequest(url, {
+        method: 'PATCH',
+        headers: {
+          ...baseHeaders,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      return rows[0] ? mapSupabaseRow(rows[0]) : null;
     },
 
     async removeIfExists(pubkey, removedAt) {
@@ -954,6 +966,7 @@ function mapSupabaseRow(row) {
     requestedFromApp: Boolean(row.requested_from_app),
     requestedAt: row.requested_at ?? null,
     removedAt: row.removed_at ?? null,
+    status: readStoredMemberStatus(row.status),
   };
 }
 
@@ -972,7 +985,20 @@ function mapMemberToSupabaseRow(member) {
     requested_from_app: member.requestedFromApp,
     requested_at: member.requestedAt,
     removed_at: member.removedAt,
+    status: readStoredMemberStatus(member.status),
   };
+}
+
+function readStoredMemberStatus(value) {
+  if (
+    value === MEMBER_STATUS_PENDING ||
+    value === MEMBER_STATUS_SUCCESS ||
+    value === MEMBER_STATUS_REJECTED
+  ) {
+    return value;
+  }
+
+  return MEMBER_STATUS_SUCCESS;
 }
 
 async function listPublicPackMembers(packUrl) {
@@ -1124,25 +1150,6 @@ async function withTimeout(promise, timeoutMs, fallbackValue) {
     promise,
     new Promise((resolve) => setTimeout(() => resolve(fallbackValue), timeoutMs)),
   ]);
-}
-
-async function withTimeoutReject(promise, timeoutMs, message) {
-  let timeoutId;
-
-  try {
-    return await Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(createHttpError(503, message));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
 }
 
 async function serveClientApp(pathname) {

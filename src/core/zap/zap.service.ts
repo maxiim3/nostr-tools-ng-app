@@ -212,7 +212,7 @@ function buildApiUrl(path: string): string {
 
   const isLocal =
     globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
-  const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
+  const origin = isLocal ? 'http://127.0.0.1:4444' : globalThis.location.origin;
 
   return `${origin}${path}`;
 }

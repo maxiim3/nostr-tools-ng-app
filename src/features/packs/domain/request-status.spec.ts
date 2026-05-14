@@ -5,8 +5,8 @@ describe('request status helpers', () => {
     expect(resolveUserRequestStatus(null, null)).toBe('idle');
   });
 
-  it('returns approved for user when there is an approval and no request', () => {
-    expect(resolveUserRequestStatus(null, { createdAt: 30, status: 'approved' })).toBe('approved');
+  it('returns success for user when there is an approval and no request', () => {
+    expect(resolveUserRequestStatus(null, { createdAt: 30, status: 'success' })).toBe('success');
   });
 
   it('returns idle for user when there is only a rejection', () => {
@@ -24,20 +24,20 @@ describe('request status helpers', () => {
   });
 
   it('returns pending when a request is newer than an approval', () => {
-    expect(resolveUserRequestStatus({ createdAt: 30 }, { createdAt: 20, status: 'approved' })).toBe(
+    expect(resolveUserRequestStatus({ createdAt: 30 }, { createdAt: 20, status: 'success' })).toBe(
       'pending'
     );
   });
 
-  it('returns approved when the latest decision approves the request', () => {
-    expect(resolveUserRequestStatus({ createdAt: 20 }, { createdAt: 30, status: 'approved' })).toBe(
-      'approved'
+  it('returns success when the latest decision approves the request', () => {
+    expect(resolveUserRequestStatus({ createdAt: 20 }, { createdAt: 30, status: 'success' })).toBe(
+      'success'
     );
   });
 
-  it('returns approved when request and approval have the same timestamp', () => {
-    expect(resolveUserRequestStatus({ createdAt: 30 }, { createdAt: 30, status: 'approved' })).toBe(
-      'approved'
+  it('returns success when request and approval have the same timestamp', () => {
+    expect(resolveUserRequestStatus({ createdAt: 30 }, { createdAt: 30, status: 'success' })).toBe(
+      'success'
     );
   });
 
@@ -58,21 +58,21 @@ describe('request status helpers', () => {
   });
 
   it('returns pending for admin when request is newer than decision', () => {
-    expect(
-      resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 10, status: 'approved' })
-    ).toBe('pending');
+    expect(resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 10, status: 'success' })).toBe(
+      'pending'
+    );
   });
 
-  it('returns approved for admin when approval is latest', () => {
-    expect(
-      resolveAdminRequestStatus({ createdAt: 10 }, { createdAt: 20, status: 'approved' })
-    ).toBe('approved');
+  it('returns success for admin when approval is latest', () => {
+    expect(resolveAdminRequestStatus({ createdAt: 10 }, { createdAt: 20, status: 'success' })).toBe(
+      'success'
+    );
   });
 
   it('returns decision status for admin when timestamps are equal', () => {
-    expect(
-      resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 20, status: 'approved' })
-    ).toBe('approved');
+    expect(resolveAdminRequestStatus({ createdAt: 20 }, { createdAt: 20, status: 'success' })).toBe(
+      'success'
+    );
   });
 
   it('returns rejected for admin when timestamps are equal and decision is rejected', () => {

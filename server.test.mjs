@@ -10,13 +10,17 @@ const USER_SECRET_KEY = generateSecretKey();
 const ADMIN_SECRET_KEY = generateSecretKey();
 const INVALID_BODY_SECRET_KEY = generateSecretKey();
 const USER_PUBKEY = getPublicKey(USER_SECRET_KEY);
+const ADMIN_PUBKEY = getPublicKey(ADMIN_SECRET_KEY);
 const INVALID_BODY_PUBKEY = getPublicKey(INVALID_BODY_SECRET_KEY);
-const ADMIN_NPUB = nip19.npubEncode(getPublicKey(ADMIN_SECRET_KEY));
+const ADMIN_NPUB = nip19.npubEncode(ADMIN_PUBKEY);
+const TEST_PACK_D_TAG = 'test-pack';
+const TEST_PACK_URL = `https://following.space/d/${TEST_PACK_D_TAG}?p=${ADMIN_PUBKEY}`;
 
 process.env.ADMIN_NPUBS = ADMIN_NPUB;
 process.env.DATA_DIR = TEST_DIR;
 process.env.SUPABASE_SECRET_KEY = 'test-secret-key';
-process.env.FRANCOPHONE_PACK_PUBLISHER_MODE = 'memory';
+process.env.FRANCOPHONE_PACK_URL = TEST_PACK_URL;
+process.env.PUBLIC_PACK_ACCEPT_SKIP_NETWORK = 'true';
 
 let baseUrl;
 
@@ -40,6 +44,21 @@ async function createAuthHeader({ secretKey, url, method, body }) {
       ),
     true,
     body
+  );
+}
+
+function createSignedPackEvent(secretKey, memberPubkey) {
+  return finalizeEvent(
+    {
+      kind: 39089,
+      tags: [
+        ['d', TEST_PACK_D_TAG],
+        ['p', memberPubkey],
+      ],
+      content: '',
+      created_at: Math.floor(Date.now() / 1000),
+    },
+    secretKey
   );
 }
 
@@ -136,7 +155,7 @@ describe('server.mjs integration', () => {
   });
 
   describe('Pack member lifecycle', () => {
-    it('does not publish the pack event when member payload validation fails', async () => {
+    it('does not create a request when member payload validation fails', async () => {
       const url = `${baseUrl}/api/pack-members`;
       const body = {
         username: 'Invalid',
@@ -160,16 +179,10 @@ describe('server.mjs integration', () => {
 
       expect(response.status).toBe(400);
 
-      const publicMembersResponse = await fetch(
-        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
-          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
-        )}`
-      );
-      const publicMembers = await publicMembersResponse.json();
-      expect(publicMembers.some((entry) => entry.pubkey === INVALID_BODY_PUBKEY)).toBe(false);
+      expect(memberRows.some((entry) => entry.pubkey === INVALID_BODY_PUBKEY)).toBe(false);
     });
 
-    it('auto-admits a user and persists the member in Supabase', async () => {
+    it('stores a pending request in Supabase', async () => {
       const url = `${baseUrl}/api/pack-members`;
       const body = {
         username: 'Alice',
@@ -197,14 +210,13 @@ describe('server.mjs integration', () => {
         body: JSON.stringify(body),
       });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(202);
       const responseBody = await response.json();
-      expect(responseBody.pubkey).toBe(USER_PUBKEY);
-      expect(responseBody.username).toBe('Alice');
-      expect(responseBody.requestedFromApp).toBe(true);
-      expect(responseBody.packEventId).toBe('memory-1');
-      expect(responseBody.packChanged).toBe(true);
-      expect(responseBody.removedAt).toBeNull();
+      expect(responseBody.status).toBe('pending');
+      expect(responseBody.member.pubkey).toBe(USER_PUBKEY);
+      expect(responseBody.member.username).toBe('Alice');
+      expect(responseBody.member.requestedFromApp).toBe(true);
+      expect(responseBody.member.removedAt).toBeNull();
 
       const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
       expect(record).toBeTruthy();
@@ -220,10 +232,10 @@ describe('server.mjs integration', () => {
       expect(record.requested_at).toBeTruthy();
       expect(record.joined_at).toBeTruthy();
       expect(record.removed_at).toBeNull();
+      expect(record.status).toBe('pending');
     });
 
-    it('is idempotent when joining again', async () => {
-      const previousRecord = memberRows.find((row) => row.pubkey === USER_PUBKEY);
+    it('updates the pending request when requesting again', async () => {
       const url = `${baseUrl}/api/pack-members`;
       const body = {
         username: 'Alice updated',
@@ -245,17 +257,16 @@ describe('server.mjs integration', () => {
         body: JSON.stringify(body),
       });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(202);
       const responseBody = await response.json();
-      expect(responseBody.packChanged).toBe(false);
+      expect(responseBody.status).toBe('pending');
       const matchingRows = memberRows.filter((row) => row.pubkey === USER_PUBKEY);
       expect(matchingRows).toHaveLength(1);
       expect(matchingRows[0].username).toBe('Alice updated');
-      expect(matchingRows[0].joined_at).toBe(previousRecord.joined_at);
-      expect(matchingRows[0].requested_at).toBe(previousRecord.requested_at);
+      expect(matchingRows[0].status).toBe('pending');
     });
 
-    it('returns joined status for authenticated member', async () => {
+    it('returns pending status for authenticated pending member', async () => {
       const url = `${baseUrl}/api/pack-members/me`;
       const authorization = await createAuthHeader({
         secretKey: USER_SECRET_KEY,
@@ -269,12 +280,58 @@ describe('server.mjs integration', () => {
 
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(body.status).toBe('joined');
+      expect(body.status).toBe('pending');
       expect(body.member.pubkey).toBe(USER_PUBKEY);
-      expect(body.publicPackMember).toBe(true);
     });
 
-    it('lets a removed stored member rejoin when the public pack still lists them', async () => {
+    it('accepts a pending member for authenticated admin', async () => {
+      const url = `${baseUrl}/api/admin/pack-members/${USER_PUBKEY}/accept`;
+      const body = {
+        packEvent: createSignedPackEvent(ADMIN_SECRET_KEY, USER_PUBKEY),
+      };
+      const authorization = await createAuthHeader({
+        secretKey: ADMIN_SECRET_KEY,
+        url,
+        method: 'POST',
+        body,
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: authorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody.status).toBe('success');
+      const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
+      expect(record.status).toBe('success');
+      expect(record.removed_at).toBeNull();
+    });
+
+    it('returns success status for an accepted authenticated member', async () => {
+      const stateUrl = `${baseUrl}/api/pack-members/me`;
+      const stateAuthorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url: stateUrl,
+        method: 'GET',
+      });
+
+      const stateResponse = await fetch(stateUrl, {
+        headers: { Authorization: stateAuthorization },
+      });
+
+      expect(stateResponse.status).toBe(200);
+      const stateBody = await stateResponse.json();
+      expect(stateBody.status).toBe('success');
+      expect(stateBody.member.pubkey).toBe(USER_PUBKEY);
+    });
+
+    it('lets a removed stored member request again', async () => {
       const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
       record.removed_at = '2025-01-20T00:00:00.000Z';
 
@@ -293,7 +350,6 @@ describe('server.mjs integration', () => {
       const stateBody = await stateResponse.json();
       expect(stateBody.status).toBe('idle');
       expect(stateBody.member).toBeNull();
-      expect(stateBody.publicPackMember).toBe(true);
 
       const joinUrl = `${baseUrl}/api/pack-members`;
       const joinBody = {
@@ -315,25 +371,14 @@ describe('server.mjs integration', () => {
         body: JSON.stringify(joinBody),
       });
 
-      expect(joinResponse.status).toBe(201);
+      expect(joinResponse.status).toBe(202);
       const joinResponseBody = await joinResponse.json();
-      expect(joinResponseBody.packChanged).toBe(false);
-      expect(joinResponseBody.removedAt).toBeNull();
+      expect(joinResponseBody.status).toBe('pending');
+      expect(joinResponseBody.member.removedAt).toBeNull();
       const updatedRecord = memberRows.find((row) => row.pubkey === USER_PUBKEY);
       expect(updatedRecord.removed_at).toBeNull();
       expect(updatedRecord.username).toBe('Alice rejoined');
-    });
-
-    it('lists public pack members from the configured publisher', async () => {
-      const response = await fetch(
-        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
-          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
-        )}`
-      );
-
-      expect(response.status).toBe(200);
-      const body = await response.json();
-      expect(body.some((entry) => entry.pubkey === USER_PUBKEY)).toBe(true);
+      expect(updatedRecord.status).toBe('pending');
     });
 
     it('lists current members for authenticated admin', async () => {
@@ -393,14 +438,61 @@ describe('server.mjs integration', () => {
       const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
       expect(record).toBeTruthy();
       expect(record.removed_at).toBeTruthy();
+    });
 
-      const publicMembersResponse = await fetch(
-        `${baseUrl}/api/public-pack-members?packUrl=${encodeURIComponent(
-          'https://following.space/d/xd0520r38aua?p=15a1989c2c483f6c6f18f2dda1033897a003669f449fc2fda4fa2fb6c9210900'
-        )}`
-      );
-      const publicMembers = await publicMembersResponse.json();
-      expect(publicMembers.some((entry) => entry.pubkey === USER_PUBKEY)).toBe(false);
+    it('rejects a pending member for authenticated admin and exposes idle to the user', async () => {
+      const joinUrl = `${baseUrl}/api/pack-members`;
+      const joinBody = { username: 'Alice rejected' };
+      const joinAuthorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url: joinUrl,
+        method: 'POST',
+        body: joinBody,
+      });
+
+      await fetch(joinUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: joinAuthorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(joinBody),
+      });
+
+      const rejectUrl = `${baseUrl}/api/admin/pack-members/${USER_PUBKEY}/reject`;
+      const rejectBody = {};
+      const rejectAuthorization = await createAuthHeader({
+        secretKey: ADMIN_SECRET_KEY,
+        url: rejectUrl,
+        method: 'POST',
+        body: rejectBody,
+      });
+
+      const rejectResponse = await fetch(rejectUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: rejectAuthorization,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(rejectBody),
+      });
+
+      expect(rejectResponse.status).toBe(200);
+      const record = memberRows.find((row) => row.pubkey === USER_PUBKEY);
+      expect(record.status).toBe('rejected');
+
+      const stateUrl = `${baseUrl}/api/pack-members/me`;
+      const stateAuthorization = await createAuthHeader({
+        secretKey: USER_SECRET_KEY,
+        url: stateUrl,
+        method: 'GET',
+      });
+      const stateResponse = await fetch(stateUrl, {
+        headers: { Authorization: stateAuthorization },
+      });
+      const stateBody = await stateResponse.json();
+      expect(stateBody.status).toBe('idle');
+      expect(stateBody.member).toBeNull();
     });
   });
 

@@ -16,6 +16,7 @@ const FAKE_ENTRIES: AdminPackMemberEntry[] = [
     username: 'Alice',
     description: 'Nostr builder',
     avatarUrl: null,
+    status: 'success',
     primalUrl: 'https://primal.net/p/abc123',
     joinedAt: 1000,
     joinedAtLabel: '1 janv. 2024',
@@ -48,6 +49,8 @@ interface PageAccess {
   sortedEntries: () => AdminPackMemberEntry[];
   sourceLabelKey: (entry: AdminPackMemberEntry) => string;
   remove: (entry: AdminPackMemberEntry) => Promise<void>;
+  accept: (entry: AdminPackMemberEntry) => Promise<void>;
+  reject: (entry: AdminPackMemberEntry) => Promise<void>;
 }
 
 function asAccessible(page: PackAdminRequestsPage): PageAccess {
@@ -57,7 +60,21 @@ function asAccessible(page: PackAdminRequestsPage): PageAccess {
 function createMocks() {
   const listAdminRequestsMock = vi.fn().mockResolvedValue(FAKE_ENTRIES);
   const removeMemberMock = vi.fn().mockResolvedValue(undefined);
+  const acceptMemberMock = vi.fn().mockResolvedValue(undefined);
+  const rejectMemberMock = vi.fn().mockResolvedValue(undefined);
   const listPublicPackMembersMock = vi.fn().mockResolvedValue([]);
+  const createSignedAddMemberEventMock = vi.fn().mockResolvedValue({
+    id: 'signed-event-id',
+    pubkey: 'owner-pubkey',
+    created_at: 1730000000,
+    kind: 39089,
+    tags: [
+      ['d', 'xd0520r38aua'],
+      ['p', 'abc123'],
+    ],
+    content: '',
+    sig: 'signed-event-sig',
+  });
 
   TestBed.configureTestingModule({
     providers: [
@@ -67,12 +84,15 @@ function createMocks() {
         useValue: {
           listAdminRequests: listAdminRequestsMock,
           removeMember: removeMemberMock,
+          acceptMember: acceptMemberMock,
+          rejectMember: rejectMemberMock,
         },
       },
       {
         provide: FrancophonePackMembershipService,
         useValue: {
           listPublicPackMembers: listPublicPackMembersMock,
+          createSignedAddMemberEvent: createSignedAddMemberEventMock,
         },
       },
     ],
@@ -81,7 +101,10 @@ function createMocks() {
   return {
     listAdminRequests: listAdminRequestsMock,
     removeMember: removeMemberMock,
+    acceptMember: acceptMemberMock,
+    rejectMember: rejectMemberMock,
     listPublicPackMembers: listPublicPackMembersMock,
+    createSignedAddMemberEvent: createSignedAddMemberEventMock,
   };
 }
 
@@ -129,8 +152,9 @@ describe('PackAdminRequestsPage', () => {
       username: 'Bob',
       requestedFromApp: false,
       joinedAtLabel: '-',
+      status: 'success',
       isStored: false,
-      canRemove: true,
+      canRemove: false,
     });
   });
 
@@ -166,7 +190,7 @@ describe('PackAdminRequestsPage', () => {
     expect(page.entries()[0]).toMatchObject({
       pubkey: 'def456',
       username: 'Bob',
-      canRemove: true,
+      canRemove: false,
     });
     expect(page.loadWarnings()).toEqual(['adminRequests.warnings.adminSourceUnavailable']);
   });
@@ -217,7 +241,7 @@ describe('PackAdminRequestsPage', () => {
     expect(page.actionSuccess()).toBe('adminRequests.removed');
   });
 
-  it('remove uses the same backend action when the member is not in DB', async () => {
+  it('marks public-pack-only members as non-removable by the DB admin API', async () => {
     const mocks = createMocks();
     mocks.listPublicPackMembers.mockResolvedValue([
       {
@@ -230,13 +254,9 @@ describe('PackAdminRequestsPage', () => {
     const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
 
     await vi.dynamicImportSettled();
-    mocks.removeMember.mockClear();
 
-    const packOnlyEntry = page.entries()[1];
-    await page.remove(packOnlyEntry);
-    await page.remove(packOnlyEntry);
-
-    expect(mocks.removeMember).toHaveBeenCalledWith('def456');
+    const packOnlyEntry = page.entries().find((entry) => entry.pubkey === 'def456');
+    expect(packOnlyEntry?.canRemove).toBe(false);
   });
 
   it('remove sets actionError on failure', async () => {
@@ -250,6 +270,41 @@ describe('PackAdminRequestsPage', () => {
     await page.remove(FAKE_ENTRIES[0]);
 
     expect(page.actionError()).toBe('adminRequests.errors.removeFailed');
+    expect(page.actingOn()).toBeNull();
+  });
+
+  it('accept delegates pending approval to the backend', async () => {
+    const mocks = createMocks();
+    const pendingEntry = { ...FAKE_ENTRIES[0], status: 'pending' as const };
+    mocks.listAdminRequests.mockResolvedValue([pendingEntry]);
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+    mocks.listAdminRequests.mockClear();
+
+    await page.accept(pendingEntry);
+
+    expect(mocks.createSignedAddMemberEvent).toHaveBeenCalledWith('abc123');
+    expect(mocks.acceptMember).toHaveBeenCalledWith('abc123', expect.any(Object));
+    expect(mocks.listAdminRequests).toHaveBeenCalled();
+    expect(page.actionSuccess()).toBe('adminRequests.accepted');
+    expect(page.actingOn()).toBeNull();
+  });
+
+  it('reject delegates pending rejection to the backend', async () => {
+    const mocks = createMocks();
+    const pendingEntry = { ...FAKE_ENTRIES[0], status: 'pending' as const };
+    mocks.listAdminRequests.mockResolvedValue([pendingEntry]);
+    const page = asAccessible(TestBed.inject(PackAdminRequestsPage));
+
+    await vi.dynamicImportSettled();
+    mocks.listAdminRequests.mockClear();
+
+    await page.reject(pendingEntry);
+
+    expect(mocks.rejectMember).toHaveBeenCalledWith('abc123');
+    expect(mocks.listAdminRequests).toHaveBeenCalled();
+    expect(page.actionSuccess()).toBe('adminRequests.rejected');
     expect(page.actingOn()).toBeNull();
   });
 
@@ -279,6 +334,7 @@ describe('PackAdminRequestsPage', () => {
         joinedAt: 1,
         joinedAtLabel: '-',
         requestedFromApp: false,
+        status: 'success',
         isStored: false,
       },
     ]);
@@ -315,5 +371,19 @@ describe('mergePackMembers', () => {
     ]);
 
     expect(result).toEqual(FAKE_ENTRIES);
+  });
+
+  it('orders pending members before accepted members', () => {
+    const pendingEntry = {
+      ...FAKE_ENTRIES[0],
+      pubkey: 'pending123',
+      username: 'Pending',
+      status: 'pending' as const,
+      requestedAt: 2000,
+    };
+
+    const result = mergePackMembers([FAKE_ENTRIES[0], pendingEntry], []);
+
+    expect(result.map((entry) => entry.status)).toEqual(['pending', 'success']);
   });
 });

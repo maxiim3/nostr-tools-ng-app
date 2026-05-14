@@ -8,6 +8,7 @@ import {
   normalizeHexPubkey,
 } from '../../../core/nostr/application/nostr-client.service';
 import { NostrSessionService } from '../../../core/nostr/application/nostr-session.service';
+import type { SignedNostrEvent } from '../../../core/nostr-connection/domain/nostr-event';
 import { StarterPackRequestService } from './starter-pack-request.service';
 
 const PACK_EVENT_KIND = 39089;
@@ -38,7 +39,7 @@ export class FrancophonePackMembershipService {
     }
 
     const state = await this.requests.getUserState();
-    return state.status === 'joined';
+    return state.status === 'success';
   }
 
   async isMember(pubkey: string): Promise<boolean> {
@@ -83,6 +84,46 @@ export class FrancophonePackMembershipService {
     }
 
     await this.nostrClient.publishEvent(PACK_EVENT_KIND, nextTags, currentPackEvent.content);
+  }
+
+  async createSignedAddMemberEvent(pubkey: string): Promise<SignedNostrEvent> {
+    const currentUser = this.session.user();
+    if (!currentUser) {
+      throw new Error('Authentication is required before updating the pack.');
+    }
+
+    const packReference = parsePackReference(PROJECT_INFO.packFRUrl);
+    if (currentUser.pubkey !== packReference.authorPubkey) {
+      throw new Error('Only the pack owner can update the public pack.');
+    }
+
+    const memberPubkey = normalizeHexPubkey(pubkey);
+    if (!memberPubkey) {
+      throw new Error('Invalid member pubkey.');
+    }
+
+    const currentPackEvent = await this.findCurrentPackEvent(packReference);
+    if (!currentPackEvent) {
+      throw new Error('Unable to load the current public pack event.');
+    }
+
+    const nextTags = cloneTags(currentPackEvent.tags);
+    if (!nextTags.some((tag) => tag[0] === 'd' && tag[1] === packReference.dTag)) {
+      nextTags.unshift(['d', packReference.dTag]);
+    }
+
+    if (
+      !nextTags.some((tag) => tag[0] === 'p' && normalizeHexPubkey(tag[1] ?? '') === memberPubkey)
+    ) {
+      nextTags.push(['p', memberPubkey]);
+    }
+
+    return this.nostrClient.signEvent({
+      kind: PACK_EVENT_KIND,
+      tags: nextTags,
+      content: currentPackEvent.content,
+      created_at: Math.floor(Date.now() / 1000),
+    });
   }
 
   private async fetchServerPublicPackMembers(): Promise<PublicPackMemberEntry[]> {
@@ -144,6 +185,10 @@ export class FrancophonePackMembershipService {
   }
 }
 
+function cloneTags(tags: string[][]): string[][] {
+  return tags.map((tag) => [...tag]);
+}
+
 function parsePackReference(packUrl: string): PackReference {
   let parsedUrl: URL;
 
@@ -194,7 +239,7 @@ function buildApiUrl(path: string): string {
 
   const isLocal =
     globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
-  const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
+  const origin = isLocal ? 'http://127.0.0.1:4444' : globalThis.location.origin;
 
   return `${origin}${path}`;
 }

@@ -129,8 +129,8 @@
     "requestJoin": "Join pack",
     "status": {
       "idle": "You can join the pack now.",
-      "pending": "Your join is being processed.",
-      "approved": "Your request is approved.",
+      "pending": "Your request is waiting for review.",
+      "success": "You have already been added to the pack.",
       "added": "You have been added to the pack!",
       "alreadyMember": "You are already part of the pack!"
     },
@@ -138,7 +138,6 @@
       "authError": "The request signature was rejected. Reconnect and try again.",
       "forbidden": "You are not allowed to perform this action.",
       "invalidRequest": "The submitted request is invalid.",
-      "packPublisherUnavailable": "The pack publisher is not responding. Please try again shortly.",
       "timeout": "The signer or server did not respond. Please retry.",
       "generic": "Unable to join the pack right now. Please try again shortly."
     },
@@ -296,7 +295,7 @@
         "body": "The Service provides the following features:",
         "features": {
           "request": "Access request to the francophone starter pack.",
-          "status": "Tracking of your request status (pending, approved, rejected).",
+          "status": "Tracking of your request status (pending, accepted, rejected).",
           "follow": "Following recommended Nostr profiles directly from the platform.",
           "zap": "Sending Lightning zaps in sats to the Service creators.",
           "admin": "An administration interface for managing access requests (restricted to administrators)."
@@ -365,9 +364,13 @@
     "empty": "No members yet.",
     "primal": "Open on Primal",
     "remove": "Remove",
+    "accept": "Accept",
+    "reject": "Reject",
     "confirmRemove": "Confirm",
     "deleting": "Deleting...",
     "removed": "Member removed from the pack.",
+    "accepted": "Request accepted.",
+    "rejected": "Request rejected.",
     "packOnly": "Pack only",
     "yes": "Yes",
     "no": "No",
@@ -378,6 +381,7 @@
       "avatar": "Avatar",
       "username": "Username",
       "description": "Description profile",
+      "status": "Status",
       "profile": "Profile",
       "accountCreatedAt": "Account creation",
       "requestedFromApp": "Source",
@@ -392,7 +396,9 @@
       "publicPack": "Public pack"
     },
     "errors": {
-      "removeFailed": "Unable to remove this member right now."
+      "removeFailed": "Unable to remove this member right now.",
+      "acceptFailed": "Unable to accept this request right now.",
+      "rejectFailed": "Unable to reject this request right now."
     },
     "warnings": {
       "adminSourceUnavailable": "The ToolStr admin source is temporarily unavailable. The list may be partial.",
@@ -400,7 +406,7 @@
     },
     "statuses": {
       "pending": "Pending",
-      "approved": "Approved",
+      "success": "Added",
       "rejected": "Rejected"
     }
   }

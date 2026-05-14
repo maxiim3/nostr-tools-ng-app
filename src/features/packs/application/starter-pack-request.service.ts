@@ -28,7 +28,7 @@ interface AdminMemberRecord {
   username: string;
   description: string | null;
   avatarUrl: string | null;
-  joinedAt: string;
+  joinedAt: string | null;
   followerCount: number | null;
   followingCount: number | null;
   accountCreatedAt: string | null;
@@ -37,10 +37,21 @@ interface AdminMemberRecord {
   requestedFromApp: boolean;
   requestedAt: string | null;
   removedAt: string | null;
+  status: 'pending' | 'success' | 'rejected';
 }
 
 export interface UserRequestState {
   status: UserRequestStatus;
+}
+
+export interface SignedPackEventPayload {
+  id: string;
+  pubkey: string;
+  created_at: number;
+  kind: number;
+  tags: string[][];
+  content: string;
+  sig: string;
 }
 
 export interface AdminPackMemberEntry {
@@ -48,8 +59,9 @@ export interface AdminPackMemberEntry {
   username: string;
   description: string | null;
   avatarUrl: string | null;
+  status: 'pending' | 'success' | 'rejected';
   primalUrl: string;
-  joinedAt: number;
+  joinedAt: number | null;
   joinedAtLabel: string;
   requestedFromApp: boolean;
   requestedAt: number | null;
@@ -80,7 +92,7 @@ export class StarterPackRequestService {
       throw new Error('Authentication is required.');
     }
 
-    await this.post('/api/pack-members', {
+    return this.post<UserRequestState>('/api/pack-members', {
       username: currentUser.displayName,
       description: currentUser.description ?? null,
       avatarUrl: currentUser.imageUrl,
@@ -90,8 +102,6 @@ export class StarterPackRequestService {
       postCount: null,
       zapCount: null,
     });
-
-    return { status: 'joined' };
   }
 
   async listAdminRequests(): Promise<AdminPackMemberEntry[]> {
@@ -106,8 +116,9 @@ export class StarterPackRequestService {
       username: record.username,
       description: record.description,
       avatarUrl: record.avatarUrl,
+      status: record.status,
       primalUrl: `https://primal.net/p/${record.pubkey}`,
-      joinedAt: toEpochSeconds(record.joinedAt),
+      joinedAt: record.joinedAt ? toEpochSeconds(record.joinedAt) : null,
       joinedAtLabel: formatOptionalDate(record.joinedAt),
       requestedFromApp: record.requestedFromApp,
       requestedAt: record.requestedAt ? toEpochSeconds(record.requestedAt) : null,
@@ -124,7 +135,17 @@ export class StarterPackRequestService {
   }
 
   async removeMember(pubkey: string): Promise<void> {
-    await this.post(`/api/admin/pack-members/${pubkey}/remove`, {});
+    await this.post<void>(`/api/admin/pack-members/${pubkey}/remove`, {});
+  }
+
+  async acceptMember(pubkey: string, packEvent: SignedPackEventPayload): Promise<void> {
+    await this.post<void>(`/api/admin/pack-members/${pubkey}/accept`, {
+      packEvent,
+    });
+  }
+
+  async rejectMember(pubkey: string): Promise<void> {
+    await this.post<void>(`/api/admin/pack-members/${pubkey}/reject`, {});
   }
 
   private async get<T>(path: string): Promise<T> {
@@ -137,21 +158,21 @@ export class StarterPackRequestService {
     return firstValueFrom(this.http.get<T>(url, { headers }));
   }
 
-  private async post<TBody extends Record<string, unknown>>(
+  private async post<TResponse, TBody extends Record<string, unknown> = Record<string, unknown>>(
     path: string,
     body: TBody
-  ): Promise<unknown> {
-    return withTimeout(this.postSigned(path, body), PACK_API_TIMEOUT_MS);
+  ): Promise<TResponse> {
+    return withTimeout(this.postSigned<TResponse, TBody>(path, body), PACK_API_TIMEOUT_MS);
   }
 
-  private async postSigned<TBody extends Record<string, unknown>>(
+  private async postSigned<TResponse, TBody extends Record<string, unknown>>(
     path: string,
     body: TBody
-  ): Promise<unknown> {
+  ): Promise<TResponse> {
     const url = buildApiUrl(path);
     const headers = await this.createSignedHeaders(url, 'POST', body);
 
-    return firstValueFrom(this.http.post(url, body, { headers }));
+    return firstValueFrom(this.http.post<TResponse>(url, body, { headers }));
   }
 
   private async createSignedHeaders(
@@ -178,7 +199,7 @@ function buildApiUrl(path: string): string {
 
   const isLocal =
     globalThis.location.hostname === 'localhost' || globalThis.location.hostname === '127.0.0.1';
-  const origin = isLocal ? 'http://127.0.0.1:3000' : globalThis.location.origin;
+  const origin = isLocal ? 'http://127.0.0.1:4444' : globalThis.location.origin;
 
   return `${origin}${path}`;
 }

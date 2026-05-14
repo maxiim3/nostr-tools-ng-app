@@ -68,6 +68,7 @@
               </button>
             </th>
             <th scope="col">{{ 'adminRequests.columns.description' | transloco }}</th>
+            <th scope="col">{{ 'adminRequests.columns.status' | transloco }}</th>
             <th scope="col">
               <button
                 type="button"
@@ -131,6 +132,16 @@
               <td class="min-w-64 max-w-sm text-sm text-[#0a0a0a]/70 [overflow-wrap:anywhere]">
                 {{ entry.description || ('adminRequests.unknown' | transloco) }}
               </td>
+              <td class="min-w-32">
+                <span
+                  class="badge badge-sm border-[2px] border-[#0a0a0a] font-bold"
+                  [class.bg-[#FFE600]]="entry.status === 'pending'"
+                  [class.bg-green-200]="entry.status === 'success'"
+                  [class.bg-red-100]="entry.status === 'rejected'"
+                >
+                  {{ 'adminRequests.statuses.' + entry.status | transloco }}
+                </span>
+              </td>
               <td class="min-w-36 text-sm text-[#0a0a0a]/70">
                 {{ sourceLabelKey(entry) | transloco }}
               </td>
@@ -138,31 +149,56 @@
                 <p>{{ entry.joinedAtLabel }}</p>
               </td>
               <td class="text-right">
-                <button
-                  type="button"
-                  class="btn btn-sm min-h-9 px-3 py-2 whitespace-nowrap border-red-600"
-                  [class.btn-outline]="confirmingRemovalPubkey() !== entry.pubkey"
-                  [class.text-red-600]="confirmingRemovalPubkey() !== entry.pubkey"
-                  [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
-                  [class.bg-red-600]="confirmingRemovalPubkey() === entry.pubkey"
-                  [class.text-white]="confirmingRemovalPubkey() === entry.pubkey"
-                  [disabled]="actingOn() === entry.pubkey"
-                  [attr.aria-label]="
-                    confirmingRemovalPubkey() === entry.pubkey
-                      ? ('adminRequests.confirmRemove' | transloco)
-                      : ('adminRequests.remove' | transloco)
-                  "
-                  (click)="remove(entry)"
-                >
-                  @if (actingOn() === entry.pubkey) {
-                    <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-                    <span class="sr-only">{{ 'adminRequests.deleting' | transloco }}</span>
-                  } @else if (confirmingRemovalPubkey() === entry.pubkey) {
-                    {{ 'adminRequests.confirmRemove' | transloco }}
-                  } @else {
-                    {{ 'adminRequests.remove' | transloco }}
+                <div class="flex justify-end gap-2">
+                  @if (entry.status === 'pending') {
+                    <button
+                      type="button"
+                      class="btn btn-success btn-sm min-h-9 px-3 py-2 whitespace-nowrap"
+                      [disabled]="actingOn() === entry.pubkey"
+                      (click)="accept(entry)"
+                    >
+                      @if (actingOn() === entry.pubkey) {
+                        <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                      }
+                      {{ 'adminRequests.accept' | transloco }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline btn-sm min-h-9 px-3 py-2 whitespace-nowrap border-red-600 text-red-600"
+                      [disabled]="actingOn() === entry.pubkey"
+                      (click)="reject(entry)"
+                    >
+                      {{ 'adminRequests.reject' | transloco }}
+                    </button>
                   }
-                </button>
+                  @if (entry.canRemove) {
+                    <button
+                      type="button"
+                      class="btn btn-sm min-h-9 px-3 py-2 whitespace-nowrap border-red-600"
+                      [class.btn-outline]="confirmingRemovalPubkey() !== entry.pubkey"
+                      [class.text-red-600]="confirmingRemovalPubkey() !== entry.pubkey"
+                      [class.btn-error]="confirmingRemovalPubkey() === entry.pubkey"
+                      [class.bg-red-600]="confirmingRemovalPubkey() === entry.pubkey"
+                      [class.text-white]="confirmingRemovalPubkey() === entry.pubkey"
+                      [disabled]="actingOn() === entry.pubkey"
+                      [attr.aria-label]="
+                        confirmingRemovalPubkey() === entry.pubkey
+                          ? ('adminRequests.confirmRemove' | transloco)
+                          : ('adminRequests.remove' | transloco)
+                      "
+                      (click)="remove(entry)"
+                    >
+                      @if (actingOn() === entry.pubkey) {
+                        <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+                        <span class="sr-only">{{ 'adminRequests.deleting' | transloco }}</span>
+                      } @else if (confirmingRemovalPubkey() === entry.pubkey) {
+                        {{ 'adminRequests.confirmRemove' | transloco }}
+                      } @else {
+                        {{ 'adminRequests.remove' | transloco }}
+                      }
+                    </button>
+                  }
+                </div>
               </td>
             </tr>
           }

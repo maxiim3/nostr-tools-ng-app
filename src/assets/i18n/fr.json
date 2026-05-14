@@ -129,8 +129,8 @@
     "requestJoin": "Rejoindre le pack",
     "status": {
       "idle": "Tu peux rejoindre le pack maintenant.",
-      "pending": "Ton admission est en cours.",
-      "approved": "Ta demande est approuvée.",
+      "pending": "Ta demande est en attente d'ajout.",
+      "success": "Tu as déjà été ajouté au pack.",
       "added": "Tu as été ajouté au pack !",
       "alreadyMember": "Tu fais déjà partie du pack !"
     },
@@ -138,7 +138,6 @@
       "authError": "La signature de la requête a été refusée. Reconnecte-toi puis réessaie.",
       "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
       "invalidRequest": "La demande envoyée est invalide.",
-      "packPublisherUnavailable": "Le service de publication du pack ne répond pas. Réessaie dans un instant.",
       "timeout": "Le signer ou le serveur n'a pas répondu. Réessaie.",
       "generic": "Impossible de rejoindre le pack pour le moment. Réessaie dans un instant."
     },
@@ -365,9 +364,13 @@
     "empty": "Aucun membre pour le moment.",
     "primal": "Voir sur Primal",
     "remove": "Retirer",
+    "accept": "Accepter",
+    "reject": "Rejeter",
     "confirmRemove": "Confirmer",
     "deleting": "Suppression...",
     "removed": "Membre supprimé du pack.",
+    "accepted": "Demande acceptée.",
+    "rejected": "Demande rejetée.",
     "packOnly": "Pack seulement",
     "yes": "Oui",
     "no": "Non",
@@ -378,6 +381,7 @@
       "avatar": "Avatar",
       "username": "Username",
       "description": "Description profile",
+      "status": "Statut",
       "profile": "Profil",
       "accountCreatedAt": "Creation du compte",
       "requestedFromApp": "Source",
@@ -392,7 +396,9 @@
       "publicPack": "Pack public"
     },
     "errors": {
-      "removeFailed": "Impossible de retirer ce membre pour le moment."
+      "removeFailed": "Impossible de retirer ce membre pour le moment.",
+      "acceptFailed": "Impossible d'accepter cette demande pour le moment.",
+      "rejectFailed": "Impossible de rejeter cette demande pour le moment."
     },
     "warnings": {
       "adminSourceUnavailable": "La source admin ToolStr est temporairement indisponible. La liste peut être partielle.",
@@ -400,7 +406,7 @@
     },
     "statuses": {
       "pending": "En attente",
-      "approved": "Approuvé",
+      "success": "Ajouté",
       "rejected": "Rejeté"
     }
   }

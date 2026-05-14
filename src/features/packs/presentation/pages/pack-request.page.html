@@ -21,23 +21,12 @@
       >
         {{ 'request.connect' | transloco }}
       </button>
-    } @else if (isPackMember()) {
+    } @else if (requestStatus() === 'success') {
       <div class="alert alert-success">
         <span class="font-bold">
-          {{
-            (joinedFromRequest() ? 'request.status.added' : 'request.status.alreadyMember')
-              | transloco
-          }}
+          {{ 'request.status.alreadyMember' | transloco }}
         </span>
       </div>
-      <a
-        [href]="packFRUrl"
-        target="_blank"
-        rel="noreferrer"
-        class="btn btn-primary btn-sm mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
-      >
-        {{ 'request.followup.starterPack' | transloco }}
-      </a>
     } @else if (requestStatus() === 'idle') {
       <button
         class="btn btn-primary btn-lg mx-auto h-auto w-full max-w-full px-6 py-3 text-sm whitespace-normal sm:w-auto sm:text-base sm:whitespace-nowrap"
